@@ -122,15 +122,27 @@ export const NotificationBell = ({ enabled }: { enabled: boolean }) => {
                 </div>
                 <ScrollArea className="h-[420px]">
                     {list.isLoading ? (
-                        <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                             Loading…
                         </div>
                     ) : list.data?.items.length === 0 ? (
-                        <div className="flex h-32 flex-col items-center justify-center gap-1 px-6 text-center">
-                            <p className="text-sm font-medium">You are all caught up</p>
-                            <p className="text-xs text-muted-foreground">
-                                New uploads from your subscriptions and replies to your comments will land here.
-                            </p>
+                        // Vertically centred empty state with a soft bell
+                        // illustration. h-full inside the fixed-height
+                        // ScrollArea pins it to the middle so the popover
+                        // doesn't read as broken when there's nothing to show.
+                        <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+                            <span
+                                aria-hidden="true"
+                                className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary/60 text-muted-foreground"
+                            >
+                                <Bell className="h-8 w-8" strokeWidth={1.5} />
+                            </span>
+                            <div className="space-y-1">
+                                <p className="text-sm font-medium text-foreground">You are all caught up</p>
+                                <p className="text-xs text-muted-foreground">
+                                    New uploads from your subscriptions and replies to your comments will land here.
+                                </p>
+                            </div>
                         </div>
                     ) : (
                         <ul className="divide-y divide-border">

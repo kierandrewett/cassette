@@ -46,6 +46,13 @@ export const channels = pgTable(
         // is_pending=true and held out of comment.list until a moderator
         // approves them. Default false keeps existing channels open.
         moderateComments: boolean("moderate_comments").notNull().default(false),
+        // ISO 3166-1 alpha-2 country code (e.g. 'GB', 'US'). Surfaced on
+        // the public About tab; null hides the row.
+        country: text("country"),
+        // When true the channel page shows a Home tab as the default
+        // landing surface (channel trailer + curated shelves). When
+        // false the Videos tab is the landing surface.
+        homeEnabled: boolean("home_enabled").notNull().default(false),
         createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
         updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     },
