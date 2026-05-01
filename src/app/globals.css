@@ -84,7 +84,6 @@
     .player-bar {
         background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
         backdrop-filter: blur(18px) saturate(140%);
-        -webkit-backdrop-filter: blur(18px) saturate(140%);
     }
     @media (prefers-reduced-motion: no-preference) {
         .player-bar {
@@ -115,7 +114,6 @@
     .surface-glass {
         background: hsl(var(--popover) / 0.94);
         backdrop-filter: blur(20px) saturate(140%);
-        -webkit-backdrop-filter: blur(20px) saturate(140%);
         border: 1px solid hsl(var(--border));
         color: hsl(var(--popover-foreground));
     }
@@ -130,7 +128,6 @@
     .player-popover {
         background: rgba(10, 10, 12, 0.78);
         backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
         border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow:
             0 16px 32px -8px rgba(0, 0, 0, 0.6),
