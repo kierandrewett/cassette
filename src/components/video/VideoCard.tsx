@@ -34,9 +34,7 @@ interface VideoCardProps {
 }
 
 export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
-    const thumbnailSrc = video.thumbnailPath
-        ? `/api/hls/${video.id}/thumb/sprite.jpg`
-        : null;
+    const thumbnailSrc = video.thumbnailPath ? `/api/hls/${video.id}/thumb/sprite.jpg` : null;
 
     const hasDuration = video.durationSec != null && video.durationSec > 0;
     const hasProgress = typeof progress === "number" && progress > 0 && progress < 1;
@@ -49,16 +47,9 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
     const watchHref = video.unlistedSlug ? `/watch/${watchId}?slug=${video.unlistedSlug}` : `/watch/${watchId}`;
 
     return (
-        <Link
-            href={watchHref}
-            className={cn("group block", className)}
-            aria-label={`Watch "${video.title}"`}
-        >
+        <Link href={watchHref} className={cn("group block", className)} aria-label={`Watch "${video.title}"`}>
             {/* Thumbnail */}
-            <div
-                ref={thumbRef}
-                className="relative overflow-hidden rounded-xl bg-secondary aspect-video"
-            >
+            <div ref={thumbRef} className="relative aspect-video overflow-hidden rounded-xl bg-secondary">
                 {thumbnailSrc ? (
                     <Image
                         src={thumbnailSrc}
@@ -77,16 +68,12 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
 
                 {/* Hover preview — sits above the static thumbnail but below the duration chip (z-10 vs z-20) */}
                 {thumbnailSrc && (
-                    <HoverPreview
-                        videoId={video.id}
-                        durationSec={video.durationSec}
-                        triggerRef={thumbRef}
-                    />
+                    <HoverPreview videoId={video.id} durationSec={video.durationSec} triggerRef={thumbRef} />
                 )}
 
                 {/* Duration chip — z-20 keeps it above the preview overlay */}
                 {hasDuration && (
-                    <span className="absolute bottom-2 right-2 z-20 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums group-hover:right-10 transition-[right] duration-150">
+                    <span className="absolute bottom-2 right-2 z-20 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white transition-[right] duration-150 group-hover:right-10">
                         {formatDuration(video.durationSec!)}
                     </span>
                 )}
@@ -97,34 +84,25 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
                 {/* Progress bar — 2 px red bar if partially watched */}
                 {hasProgress && (
                     <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-white/20">
-                        <div
-                            className="h-full bg-red-500"
-                            style={{ width: `${Math.round(progress! * 100)}%` }}
-                        />
+                        <div className="h-full bg-red-500" style={{ width: `${Math.round(progress! * 100)}%` }} />
                     </div>
                 )}
             </div>
 
             {/* Metadata */}
-            <div className="mt-2 space-y-0.5 group-hover:shadow-md transition-shadow duration-200">
+            <div className="mt-2 space-y-0.5 transition-shadow duration-200 group-hover:shadow-md">
                 {/* Two-line clamp title */}
-                <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground">
-                    {video.title}
-                </h3>
-                <p className="text-xs text-muted-foreground truncate">
-                    {video.channel.name}
-                    {" "}
-                    <span aria-hidden="true">&middot;</span>
-                    {" @"}{video.channel.handle}
-                </p>
+                <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{video.title}</h3>
+                {/* Channel name only — the redundant "@handle" has been
+                    dropped because the channel name already identifies the
+                    uploader on the card. */}
+                <p className="truncate text-xs text-muted-foreground">{video.channel.name}</p>
                 <p className="text-xs text-muted-foreground">
                     {formatCount(video.viewCount)} views
                     {video.publishedAt && (
                         <>
                             {" "}
-                            <span aria-hidden="true">&middot;</span>
-                            {" "}
-                            {formatRelativeTime(video.publishedAt)}
+                            <span aria-hidden="true">&middot;</span> {formatRelativeTime(video.publishedAt)}
                         </>
                     )}
                 </p>
