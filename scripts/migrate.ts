@@ -24,11 +24,36 @@ if (!databaseUrl) {
 
 const log = (msg: string): void => console.log(`[migrate] ${msg}`);
 
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
 const main = async (): Promise<void> => {
     log(`connecting to ${databaseUrl.replace(/:[^:@]+@/, ":***@")}`);
 
     const sql = postgres(databaseUrl, { max: 1 });
     const db = drizzle(sql);
+
+    // The docker compose `db` hostname can take a beat to resolve on cold
+    // start (Docker network race). Retry the first probe with backoff up to
+    // ~30 s before giving up.
+    const probeDeadline = Date.now() + 30_000;
+    let probed = false;
+    let lastErr: unknown;
+    while (Date.now() < probeDeadline) {
+        try {
+            await sql`SELECT 1`;
+            probed = true;
+            break;
+        } catch (err) {
+            lastErr = err;
+            const msg = err instanceof Error ? err.message : String(err);
+            log(`db not reachable yet (${msg}); retrying in 2s`);
+            await sleep(2000);
+        }
+    }
+    if (!probed) {
+        log("db never came up");
+        throw lastErr ?? new Error("database unreachable");
+    }
 
     // Ensure required Postgres extensions are present before running schema
     // migrations; the schema relies on citext + pg_trgm + pgcrypto.
