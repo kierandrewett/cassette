@@ -2,8 +2,11 @@
 
 import { useMediaRemote, useMediaState } from "@vidstack/react";
 import { Pause, Play } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
+
+const CENTRE_IDLE_MS = 2500;
 
 /**
  * Big central play/pause button.
@@ -11,6 +14,11 @@ import { cn } from "@/lib/utils";
  * Visible when paused, or when the user hovers the player (active=true and
  * not fullscreen-idle). Uses an Apple-TV-style pulse animation on hover.
  * The buffer spinner is shown when media is waiting / stalled.
+ *
+ * The button fades out after ~2.5s of pointer/keyboard inactivity even
+ * when the video is paused — the global idle hook keeps the chrome bars
+ * permanently visible while paused, but the giant centre puck looked
+ * stuck on a still frame. Reappears on any movement.
  */
 export const PlayerCenterStage = () => {
     const remote = useMediaRemote();
@@ -18,7 +26,28 @@ export const PlayerCenterStage = () => {
     const waiting = useMediaState("waiting");
     const playing = useMediaState("playing");
 
-    const showButton = paused || (!playing && !waiting);
+    // Local idle tracker — independent of useIdleControls because that one
+    // pins active=true while paused.
+    const [active, setActive] = useState(true);
+    const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        const wake = () => {
+            setActive(true);
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+            idleTimerRef.current = setTimeout(() => setActive(false), CENTRE_IDLE_MS);
+        };
+        wake();
+        document.addEventListener("mousemove", wake);
+        document.addEventListener("keydown", wake);
+        return () => {
+            document.removeEventListener("mousemove", wake);
+            document.removeEventListener("keydown", wake);
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+        };
+    }, []);
+
+    // Show when (paused OR neither playing nor waiting) AND user is active.
+    const showButton = (paused || (!playing && !waiting)) && active;
     const showSpinner = waiting && !paused;
 
     const handleClick = () => {
