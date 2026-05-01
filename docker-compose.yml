@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cassette-db
+    environment:
+      POSTGRES_USER: cassette
+      POSTGRES_PASSWORD: cassette
+      POSTGRES_DB: cassette
+    ports:
+      - "5432:5432"
+    volumes:
+      - cassette-pgdata:/var/lib/postgresql/data
+      - ./docker/init-extensions.sql:/docker-entrypoint-initdb.d/00-extensions.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cassette -d cassette"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: cassette-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://cassette:cassette@db:5432/cassette
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${PUBLIC_URL:-http://localhost:3000}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+      HLS_SIGNING_SECRET: ${HLS_SIGNING_SECRET}
+      MEDIA_SOURCE_PATH: /media/source
+      MEDIA_HLS_PATH: /media/hls
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-21474836480}
+      TRANSCODE_CONCURRENCY: ${TRANSCODE_CONCURRENCY:-1}
+      ENABLE_NVENC: ${ENABLE_NVENC:-0}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-please-change-me}
+    volumes:
+      - ${MEDIA_SOURCE_PATH:-./media/source}:/media/source
+      - ${MEDIA_HLS_PATH:-./media/hls}:/media/hls
+    ports:
+      - "3000:3000"
+
+volumes:
+  cassette-pgdata: {}

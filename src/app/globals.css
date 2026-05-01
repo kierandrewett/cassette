@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 0 0% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 3.9%;
+        --primary: 0 0% 9%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 0 0% 96.1%;
+        --secondary-foreground: 0 0% 9%;
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+        --accent: 0 0% 96.1%;
+        --accent-foreground: 0 0% 9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 89.8%;
+        --input: 0 0% 89.8%;
+        --ring: 0 0% 3.9%;
+        --radius: 0.625rem;
+    }
+
+    .dark {
+        /* The cassette dark palette: true black surfaces for the player area,
+           off-black for chrome. Chosen so HLS frames blend into the canvas. */
+        --background: 0 0% 0%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 4%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 6%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 0 0% 9%;
+        --secondary: 0 0% 11%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 11%;
+        --muted-foreground: 0 0% 63.9%;
+        --accent: 0 0% 14%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 72.2% 50.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 14%;
+        --input: 0 0% 14%;
+        --ring: 0 0% 83.1%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html,
+    body {
+        @apply h-full;
+    }
+    body {
+        @apply bg-background text-foreground antialiased;
+        font-family:
+            system-ui,
+            -apple-system,
+            "Segoe UI",
+            Roboto,
+            "Helvetica Neue",
+            Arial,
+            sans-serif;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    /* Player chrome: glass-blur top/bottom bars driven by data-active attribute. */
+    .player-bar {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+        backdrop-filter: blur(18px) saturate(140%);
+        -webkit-backdrop-filter: blur(18px) saturate(140%);
+        transition:
+            opacity 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+            transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .player-bar[data-active="false"] {
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+    }
+    .player-bar[data-position="top"] {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    }
+
+    /* Hide cursor when player chrome is idle and in fullscreen. */
+    .player-canvas[data-active="false"][data-fullscreen="true"] {
+        cursor: none;
+    }
+
+    /* Glass surface used by overlays and menus throughout the app. */
+    .surface-glass {
+        background: rgba(11, 11, 13, 0.72);
+        backdrop-filter: blur(20px) saturate(150%);
+        -webkit-backdrop-filter: blur(20px) saturate(150%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Standard scrollbar styling so dark surfaces look intentional. */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+}

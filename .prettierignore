@@ -1,0 +1,12 @@
+node_modules
+.next
+.turbo
+dist
+build
+out
+coverage
+drizzle/meta
+*.lockb
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
