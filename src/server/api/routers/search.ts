@@ -189,47 +189,52 @@ export const searchRouter = createTRPCRouter({
             sim: number;
         };
 
+        // Each per-source SELECT has its own ORDER BY + LIMIT, so they
+        // need to be parenthesised before the UNION ALL — bare ORDER BY
+        // inside a UNION branch is a syntax error in Postgres.
         const rows = await ctx.db.execute<SuggestionRow>(sql`
                 SELECT kind, label, href, sim FROM (
-                    SELECT
-                        'video'                               AS kind,
-                        v.title                              AS label,
-                        '/watch/' || v.id                    AS href,
-                        similarity(v.title, ${q})            AS sim
-                    FROM videos v
-                    WHERE
-                        v.title % ${q}
-                        AND v.privacy = 'public'
-                        AND v.status = 'ready'
-                    ORDER BY sim DESC
-                    LIMIT 5
-
+                    (
+                        SELECT
+                            'video'                               AS kind,
+                            v.title                               AS label,
+                            '/watch/' || v.id                     AS href,
+                            similarity(v.title, ${q})             AS sim
+                        FROM videos v
+                        WHERE
+                            v.title % ${q}
+                            AND v.privacy = 'public'
+                            AND v.status = 'ready'
+                        ORDER BY sim DESC
+                        LIMIT 5
+                    )
                     UNION ALL
-
-                    SELECT
-                        'channel'                            AS kind,
-                        c.name                              AS label,
-                        '/channel/' || c.handle                   AS href,
-                        similarity(c.name, ${q})            AS sim
-                    FROM channels c
-                    WHERE c.name % ${q}
-                    ORDER BY sim DESC
-                    LIMIT 3
-
+                    (
+                        SELECT
+                            'channel'                             AS kind,
+                            c.name                                AS label,
+                            '/@' || c.handle                      AS href,
+                            similarity(c.name, ${q})              AS sim
+                        FROM channels c
+                        WHERE c.name % ${q}
+                        ORDER BY sim DESC
+                        LIMIT 3
+                    )
                     UNION ALL
-
-                    SELECT
-                        'playlist'                          AS kind,
-                        p.title                            AS label,
-                        '/playlist/' || p.id               AS href,
-                        similarity(p.title, ${q})          AS sim
-                    FROM playlists p
-                    WHERE
-                        p.title % ${q}
-                        AND p.privacy = 'public'
-                        AND p.kind = 'user'
-                    ORDER BY sim DESC
-                    LIMIT 2
+                    (
+                        SELECT
+                            'playlist'                            AS kind,
+                            p.title                               AS label,
+                            '/playlist/' || p.id                  AS href,
+                            similarity(p.title, ${q})             AS sim
+                        FROM playlists p
+                        WHERE
+                            p.title % ${q}
+                            AND p.privacy = 'public'
+                            AND p.kind = 'user'
+                        ORDER BY sim DESC
+                        LIMIT 2
+                    )
                 ) sub
                 ORDER BY sim DESC
             `);

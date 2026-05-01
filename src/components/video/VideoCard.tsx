@@ -47,9 +47,21 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
     const watchHref = video.unlistedSlug ? `/watch/${watchId}?slug=${video.unlistedSlug}` : `/watch/${watchId}`;
 
     return (
-        <Link href={watchHref} className={cn("group block", className)} aria-label={`Watch "${video.title}"`}>
+        <Link
+            href={watchHref}
+            className={cn(
+                // Whole-card hover treatment matches the history row: subtle
+                // bg lifts on hover, padding lets it breathe, rounded corners
+                // are inherited by the inner thumbnail. Card hover applies to
+                // the thumbnail + metadata together so the boundary reads as
+                // intentional.
+                "group block rounded-xl p-2 transition-colors hover:bg-secondary/40",
+                className,
+            )}
+            aria-label={`Watch "${video.title}"`}
+        >
             {/* Thumbnail */}
-            <div ref={thumbRef} className="relative aspect-video overflow-hidden rounded-xl bg-secondary">
+            <div ref={thumbRef} className="relative aspect-video overflow-hidden rounded-lg bg-secondary">
                 {thumbnailSrc ? (
                     <Image
                         src={thumbnailSrc}

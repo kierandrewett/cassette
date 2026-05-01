@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
     Home09Icon,
     Tv01Icon,
@@ -139,7 +141,6 @@ export const LeftRail = ({
     isAuthenticated = false,
 }: LeftRailProps) => {
     const pathname = usePathname();
-    const router = useRouter();
     const t = useTranslations("nav");
 
     return (
@@ -186,50 +187,60 @@ export const LeftRail = ({
                         </>
                     )}
 
-                    {/* Owned channels — each row links to /channel/<handle>; a
+                    {/* Owned channels — each row links to /@<handle>; a
                         small Studio shortcut sits to the right so the user
-                        does not need a top-level Studio entry to manage one. */}
+                        does not need a top-level Studio entry to manage one.
+                        The Studio button is rendered as a SIBLING of the
+                        Link rather than nested inside it: nesting an <a>
+                        inside an <a> emits invalid HTML and Next/Link
+                        intercepts the click before our onClick can fire,
+                        which is why the previous implementation didn't
+                        actually navigate. Absolute positioning keeps it
+                        flush to the right of the row regardless of label
+                        length. */}
                     {channels.length > 0 && (
-                        <>
+                        <TooltipProvider delayDuration={150}>
                             <Divider />
                             <SectionHeader>{t("yourChannels")}</SectionHeader>
                             <ul className="space-y-0.5">
                                 {channels.map((channel) => {
-                                    const href = `/channel/${channel.handle}`;
+                                    const href = `/@${channel.handle}`;
                                     const studioHref = `/studio/channel/${channel.handle}`;
                                     const active = pathname === href || pathname.startsWith(`${href}/`);
                                     return (
-                                        <li key={channel.id}>
-                                            <RailLink
+                                        <li key={channel.id} className="group relative">
+                                            <Link
                                                 href={href}
-                                                label={channel.name}
-                                                Icon={Settings02Icon}
-                                                active={active}
-                                                avatar={<ChannelAvatar channel={channel} />}
-                                                trailing={
-                                                    // Plain button — nested <Link> inside the
-                                                    // RailLink anchor would emit invalid <a><a/></a>
-                                                    // HTML and trip a hydration error.
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            router.push(studioHref);
-                                                        }}
-                                                        title="Open in Studio"
+                                                aria-current={active ? "page" : undefined}
+                                                className={cn(
+                                                    "flex items-center gap-3 rounded-lg px-3 py-2 pr-10 text-sm transition-colors",
+                                                    active
+                                                        ? "bg-secondary font-medium text-foreground"
+                                                        : "font-normal text-foreground/85 hover:bg-secondary/60 hover:text-foreground",
+                                                )}
+                                            >
+                                                <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                                                    <ChannelAvatar channel={channel} />
+                                                </span>
+                                                <span className="flex-1 truncate">{channel.name}</span>
+                                            </Link>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Link
+                                                        href={studioHref}
                                                         aria-label={`Open ${channel.name} in Studio`}
-                                                        className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-foreground/10 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                                                        className="absolute right-1.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-foreground/10 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
                                                     >
-                                                        <Settings02Icon size={14} strokeWidth={1.7} />
-                                                    </button>
-                                                }
-                                            />
+                                                        <Settings02Icon size={15} strokeWidth={1.8} />
+                                                    </Link>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="right">Open in Studio</TooltipContent>
+                                            </Tooltip>
                                         </li>
                                     );
                                 })}
                             </ul>
-                        </>
+                        </TooltipProvider>
                     )}
 
                     {/* Subscriptions — channels the viewer follows, listed
