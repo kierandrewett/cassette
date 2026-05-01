@@ -86,34 +86,43 @@ const ChannelChip = ({ activeChannel, channels }: ChannelChipProps) => {
         <button
             type="button"
             className={cn(
-                "group flex h-9 items-center gap-2 rounded-full border border-border bg-card px-2.5 pr-3 text-sm font-medium",
-                "transition-colors hover:bg-accent",
+                // Channel chip — pill with avatar puck tucked into the left edge,
+                // name text, and a discreet chevron suggesting it's a switcher.
+                "group flex h-9 items-center gap-2 rounded-full border border-border bg-card pl-1 pr-3 text-sm font-medium shadow-sm",
+                "transition-colors hover:border-foreground/20 hover:bg-accent",
+                open && "border-foreground/20 bg-accent",
             )}
             aria-haspopup="menu"
             aria-expanded={open}
+            aria-label={`Switch channel — currently @${activeChannel.handle}`}
         >
-            <Avatar className="h-6 w-6">
+            <Avatar className="h-7 w-7">
                 {avatarSrc(activeChannel) && (
                     <AvatarImage src={avatarSrc(activeChannel) as string} alt={activeChannel.name} />
                 )}
                 <AvatarFallback className="text-[10px]">{initialsOf(activeChannel.name)}</AvatarFallback>
             </Avatar>
             <span className="max-w-[10rem] truncate">{activeChannel.name}</span>
-            <ArrowDown01Icon size={14} strokeWidth={1.6} className="text-muted-foreground" />
+            <ArrowDown01Icon
+                size={14}
+                strokeWidth={1.8}
+                className="text-muted-foreground transition-transform group-hover:text-foreground group-aria-expanded:rotate-180"
+            />
         </button>
     ) : (
         <button
             type="button"
             className={cn(
-                "flex h-9 items-center gap-2 rounded-full border border-border bg-card px-3 text-sm font-medium",
-                "transition-colors hover:bg-accent",
+                "flex h-9 items-center gap-2 rounded-full border border-border bg-card px-3 text-sm font-medium shadow-sm",
+                "transition-colors hover:border-foreground/20 hover:bg-accent",
+                open && "border-foreground/20 bg-accent",
             )}
             aria-haspopup="menu"
             aria-expanded={open}
         >
-            <UserMultipleIcon size={16} strokeWidth={1.6} />
+            <UserMultipleIcon size={16} strokeWidth={1.8} />
             <span>All channels</span>
-            <ArrowDown01Icon size={14} strokeWidth={1.6} className="text-muted-foreground" />
+            <ArrowDown01Icon size={14} strokeWidth={1.8} className="text-muted-foreground" />
         </button>
     );
 
@@ -180,8 +189,10 @@ export const StudioSubNav = ({ channel, channels }: StudioSubNavProps) => {
             className={cn(
                 // Sticks to the top of the AppShell content area on scroll. The
                 // 56px (3.5rem) offset matches the AppHeader height so the pill
-                // row never tucks behind the fixed header.
-                "sticky top-14 z-30 -mx-4 border-b border-border bg-background px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8",
+                // row never tucks behind the fixed header. The 1px border + a
+                // soft backdrop-blur strip read as a deliberate divider between
+                // the subnav and the page content.
+                "sticky top-14 z-30 -mx-4 border-b border-border bg-background/95 px-4 backdrop-blur md:-mx-6 md:px-6 lg:-mx-8 lg:px-8",
             )}
         >
             <div className="flex items-center gap-3 overflow-x-auto py-3">
@@ -198,16 +209,19 @@ export const StudioSubNav = ({ channel, channels }: StudioSubNavProps) => {
                                 key={href}
                                 href={href}
                                 aria-current={active ? "page" : undefined}
+                                title={label}
                                 className={cn(
-                                    // Pill tab — Apple-TV-ish segmented control. Selected pill
-                                    // gets a subtle accent fill plus stronger foreground colour.
+                                    // Pill tab — Apple-TV-ish segmented control. The selected
+                                    // pill picks up a strong foreground fill so the active
+                                    // section is unmistakable; idle pills sit in muted text
+                                    // and lean on the hover state for affordance.
                                     "flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-sm font-medium transition-colors",
                                     active
-                                        ? "bg-accent text-foreground"
-                                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                                        ? "bg-foreground text-background shadow-sm"
+                                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
                                 )}
                             >
-                                <Icon size={16} strokeWidth={active ? 2 : 1.6} />
+                                <Icon size={16} strokeWidth={active ? 2 : 1.7} />
                                 <span>{label}</span>
                             </Link>
                         );
