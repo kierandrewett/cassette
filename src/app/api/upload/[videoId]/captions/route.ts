@@ -32,10 +32,7 @@ export const dynamic = "force-dynamic";
 //   - label (display label, e.g. "English"; defaults to lang)
 //   - isDefault (optional "true"/"false")
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: Promise<{ videoId: string }> },
-): Promise<Response> {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ videoId: string }> }): Promise<Response> {
     const { videoId } = await params;
 
     // ---- 1. load video + authenticate ----
@@ -58,12 +55,7 @@ export async function POST(
             const memberRows = await db
                 .select()
                 .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, session.user.id),
-                    ),
-                )
+                .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, session.user.id)))
                 .limit(1);
             isAuthorized = !!memberRows[0];
         }
@@ -178,4 +170,3 @@ export async function POST(
         { status: 201, headers: { "Content-Type": "application/json" } },
     );
 }
-

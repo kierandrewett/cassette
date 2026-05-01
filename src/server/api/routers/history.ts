@@ -21,10 +21,7 @@ export const historyRouter = createTRPCRouter({
         )
         .query(async ({ ctx, input }) => {
             const baseWhere = input.cursor
-                ? and(
-                      eq(watchHistory.userId, ctx.user.id),
-                      lt(watchHistory.watchedAt, new Date(input.cursor)),
-                  )
+                ? and(eq(watchHistory.userId, ctx.user.id), lt(watchHistory.watchedAt, new Date(input.cursor)))
                 : eq(watchHistory.userId, ctx.user.id);
 
             // When incompleteOnly is requested we INNER JOIN watchProgress and
@@ -101,12 +98,10 @@ export const historyRouter = createTRPCRouter({
     }),
 
     /** Delete a single watch history entry for a given video. */
-    remove: protectedProcedure
-        .input(z.object({ videoId: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            await ctx.db
-                .delete(watchHistory)
-                .where(and(eq(watchHistory.userId, ctx.user.id), eq(watchHistory.videoId, input.videoId)));
-            return { ok: true };
-        }),
+    remove: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        await ctx.db
+            .delete(watchHistory)
+            .where(and(eq(watchHistory.userId, ctx.user.id), eq(watchHistory.videoId, input.videoId)));
+        return { ok: true };
+    }),
 });

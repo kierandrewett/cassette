@@ -31,7 +31,7 @@ SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 // Sheet content: glass surface slide-in panel.
 const sheetVariants = cva(
-    "fixed z-50 gap-4 surface-glass p-6 shadow-2xl transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+    "surface-glass fixed z-50 gap-4 p-6 shadow-2xl transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
     {
         variants: {
             side: {
@@ -48,8 +48,7 @@ const sheetVariants = cva(
 );
 
 interface SheetContentProps
-    extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-        VariantProps<typeof sheetVariants> {}
+    extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>, VariantProps<typeof sheetVariants> {}
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
     ({ side = "right", className, children, ...props }, ref) => (

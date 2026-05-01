@@ -17,7 +17,7 @@ export type FfprobeStream = {
     height?: number;
     coded_width?: number;
     coded_height?: number;
-    r_frame_rate?: string;   // e.g. "30/1"
+    r_frame_rate?: string; // e.g. "30/1"
     avg_frame_rate?: string;
     display_aspect_ratio?: string;
     pix_fmt?: string;
@@ -42,7 +42,7 @@ export type FfprobeFormat = {
     format_name: string;
     format_long_name: string;
     start_time: string;
-    duration: string;       // seconds as string, e.g. "123.456"
+    duration: string; // seconds as string, e.g. "123.456"
     size: string;
     bit_rate: string;
     probe_score: number;
@@ -84,11 +84,13 @@ export type ProbeMetadata = {
 // Throws with a clear message if no video stream is found.
 export const probe = async (sourcePath: string): Promise<ProbeMetadata> => {
     const { stdout } = await execFileAsync("ffprobe", [
-        "-v", "error",
+        "-v",
+        "error",
         "-show_streams",
         "-show_format",
         "-show_chapters",
-        "-of", "json",
+        "-of",
+        "json",
         sourcePath,
     ]);
 

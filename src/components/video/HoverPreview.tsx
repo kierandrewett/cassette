@@ -35,17 +35,11 @@ function bgPosition(frame: number): string {
  * Gate component: checks all opt-out conditions before mounting the inner
  * implementation, so the inner component can use hooks unconditionally.
  */
-export const HoverPreview = ({
-    videoId,
-    durationSec,
-    triggerRef,
-    enabled = true,
-}: HoverPreviewProps) => {
+export const HoverPreview = ({ videoId, durationSec, triggerRef, enabled = true }: HoverPreviewProps) => {
     // Feature-gate checks. Evaluated client-side only via typeof guards.
     // These are stable for the component lifetime (change only on full reload).
     const prefersReducedMotion =
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // navigator.connection is non-standard; cast via unknown.
     const saveData =
@@ -58,13 +52,7 @@ export const HoverPreview = ({
         return null;
     }
 
-    return (
-        <HoverPreviewInner
-            videoId={videoId}
-            durationSec={durationSec}
-            triggerRef={triggerRef}
-        />
-    );
+    return <HoverPreviewInner videoId={videoId} durationSec={durationSec} triggerRef={triggerRef} />;
 };
 
 // ---------------------------------------------------------------------------

@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Shortcut {
     keys: string[];
@@ -51,21 +46,15 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     },
     {
         category: "Captions",
-        shortcuts: [
-            { keys: ["C"], description: "Toggle captions" },
-        ],
+        shortcuts: [{ keys: ["C"], description: "Toggle captions" }],
     },
     {
         category: "Overlays",
-        shortcuts: [
-            { keys: ["B"], description: "Toggle stats for nerds" },
-        ],
+        shortcuts: [{ keys: ["B"], description: "Toggle stats for nerds" }],
     },
     {
         category: "Help",
-        shortcuts: [
-            { keys: ["?"], description: "Show / hide keyboard shortcuts" },
-        ],
+        shortcuts: [{ keys: ["?"], description: "Show / hide keyboard shortcuts" }],
     },
 ];
 
@@ -117,10 +106,7 @@ export const KeyboardShortcutsOverlay = ({ open, onOpenChange }: KeyboardShortcu
                             </p>
                             <ul className="space-y-1.5">
                                 {group.shortcuts.map((s) => (
-                                    <li
-                                        key={s.description}
-                                        className="flex items-center justify-between gap-4 text-sm"
-                                    >
+                                    <li key={s.description} className="flex items-center justify-between gap-4 text-sm">
                                         <span className="text-foreground/80">{s.description}</span>
                                         <span className="flex shrink-0 items-center gap-1">
                                             {s.keys.map((k) => (

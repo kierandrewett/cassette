@@ -1,4 +1,15 @@
-import { type AnyPgColumn, boolean, index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+    type AnyPgColumn,
+    boolean,
+    index,
+    integer,
+    pgEnum,
+    pgTable,
+    primaryKey,
+    text,
+    timestamp,
+    uuid,
+} from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
 import { channels } from "./channels";

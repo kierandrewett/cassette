@@ -127,7 +127,9 @@ export const NotificationBell = ({ enabled }: { enabled: boolean }) => {
                     ) : list.data?.items.length === 0 ? (
                         <div className="flex h-32 flex-col items-center justify-center gap-1 px-6 text-center">
                             <p className="text-sm font-medium">You are all caught up</p>
-                            <p className="text-xs text-muted-foreground">New uploads from your subscriptions and replies to your comments will land here.</p>
+                            <p className="text-xs text-muted-foreground">
+                                New uploads from your subscriptions and replies to your comments will land here.
+                            </p>
                         </div>
                     ) : (
                         <ul className="divide-y divide-border">

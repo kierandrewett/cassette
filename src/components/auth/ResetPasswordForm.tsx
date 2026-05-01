@@ -79,9 +79,7 @@ export const ResetPasswordForm = ({ token }: Props) => {
                             errors.newPassword && "border-destructive focus-visible:ring-destructive",
                         )}
                     />
-                    {errors.newPassword && (
-                        <p className="text-xs text-destructive">{errors.newPassword.message}</p>
-                    )}
+                    {errors.newPassword && <p className="text-xs text-destructive">{errors.newPassword.message}</p>}
                 </div>
 
                 {/* Confirm password */}
@@ -108,7 +106,10 @@ export const ResetPasswordForm = ({ token }: Props) => {
 
                 {/* Server error */}
                 {serverError && (
-                    <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p
+                        role="alert"
+                        className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                    >
                         {serverError}
                     </p>
                 )}

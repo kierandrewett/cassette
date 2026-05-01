@@ -120,7 +120,7 @@ export const ChannelCustomiseForm = ({
                             disabled={isSaving}
                             className="block w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                         />
-                        <p className="text-xs text-muted-foreground text-right">{description.length} / 2000</p>
+                        <p className="text-right text-xs text-muted-foreground">{description.length} / 2000</p>
                     </div>
 
                     {saveError && <p className="text-sm text-destructive">{saveError}</p>}

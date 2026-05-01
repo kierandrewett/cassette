@@ -55,10 +55,7 @@ const detectMagic = (buf: Buffer): boolean => {
 // Body: multipart/form-data, single field `file` (jpg/png/webp, ≤ 5 MB).
 // ---------------------------------------------------------------------------
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: Promise<{ videoId: string }> },
-): Promise<Response> {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ videoId: string }> }): Promise<Response> {
     const { videoId } = await params;
 
     // ---- 1. Load video ----
@@ -87,12 +84,7 @@ export async function POST(
             const memberRows = await db
                 .select({ role: channelMembers.role })
                 .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, session.user.id),
-                    ),
-                )
+                .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, session.user.id)))
                 .limit(1);
             isAuthorised = !!memberRows[0];
         }
@@ -160,10 +152,7 @@ export async function POST(
 
     const relPath = relative(paths.hlsRoot, thumbPath);
 
-    await db
-        .update(videos)
-        .set({ thumbnailPath: relPath, updatedAt: new Date() })
-        .where(eq(videos.id, videoId));
+    await db.update(videos).set({ thumbnailPath: relPath, updatedAt: new Date() }).where(eq(videos.id, videoId));
 
     return json(200, {
         ok: true,

@@ -26,7 +26,9 @@ export const PreferencesPanel = () => {
 
     // Render a stable placeholder during SSR to avoid hydration mismatches.
     if (!mounted) {
-        return <PreferencesRow label="Hover previews" description="" checked={true} onChange={() => undefined} disabled />;
+        return (
+            <PreferencesRow label="Hover previews" description="" checked={true} onChange={() => undefined} disabled />
+        );
     }
 
     return (
@@ -53,11 +55,9 @@ interface PreferencesRowProps {
 
 const PreferencesRow = ({ label, description, checked, onChange, disabled }: PreferencesRowProps) => (
     <div className="flex items-start justify-between gap-4 px-4 py-3">
-        <div className="space-y-0.5 min-w-0">
+        <div className="min-w-0 space-y-0.5">
             <span className="text-sm font-medium text-foreground">{label}</span>
-            {description && (
-                <p className="text-xs text-muted-foreground">{description}</p>
-            )}
+            {description && <p className="text-xs text-muted-foreground">{description}</p>}
         </div>
         <button
             role="switch"

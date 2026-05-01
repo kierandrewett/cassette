@@ -49,12 +49,7 @@ const flatten = (fields: Record<string, unknown>): string =>
         })
         .join(" ");
 
-const emit = (
-    level: Level,
-    scope: string,
-    msg: string,
-    fields?: Record<string, unknown>,
-): void => {
+const emit = (level: Level, scope: string, msg: string, fields?: Record<string, unknown>): void => {
     if (LEVELS[level] < envLevel()) return;
 
     if (isJson()) {

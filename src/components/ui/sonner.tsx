@@ -14,8 +14,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
                 classNames: {
                     toast: "group toast group-[.toaster]:surface-glass group-[.toaster]:text-foreground group-[.toaster]:shadow-xl",
                     description: "group-[.toast]:text-muted-foreground",
-                    actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-full",
-                    cancelButton: "group-[.toast]:bg-secondary group-[.toast]:text-secondary-foreground group-[.toast]:rounded-lg",
+                    actionButton:
+                        "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-full",
+                    cancelButton:
+                        "group-[.toast]:bg-secondary group-[.toast]:text-secondary-foreground group-[.toast]:rounded-lg",
                 },
             }}
             {...props}

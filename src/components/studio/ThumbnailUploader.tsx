@@ -135,7 +135,9 @@ export const ThumbnailUploader = ({ videoId, onSaved }: ThumbnailUploaderProps) 
                 role="button"
                 aria-label="Upload thumbnail image"
                 tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") inputRef.current?.click(); }}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+                }}
             >
                 <UploadCloud className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
                 <div>
@@ -182,9 +184,7 @@ export const ThumbnailUploader = ({ videoId, onSaved }: ThumbnailUploaderProps) 
             )}
 
             {/* Error message */}
-            {state.status === "error" && (
-                <p className="text-sm text-destructive">{state.message}</p>
-            )}
+            {state.status === "error" && <p className="text-sm text-destructive">{state.message}</p>}
 
             {/* Action buttons */}
             <div className="flex gap-2">
@@ -202,9 +202,12 @@ export const ThumbnailUploader = ({ videoId, onSaved }: ThumbnailUploaderProps) 
                     </button>
                 )}
                 {state.status === "done" && (
-                    <span className="text-sm text-green-500 font-medium flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-sm font-medium text-green-500">
                         <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                            <path fillRule="evenodd" d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z" />
+                            <path
+                                fillRule="evenodd"
+                                d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"
+                            />
                         </svg>
                         Uploaded
                     </span>

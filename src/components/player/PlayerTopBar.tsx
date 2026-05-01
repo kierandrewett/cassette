@@ -17,13 +17,7 @@ interface PlayerTopBarProps {
  * Top glass-blur bar — shows title + channel info (only in theatre/fullscreen).
  * Fades in/out with the .player-bar class driven by the active data attribute.
  */
-export const PlayerTopBar = ({
-    title,
-    channelName,
-    channelHandle,
-    avatarPath,
-    active,
-}: PlayerTopBarProps) => {
+export const PlayerTopBar = ({ title, channelName, channelHandle, avatarPath, active }: PlayerTopBarProps) => {
     const theatre = usePlayerStore((s) => s.theatre);
     const setTheatre = usePlayerStore((s) => s.setTheatre);
 
@@ -32,7 +26,7 @@ export const PlayerTopBar = ({
 
     return (
         <div
-            className="player-bar absolute inset-x-0 top-0 z-30 flex items-center gap-3 px-4 pt-4 pb-8"
+            className="player-bar absolute inset-x-0 top-0 z-30 flex items-center gap-3 px-4 pb-8 pt-4"
             data-active={active ? "true" : "false"}
             data-position="top"
         >
@@ -44,7 +38,7 @@ export const PlayerTopBar = ({
                     width={32}
                     height={32}
                     unoptimized
-                    className="h-8 w-8 rounded-full object-cover ring-1 ring-white/20 flex-shrink-0"
+                    className="h-8 w-8 flex-shrink-0 rounded-full object-cover ring-1 ring-white/20"
                 />
             ) : (
                 <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white/80 ring-1 ring-white/20">
@@ -54,11 +48,10 @@ export const PlayerTopBar = ({
 
             {/* Title + channel */}
             <div className="flex min-w-0 flex-col">
-                <p className="truncate text-sm font-semibold text-white leading-snug">{title}</p>
-                <p className="truncate text-xs text-white/60 leading-snug">
+                <p className="truncate text-sm font-semibold leading-snug text-white">{title}</p>
+                <p className="truncate text-xs leading-snug text-white/60">
                     {channelName}
-                    <span className="mx-1 text-white/30">&middot;</span>
-                    @{channelHandle}
+                    <span className="mx-1 text-white/30">&middot;</span>@{channelHandle}
                 </p>
             </div>
 
@@ -66,7 +59,7 @@ export const PlayerTopBar = ({
             <button
                 aria-label="Exit theatre mode"
                 onClick={() => setTheatre(false)}
-                className="ml-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors"
+                className="ml-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
                 <Cancel01Icon size={16} />
             </button>

@@ -62,7 +62,7 @@ const CreatePlaylistForm = ({
     return (
         <form
             onSubmit={handleSubmit}
-            className="px-3 py-2 space-y-2"
+            className="space-y-2 px-3 py-2"
             // Prevent the dropdown from closing when clicking inside the form.
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
@@ -89,7 +89,7 @@ const CreatePlaylistForm = ({
                     id="new-playlist-privacy"
                     value={privacy}
                     onChange={(e) => setPrivacy(e.target.value as Privacy)}
-                    className="w-full h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="h-7 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                     <option value="private">Private</option>
                     <option value="unlisted">Unlisted</option>
@@ -100,14 +100,14 @@ const CreatePlaylistForm = ({
                 <button
                     type="submit"
                     disabled={busy || !title.trim()}
-                    className="flex-1 rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                    className="flex-1 rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
                     {busy ? "Creating…" : "Create"}
                 </button>
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    className="rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
                     Cancel
                 </button>
@@ -124,20 +124,23 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
     const [queueAdded, setQueueAdded] = useState(false);
     const [watchLaterAdded, setWatchLaterAdded] = useState(false);
 
-    const { data: playlists } = api.playlist.list.useQuery(
-        {},
-        { enabled: !!session?.user && open },
-    );
+    const { data: playlists } = api.playlist.list.useQuery({}, { enabled: !!session?.user && open });
 
     const addToQueue = api.playlist.queue.add.useMutation({
         onMutate: () => setQueueAdded(true),
-        onError: () => { setQueueAdded(false); toast.error("Failed to add to queue"); },
+        onError: () => {
+            setQueueAdded(false);
+            toast.error("Failed to add to queue");
+        },
         onSuccess: () => toast.success("Added to queue"),
     });
 
     const addToWatchLater = api.playlist.watchLater.add.useMutation({
         onMutate: () => setWatchLaterAdded(true),
-        onError: () => { setWatchLaterAdded(false); toast.error("Failed to save to Watch Later"); },
+        onError: () => {
+            setWatchLaterAdded(false);
+            toast.error("Failed to save to Watch Later");
+        },
         onSuccess: () => toast.success("Saved to Watch Later"),
     });
 
@@ -161,7 +164,7 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                     e.stopPropagation();
                     router.push("/login");
                 }}
-                className="flex items-center gap-1.5 rounded-lg bg-secondary/80 px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 rounded-lg bg-secondary/80 px-2.5 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
                 aria-label="Sign in to save this video"
             >
                 <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -173,12 +176,18 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
     const userPlaylists = playlists ?? [];
 
     return (
-        <DropdownMenu open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowCreate(false); }}>
+        <DropdownMenu
+            open={open}
+            onOpenChange={(v) => {
+                setOpen(v);
+                if (!v) setShowCreate(false);
+            }}
+        >
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-md bg-black/60 hover:bg-black/80 text-white"
+                    className="h-7 w-7 rounded-md bg-black/60 text-white hover:bg-black/80"
                     aria-label="Save to playlist"
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -186,11 +195,7 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                 </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-                align="end"
-                className="w-56"
-                onClick={(e) => e.stopPropagation()}
-            >
+            <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
                 {/* System actions */}
                 <DropdownMenuItem
                     onSelect={(e) => {
@@ -200,10 +205,11 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                     }}
                     disabled={addToQueue.isPending}
                 >
-                    {queueAdded
-                        ? <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
-                        : <List className="mr-2 h-4 w-4" aria-hidden="true" />
-                    }
+                    {queueAdded ? (
+                        <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
+                    ) : (
+                        <List className="mr-2 h-4 w-4" aria-hidden="true" />
+                    )}
                     {queueAdded ? "Added to queue" : "Add to queue"}
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -214,10 +220,11 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                     }}
                     disabled={addToWatchLater.isPending}
                 >
-                    {watchLaterAdded
-                        ? <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
-                        : <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-                    }
+                    {watchLaterAdded ? (
+                        <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
+                    ) : (
+                        <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                    )}
                     {watchLaterAdded ? "Saved to Watch Later" : "Add to Watch Later"}
                 </DropdownMenuItem>
 
@@ -227,7 +234,11 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                 {userPlaylists.map((pl) => (
                     <DropdownMenuItem
                         key={pl.id}
-                        onSelect={(e) => { e.preventDefault(); addItem.mutate({ playlistId: pl.id, videoId }); setOpen(false); }}
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            addItem.mutate({ playlistId: pl.id, videoId });
+                            setOpen(false);
+                        }}
                         disabled={addItem.isPending}
                     >
                         <span className="truncate">{pl.title}</span>
@@ -240,15 +251,20 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                 {showCreate ? (
                     <CreatePlaylistForm
                         videoId={videoId}
-                        onCreated={() => { setShowCreate(false); setOpen(false); }}
+                        onCreated={() => {
+                            setShowCreate(false);
+                            setOpen(false);
+                        }}
                         onCancel={() => setShowCreate(false)}
                     />
                 ) : (
                     <DropdownMenuItem
-                        onSelect={(e) => { e.preventDefault(); setShowCreate(true); }}
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            setShowCreate(true);
+                        }}
                     >
-                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                        + Create new playlist
+                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />+ Create new playlist
                     </DropdownMenuItem>
                 )}
             </DropdownMenuContent>

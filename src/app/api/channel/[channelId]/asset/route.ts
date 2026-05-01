@@ -72,9 +72,7 @@ const detectImageExt = (buf: Buffer): string | null => {
 
 // Resolves the channelId the caller is permitted to manage.
 // Returns null with a Response already set if auth fails.
-type AuthResult =
-    | { ok: true; resolvedChannelId: string }
-    | { ok: false; response: Response };
+type AuthResult = { ok: true; resolvedChannelId: string } | { ok: false; response: Response };
 
 const resolveAuth = async (req: NextRequest, channelIdFromPath: string): Promise<AuthResult> => {
     const authHeader = req.headers.get("authorization") ?? "";
@@ -100,12 +98,7 @@ const resolveAuth = async (req: NextRequest, channelIdFromPath: string): Promise
     const memberRows = await db
         .select({ role: channelMembers.role })
         .from(channelMembers)
-        .where(
-            and(
-                eq(channelMembers.channelId, channelIdFromPath),
-                eq(channelMembers.userId, session.user.id),
-            ),
-        )
+        .where(and(eq(channelMembers.channelId, channelIdFromPath), eq(channelMembers.userId, session.user.id)))
         .limit(1);
 
     const member = memberRows[0];
@@ -133,11 +126,7 @@ export async function POST(
     if (!authResult.ok) return authResult.response;
 
     // Verify channel exists.
-    const channelRows = await db
-        .select({ id: channels.id })
-        .from(channels)
-        .where(eq(channels.id, channelId))
-        .limit(1);
+    const channelRows = await db.select({ id: channels.id }).from(channels).where(eq(channels.id, channelId)).limit(1);
     if (!channelRows[0]) return json(404, { error: "channel not found" });
 
     // Parse multipart form — collect file into memory (≤10 MB, safe for images).
@@ -181,7 +170,7 @@ export async function POST(
 
         bb.on("finish", () => {
             if (!kind) {
-                resolve({ error: "kind field must be \"avatar\" or \"banner\"", status: 400 });
+                resolve({ error: 'kind field must be "avatar" or "banner"', status: 400 });
                 return;
             }
             if (!fileReceived) {
@@ -274,7 +263,7 @@ export async function DELETE(
 
     const kind = req.nextUrl.searchParams.get("kind");
     if (kind !== "avatar" && kind !== "banner") {
-        return json(400, { error: "query param kind must be \"avatar\" or \"banner\"" });
+        return json(400, { error: 'query param kind must be "avatar" or "banner"' });
     }
 
     // Remove all extension variants best-effort.
@@ -284,9 +273,7 @@ export async function DELETE(
     }
 
     const patch =
-        kind === "avatar"
-            ? { avatarPath: null, updatedAt: new Date() }
-            : { bannerPath: null, updatedAt: new Date() };
+        kind === "avatar" ? { avatarPath: null, updatedAt: new Date() } : { bannerPath: null, updatedAt: new Date() };
 
     await db.update(channels).set(patch).where(eq(channels.id, channelId));
 

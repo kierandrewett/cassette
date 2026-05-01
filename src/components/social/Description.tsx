@@ -19,9 +19,9 @@ interface DescriptionProps {
 function parseTimestamp(ts: string): number {
     const parts = ts.split(":").map(Number);
     if (parts.length === 3) {
-        return (parts[0]! * 3600) + (parts[1]! * 60) + parts[2]!;
+        return parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
     }
-    return (parts[0]! * 60) + parts[1]!;
+    return parts[0]! * 60 + parts[1]!;
 }
 
 /**

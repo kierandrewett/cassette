@@ -52,9 +52,7 @@ export async function GET(
         }
     } else {
         // private: token is mandatory
-        credential = accessResult.token
-            ? { kind: "token", token: accessResult.token }
-            : { kind: "none" };
+        credential = accessResult.token ? { kind: "token", token: accessResult.token } : { kind: "none" };
     }
 
     let body: string;

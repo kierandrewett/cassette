@@ -16,12 +16,7 @@ export const getChannelUsage = async (channelId: string): Promise<number> => {
     const rows = await db
         .select({ total: sum(videos.sourceBytes) })
         .from(videos)
-        .where(
-            and(
-                eq(videos.channelId, channelId),
-                ne(videos.status, "failed"),
-            ),
-        );
+        .where(and(eq(videos.channelId, channelId), ne(videos.status, "failed")));
 
     return Number(rows[0]?.total ?? 0);
 };

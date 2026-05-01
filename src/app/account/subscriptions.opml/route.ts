@@ -20,7 +20,7 @@ const ESC: Record<string, string> = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    "\"": "&quot;",
+    '"': "&quot;",
     "'": "&apos;",
 };
 

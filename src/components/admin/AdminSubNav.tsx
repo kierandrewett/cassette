@@ -20,7 +20,7 @@ export const AdminSubNav = () => {
     const pathname = usePathname();
 
     return (
-        <nav className="flex gap-1 border-b border-border px-4 overflow-x-auto" aria-label="Admin navigation">
+        <nav className="flex gap-1 overflow-x-auto border-b border-border px-4" aria-label="Admin navigation">
             {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
                 const active = exact ? pathname === href : pathname.startsWith(href);
                 return (
@@ -29,10 +29,10 @@ export const AdminSubNav = () => {
                         href={href}
                         className={cn(
                             "flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors",
-                            "border-b-2 -mb-px",
+                            "-mb-px border-b-2",
                             active
                                 ? "border-primary text-foreground"
-                                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
+                                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                         )}
                     >
                         <Icon className="h-4 w-4 shrink-0" />

@@ -18,15 +18,15 @@ const HomePage = async () => {
         <main className="flex min-h-screen flex-col items-center justify-center gap-10 p-8 text-center">
             <div className="space-y-6">
                 <div className="flex justify-center">
-                    <CassetteWordmark className="text-foreground scale-150" />
+                    <CassetteWordmark className="scale-150 text-foreground" />
                 </div>
                 <div className="space-y-3">
                     <h1 className="text-balance text-5xl font-semibold tracking-tight md:text-6xl">
                         Your videos. Your hardware. Your rules.
                     </h1>
                     <p className="mx-auto max-w-xl text-balance text-base text-muted-foreground">
-                        A self-hosted personal video platform. Upload via a simple HTTP API,
-                        watch back as adaptive HLS, and keep your library on disc where you can see it.
+                        A self-hosted personal video platform. Upload via a simple HTTP API, watch back as adaptive HLS,
+                        and keep your library on disc where you can see it.
                     </p>
                 </div>
             </div>

@@ -39,10 +39,7 @@ export type MultipartOptions = {
 //   - the file exceeds `maxFileBytes`
 //   - any field value exceeds MAX_FIELD_SIZE
 //   - a caption buffer exceeds MAX_CAPTION_SIZE
-export const parseMultipart = (
-    req: IncomingMessage,
-    options: MultipartOptions,
-): Promise<ParsedMultipart> =>
+export const parseMultipart = (req: IncomingMessage, options: MultipartOptions): Promise<ParsedMultipart> =>
     new Promise((resolve, reject) => {
         const bb = busboy({
             headers: options.headers as Record<string, string>,

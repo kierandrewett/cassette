@@ -189,8 +189,8 @@ export const ChapterEditor = ({ videoId, initialChapters, channelId }: ChapterEd
     return (
         <div className="space-y-4 pt-2">
             <p className="text-sm text-muted-foreground">
-                Add manual chapters. These take precedence over any chapters extracted from the video.
-                Start time format: <code className="font-mono text-xs">mm:ss</code>.
+                Add manual chapters. These take precedence over any chapters extracted from the video. Start time
+                format: <code className="font-mono text-xs">mm:ss</code>.
             </p>
 
             {rows.length === 0 ? (
@@ -209,7 +209,7 @@ export const ChapterEditor = ({ videoId, initialChapters, channelId }: ChapterEd
                             onDrop={handleDrop}
                             className={cn(
                                 "flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5",
-                                "hover:border-primary/30 transition-colors",
+                                "transition-colors hover:border-primary/30",
                             )}
                             aria-label={`Chapter ${idx + 1}`}
                         >
@@ -228,9 +228,7 @@ export const ChapterEditor = ({ videoId, initialChapters, channelId }: ChapterEd
                                 type="text"
                                 inputMode="numeric"
                                 value={timeInputs[row.key] ?? ""}
-                                onChange={(e) =>
-                                    setTimeInputs((prev) => ({ ...prev, [row.key]: e.target.value }))
-                                }
+                                onChange={(e) => setTimeInputs((prev) => ({ ...prev, [row.key]: e.target.value }))}
                                 onBlur={() => commitTime(row.key)}
                                 aria-label={`Start time for chapter ${idx + 1}`}
                                 className={cn(
@@ -261,7 +259,7 @@ export const ChapterEditor = ({ videoId, initialChapters, channelId }: ChapterEd
                                 type="button"
                                 onClick={() => removeRow(row.key)}
                                 aria-label={`Remove chapter ${idx + 1}`}
-                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                             >
                                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </button>

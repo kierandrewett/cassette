@@ -110,9 +110,7 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                 if (attempts++ >= maxAttempts) {
                     setEntries((prev) =>
                         prev.map((e) =>
-                            e.id === entryId
-                                ? { ...e, status: "failed", errorMessage: "Transcoding timed out." }
-                                : e,
+                            e.id === entryId ? { ...e, status: "failed", errorMessage: "Transcoding timed out." } : e,
                         ),
                     );
                     return;
@@ -178,16 +176,12 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
             const xhr = new XMLHttpRequest();
             xhrMap.current.set(entry.id, xhr);
 
-            setEntries((prev) =>
-                prev.map((e) => (e.id === entry.id ? { ...e, status: "uploading", progress: 0 } : e)),
-            );
+            setEntries((prev) => prev.map((e) => (e.id === entry.id ? { ...e, status: "uploading", progress: 0 } : e)));
 
             xhr.upload.addEventListener("progress", (ev) => {
                 if (!ev.lengthComputable) return;
                 const percent = Math.round((ev.loaded / ev.total) * 100);
-                setEntries((prev) =>
-                    prev.map((e) => (e.id === entry.id ? { ...e, progress: percent } : e)),
-                );
+                setEntries((prev) => prev.map((e) => (e.id === entry.id ? { ...e, progress: percent } : e)));
             });
 
             xhr.addEventListener("load", () => {
@@ -228,9 +222,7 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                         // ignore
                     }
                     setEntries((prev) =>
-                        prev.map((e) =>
-                            e.id === entry.id ? { ...e, status: "failed", errorMessage } : e,
-                        ),
+                        prev.map((e) => (e.id === entry.id ? { ...e, status: "failed", errorMessage } : e)),
                     );
                 }
             });
@@ -275,7 +267,9 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
     // ---------------------------------------------------------------------------
 
     const addFiles = useCallback((files: File[]) => {
-        const videoFiles = files.filter((f) => f.type.startsWith("video/") || /\.(mp4|mkv|mov|webm|avi|ts)$/i.test(f.name));
+        const videoFiles = files.filter(
+            (f) => f.type.startsWith("video/") || /\.(mp4|mkv|mov|webm|avi|ts)$/i.test(f.name),
+        );
         if (videoFiles.length === 0) return;
 
         const newEntries: FileEntry[] = videoFiles.map((f) => ({
@@ -454,8 +448,8 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                 return (
                                     <tr key={entry.id} className="border-b border-border last:border-0">
                                         {/* File info */}
-                                        <td className="py-3 pl-4 pr-3 align-top w-48">
-                                            <p className="truncate text-xs font-medium text-foreground max-w-44">
+                                        <td className="w-48 py-3 pl-4 pr-3 align-top">
+                                            <p className="max-w-44 truncate text-xs font-medium text-foreground">
                                                 {entry.file.name}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
@@ -464,7 +458,7 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                         </td>
 
                                         {/* Metadata block */}
-                                        <td className="px-3 py-3 align-top min-w-72">
+                                        <td className="min-w-72 px-3 py-3 align-top">
                                             <div className="space-y-2">
                                                 <input
                                                     type="text"
@@ -480,12 +474,14 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                                 />
                                                 <textarea
                                                     value={entry.description}
-                                                    onChange={(e) => updateField(entry.id, "description", e.target.value)}
+                                                    onChange={(e) =>
+                                                        updateField(entry.id, "description", e.target.value)
+                                                    }
                                                     disabled={isActive || isFinal}
                                                     rows={2}
                                                     placeholder="Description (optional)"
                                                     className={cn(
-                                                        "flex w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm resize-none",
+                                                        "flex w-full resize-none rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm",
                                                         "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                                                         "disabled:pointer-events-none disabled:opacity-50",
                                                     )}
@@ -509,7 +505,8 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                                             key={v}
                                                             className={cn(
                                                                 "flex cursor-pointer items-center gap-1.5 text-xs",
-                                                                (isActive || isFinal) && "pointer-events-none opacity-50",
+                                                                (isActive || isFinal) &&
+                                                                    "pointer-events-none opacity-50",
                                                             )}
                                                         >
                                                             <input
@@ -529,7 +526,7 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                         </td>
 
                                         {/* Status */}
-                                        <td className="px-3 py-3 align-top whitespace-nowrap">
+                                        <td className="whitespace-nowrap px-3 py-3 align-top">
                                             <span
                                                 className={cn(
                                                     "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
@@ -539,14 +536,14 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                                 {statusLabel[entry.status]}
                                             </span>
                                             {entry.errorMessage && (
-                                                <p className="mt-1 text-xs text-destructive max-w-36 break-words">
+                                                <p className="mt-1 max-w-36 break-words text-xs text-destructive">
                                                     {entry.errorMessage}
                                                 </p>
                                             )}
                                         </td>
 
                                         {/* Progress bar */}
-                                        <td className="px-3 py-3 align-top w-32">
+                                        <td className="w-32 px-3 py-3 align-top">
                                             <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                                                 <div
                                                     className={cn(
@@ -568,14 +565,14 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                                 />
                                             </div>
                                             {(entry.status === "uploading" || entry.status === "transcoding") && (
-                                                <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">
+                                                <p className="mt-1 text-[10px] tabular-nums text-muted-foreground">
                                                     {entry.progress}%
                                                 </p>
                                             )}
                                         </td>
 
                                         {/* Actions */}
-                                        <td className="py-3 pl-3 pr-4 align-top whitespace-nowrap text-right">
+                                        <td className="whitespace-nowrap py-3 pl-3 pr-4 text-right align-top">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 {entry.status === "failed" && (
                                                     <button
@@ -640,8 +637,8 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
             {allDone && (
                 <div className="rounded-xl border border-border bg-card p-5">
                     <p className="text-sm font-medium text-foreground">
-                        All uploads processed. {entries.filter((e) => e.status === "ready").length} of{" "}
-                        {entries.length} successful.
+                        All uploads processed. {entries.filter((e) => e.status === "ready").length} of {entries.length}{" "}
+                        successful.
                     </p>
                     <Link
                         href={`/studio/c/${channel.handle}/videos`}

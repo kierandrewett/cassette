@@ -12,9 +12,7 @@ interface DescriptionClientProps {
 // URL pattern for auto-linking external URLs in descriptions.
 const URL_RE = /https?:\/\/[^\s<>"]+/g;
 
-type Segment =
-    | { type: "text"; content: string }
-    | { type: "url"; content: string };
+type Segment = { type: "text"; content: string } | { type: "url"; content: string };
 
 /**
  * Split the text into plain-text and URL segments only. Timestamp linkification
@@ -62,7 +60,7 @@ export const DescriptionClient = ({ text }: DescriptionClientProps) => {
                     href={seg.content}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 hover:underline transition-colors break-all"
+                    className="break-all text-blue-400 transition-colors hover:text-blue-300 hover:underline"
                 >
                     {seg.content}
                 </a>
@@ -85,7 +83,7 @@ export const DescriptionClient = ({ text }: DescriptionClientProps) => {
     };
 
     return (
-        <div className="text-sm text-foreground/90 leading-relaxed">
+        <div className="text-sm leading-relaxed text-foreground/90">
             <div
                 className={cn(
                     "whitespace-pre-wrap break-words transition-all",
@@ -98,7 +96,7 @@ export const DescriptionClient = ({ text }: DescriptionClientProps) => {
             {needsClamp && (
                 <button
                     onClick={() => setExpanded((v) => !v)}
-                    className="mt-2 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors"
+                    className="mt-2 text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
                 >
                     {expanded ? "Show less" : "Show more"}
                 </button>

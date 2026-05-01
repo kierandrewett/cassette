@@ -230,9 +230,7 @@ export const AssetUploader = ({ kind, channelId, currentUrl, onUpdated }: AssetU
                 </div>
 
                 <p className="text-xs text-muted-foreground">{labels.hint}</p>
-                {uploadState.status === "error" && (
-                    <p className="text-xs text-destructive">{uploadState.message}</p>
-                )}
+                {uploadState.status === "error" && <p className="text-xs text-destructive">{uploadState.message}</p>}
             </div>
         );
     }
@@ -317,9 +315,7 @@ export const AssetUploader = ({ kind, channelId, currentUrl, onUpdated }: AssetU
                 )}
             </div>
 
-            {uploadState.status === "error" && (
-                <p className="text-xs text-destructive">{uploadState.message}</p>
-            )}
+            {uploadState.status === "error" && <p className="text-xs text-destructive">{uploadState.message}</p>}
         </div>
     );
 };

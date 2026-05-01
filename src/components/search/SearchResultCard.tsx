@@ -34,9 +34,7 @@ export const SearchResultCard = ({ video, progress, className }: SearchResultCar
 
     // Description snippet: show the first ~150 characters.
     const snippet =
-        video.description.length > 150
-            ? `${video.description.slice(0, 150).trimEnd()}…`
-            : video.description;
+        video.description.length > 150 ? `${video.description.slice(0, 150).trimEnd()}…` : video.description;
 
     return (
         <Link
@@ -45,7 +43,7 @@ export const SearchResultCard = ({ video, progress, className }: SearchResultCar
             aria-label={`Watch "${video.title}"`}
         >
             {/* Thumbnail — fixed 16:9 at 246px wide on all breakpoints */}
-            <div className="relative w-[246px] shrink-0 overflow-hidden rounded-xl bg-secondary aspect-video">
+            <div className="relative aspect-video w-[246px] shrink-0 overflow-hidden rounded-xl bg-secondary">
                 {thumbnailSrc ? (
                     <Image
                         src={thumbnailSrc}
@@ -63,7 +61,7 @@ export const SearchResultCard = ({ video, progress, className }: SearchResultCar
 
                 {/* Duration chip */}
                 {hasDuration && (
-                    <span className="absolute bottom-2 right-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums">
+                    <span className="absolute bottom-2 right-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-white">
                         {formatDuration(video.durationSec!)}
                     </span>
                 )}
@@ -71,10 +69,7 @@ export const SearchResultCard = ({ video, progress, className }: SearchResultCar
                 {/* Watch progress bar */}
                 {hasProgress && (
                     <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/20">
-                        <div
-                            className="h-full bg-red-500"
-                            style={{ width: `${Math.round(progress! * 100)}%` }}
-                        />
+                        <div className="h-full bg-red-500" style={{ width: `${Math.round(progress! * 100)}%` }} />
                     </div>
                 )}
             </div>
@@ -90,24 +85,19 @@ export const SearchResultCard = ({ video, progress, className }: SearchResultCar
                     {video.publishedAt && (
                         <>
                             {" "}
-                            <span aria-hidden="true">&middot;</span>
-                            {" "}
-                            {formatRelativeTime(video.publishedAt)}
+                            <span aria-hidden="true">&middot;</span> {formatRelativeTime(video.publishedAt)}
                         </>
                     )}
                 </p>
 
-                <p className="text-xs text-muted-foreground truncate">
-                    {video.channel.name}
-                    {" "}
-                    <span aria-hidden="true">&middot;</span>
-                    {" @"}{video.channel.handle}
+                <p className="truncate text-xs text-muted-foreground">
+                    {video.channel.name} <span aria-hidden="true">&middot;</span>
+                    {" @"}
+                    {video.channel.handle}
                 </p>
 
                 {snippet && (
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
-                        {snippet}
-                    </p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{snippet}</p>
                 )}
             </div>
         </Link>

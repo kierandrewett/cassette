@@ -185,11 +185,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // ---- 4. Validate channel membership (session auth) ----
 
-    const channelRows = await db
-        .select()
-        .from(channels)
-        .where(eq(channels.id, channelId))
-        .limit(1);
+    const channelRows = await db.select().from(channels).where(eq(channels.id, channelId)).limit(1);
 
     const channel = channelRows[0];
     if (!channel) {
@@ -298,10 +294,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const sha256 = await computeFileSha256(finalPath);
 
     // Update video row with final source path and hash.
-    await db
-        .update(videos)
-        .set({ sourcePath, sourceSha256: sha256 })
-        .where(eq(videos.id, videoId));
+    await db.update(videos).set({ sourcePath, sourceSha256: sha256 }).where(eq(videos.id, videoId));
 
     // ---- 8. Handle sidecar captions ----
 
@@ -365,10 +358,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     );
 
     if (pgbossJobId && jobRow) {
-        await db
-            .update(transcodeJobs)
-            .set({ pgbossJobId })
-            .where(eq(transcodeJobs.id, jobRow.id));
+        await db.update(transcodeJobs).set({ pgbossJobId }).where(eq(transcodeJobs.id, jobRow.id));
     }
 
     // ---- 11. Respond 201 ----
@@ -378,9 +368,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             videoId,
             status: "queued",
             statusUrl: `/api/trpc/video.uploadStatus?input=${encodeURIComponent(JSON.stringify({ videoId }))}`,
-            watchUrl: privacy === "unlisted" && slugValue
-                ? `/watch/${videoId}?slug=${slugValue}`
-                : `/watch/${videoId}`,
+            watchUrl: privacy === "unlisted" && slugValue ? `/watch/${videoId}?slug=${slugValue}` : `/watch/${videoId}`,
         }),
         {
             status: 201,

@@ -43,9 +43,7 @@ const StatusPill = ({ status }: StatusPillProps) => {
         <span
             className={cn(
                 "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                isSuccess
-                    ? "bg-green-500/10 text-green-400"
-                    : "bg-destructive/10 text-destructive",
+                isSuccess ? "bg-green-500/10 text-green-400" : "bg-destructive/10 text-destructive",
             )}
         >
             {isSuccess ? "Success" : "Error"}
@@ -73,10 +71,10 @@ const SecretReveal = ({ label, secret, onDismiss }: SecretRevealProps) => {
     };
 
     return (
-        <div className="rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-5 space-y-3">
+        <div className="space-y-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-5">
             <p className="text-sm font-medium text-yellow-400">{label} — you won&apos;t see this again.</p>
             <div className="flex items-center gap-2">
-                <code className="flex-1 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 text-sm font-mono">
+                <code className="flex-1 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-sm">
                     {secret}
                 </code>
                 <button
@@ -124,7 +122,7 @@ const EventsCheckboxGroup = ({ value, onChange }: EventsCheckboxGroupProps) => {
     return (
         <div className="space-y-2">
             {ALLOWED_EVENTS.map((ev) => (
-                <label key={ev} className="flex items-center gap-2 cursor-pointer select-none">
+                <label key={ev} className="flex cursor-pointer select-none items-center gap-2">
                     <input
                         type="checkbox"
                         checked={value.includes(ev)}
@@ -167,20 +165,25 @@ const DeliveriesDialog = ({ channelId, webhookId, webhookName, onClose }: Delive
                         ✕
                     </button>
                 </div>
-                <div className="max-h-[60vh] overflow-y-auto p-6 space-y-3">
+                <div className="max-h-[60vh] space-y-3 overflow-y-auto p-6">
                     {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
                     {!isLoading && (!data || data.length === 0) && (
                         <p className="text-sm text-muted-foreground">No deliveries yet.</p>
                     )}
                     {data?.map((d) => (
-                        <div key={d.id} className="rounded-lg border border-border bg-card px-4 py-3 space-y-1">
+                        <div key={d.id} className="space-y-1 rounded-lg border border-border bg-card px-4 py-3">
                             <div className="flex items-center gap-2">
                                 <span className="font-mono text-xs text-muted-foreground">{d.event}</span>
-                                <StatusPill status={d.statusCode
-                                    ? (parseInt(d.statusCode, 10) >= 200 && parseInt(d.statusCode, 10) < 300
-                                        ? "success"
-                                        : "error")
-                                    : d.errorMessage ? "error" : null}
+                                <StatusPill
+                                    status={
+                                        d.statusCode
+                                            ? parseInt(d.statusCode, 10) >= 200 && parseInt(d.statusCode, 10) < 300
+                                                ? "success"
+                                                : "error"
+                                            : d.errorMessage
+                                              ? "error"
+                                              : null
+                                    }
                                 />
                                 {d.statusCode && (
                                     <span className="font-mono text-xs text-muted-foreground">HTTP {d.statusCode}</span>
@@ -189,11 +192,9 @@ const DeliveriesDialog = ({ channelId, webhookId, webhookName, onClose }: Delive
                                     {d.createdAt ? formatRelativeTime(d.createdAt) : "—"}
                                 </span>
                             </div>
-                            {d.errorMessage && (
-                                <p className="text-xs text-destructive truncate">{d.errorMessage}</p>
-                            )}
+                            {d.errorMessage && <p className="truncate text-xs text-destructive">{d.errorMessage}</p>}
                             {d.responseBody && (
-                                <pre className="max-h-20 overflow-auto rounded bg-muted/40 p-2 text-xs text-muted-foreground whitespace-pre-wrap break-all">
+                                <pre className="max-h-20 overflow-auto whitespace-pre-wrap break-all rounded bg-muted/40 p-2 text-xs text-muted-foreground">
                                     {d.responseBody}
                                 </pre>
                             )}
@@ -257,9 +258,18 @@ const WebhookFormDialog = ({
         e.preventDefault();
         setError(null);
 
-        if (!name.trim()) { setError("Name is required."); return; }
-        if (!url.trim()) { setError("URL is required."); return; }
-        if (events.length === 0) { setError("Select at least one event."); return; }
+        if (!name.trim()) {
+            setError("Name is required.");
+            return;
+        }
+        if (!url.trim()) {
+            setError("URL is required.");
+            return;
+        }
+        if (events.length === 0) {
+            setError("Select at least one event.");
+            return;
+        }
 
         if (editWebhookId) {
             updateMut.mutate({
@@ -279,9 +289,7 @@ const WebhookFormDialog = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
             <div className="w-full max-w-lg rounded-xl border border-border bg-background shadow-xl">
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                    <h3 className="text-base font-semibold">
-                        {editWebhookId ? "Edit webhook" : "Add webhook"}
-                    </h3>
+                    <h3 className="text-base font-semibold">{editWebhookId ? "Edit webhook" : "Add webhook"}</h3>
                     <button
                         type="button"
                         onClick={onClose}
@@ -292,9 +300,11 @@ const WebhookFormDialog = ({
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-5 p-6">
                     <div className="space-y-1.5">
-                        <label htmlFor="wh-name" className="text-sm font-medium">Name</label>
+                        <label htmlFor="wh-name" className="text-sm font-medium">
+                            Name
+                        </label>
                         <input
                             id="wh-name"
                             type="text"
@@ -306,7 +316,9 @@ const WebhookFormDialog = ({
                     </div>
 
                     <div className="space-y-1.5">
-                        <label htmlFor="wh-url" className="text-sm font-medium">URL</label>
+                        <label htmlFor="wh-url" className="text-sm font-medium">
+                            URL
+                        </label>
                         <input
                             id="wh-url"
                             type="url"
@@ -331,7 +343,7 @@ const WebhookFormDialog = ({
                                 onChange={(e) => setEnabled(e.target.checked)}
                                 className="h-4 w-4 rounded border-input accent-primary"
                             />
-                            <label htmlFor="wh-enabled" className="text-sm font-medium cursor-pointer">
+                            <label htmlFor="wh-enabled" className="cursor-pointer text-sm font-medium">
                                 Enabled
                             </label>
                         </div>
@@ -424,8 +436,8 @@ export const WebhooksPanel = ({ channelId }: WebhooksPanelProps) => {
                 <div>
                     <h2 className="text-lg font-semibold">Webhooks</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Receive HTTP POST notifications when events happen on your channel.
-                        Payloads are signed with HMAC-SHA256.
+                        Receive HTTP POST notifications when events happen on your channel. Payloads are signed with
+                        HMAC-SHA256.
                     </p>
                 </div>
                 <button
@@ -456,20 +468,18 @@ export const WebhooksPanel = ({ channelId }: WebhooksPanelProps) => {
                         let displayUrl = wh.url;
                         try {
                             const parsed = new URL(wh.url);
-                            displayUrl = parsed.origin + (parsed.pathname.length > 1 ? parsed.pathname.slice(0, 20) + "…" : "");
+                            displayUrl =
+                                parsed.origin + (parsed.pathname.length > 1 ? parsed.pathname.slice(0, 20) + "…" : "");
                         } catch {
                             // Leave as-is if URL parse fails.
                         }
 
                         return (
-                            <div
-                                key={wh.id}
-                                className="rounded-lg border border-border bg-card px-4 py-4 space-y-3"
-                            >
+                            <div key={wh.id} className="space-y-3 rounded-lg border border-border bg-card px-4 py-4">
                                 {/* Top row */}
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="min-w-0 flex-1 space-y-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             <span className="truncate text-sm font-semibold">{wh.name}</span>
                                             {!wh.enabled && (
                                                 <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -478,13 +488,14 @@ export const WebhooksPanel = ({ channelId }: WebhooksPanelProps) => {
                                             )}
                                             <StatusPill status={wh.lastDeliveryStatus} />
                                         </div>
-                                        <p className="font-mono text-xs text-muted-foreground truncate">{displayUrl}</p>
+                                        <p className="truncate font-mono text-xs text-muted-foreground">{displayUrl}</p>
                                         <p className="text-xs text-muted-foreground">
                                             Events:{" "}
-                                            {wh.events.length > 0
-                                                ? wh.events.join(", ")
-                                                : <span className="italic">none</span>
-                                            }
+                                            {wh.events.length > 0 ? (
+                                                wh.events.join(", ")
+                                            ) : (
+                                                <span className="italic">none</span>
+                                            )}
                                         </p>
                                         {wh.lastDeliveryAt && (
                                             <p className="text-xs text-muted-foreground">

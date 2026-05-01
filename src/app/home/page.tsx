@@ -141,7 +141,7 @@ const HomePage = async () => {
                         emptySlot={
                             <div className="rounded-2xl border border-border bg-card/40 p-10 text-center">
                                 <p className="text-base font-medium">No videos yet.</p>
-                                <p className="mt-1 max-w-md mx-auto text-sm text-muted-foreground">
+                                <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
                                     Head to{" "}
                                     <a href="/studio" className="text-foreground underline-offset-4 hover:underline">
                                         Studio

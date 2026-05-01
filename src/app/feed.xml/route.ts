@@ -19,7 +19,7 @@ const ESC: Record<string, string> = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    "\"": "&quot;",
+    '"': "&quot;",
     "'": "&apos;",
 };
 
@@ -46,27 +46,23 @@ export async function GET(_req: NextRequest): Promise<Response> {
         })
         .from(videos)
         .innerJoin(channels, eq(videos.channelId, channels.id))
-        .where(
-            and(
-                eq(videos.privacy, "public"),
-                eq(videos.status, "ready"),
-            ),
-        )
+        .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready")))
         .orderBy(desc(videos.publishedAt))
         .limit(50);
 
-    const items = rows.map((v) => {
-        const link = `${baseUrl}/watch/${escapeXml(v.id)}`;
-        const channelFeed = `${baseUrl}/c/${escapeXml(v.channelHandle)}/feed.xml`;
-        const pubDate = v.publishedAt ? v.publishedAt.toUTCString() : new Date(0).toUTCString();
-        const description = escapeXml((v.description ?? "").slice(0, 500));
-        const title = escapeXml(v.title);
+    const items = rows
+        .map((v) => {
+            const link = `${baseUrl}/watch/${escapeXml(v.id)}`;
+            const channelFeed = `${baseUrl}/c/${escapeXml(v.channelHandle)}/feed.xml`;
+            const pubDate = v.publishedAt ? v.publishedAt.toUTCString() : new Date(0).toUTCString();
+            const description = escapeXml((v.description ?? "").slice(0, 500));
+            const title = escapeXml(v.title);
 
-        const enclosureEl = v.thumbnailPath
-            ? `\n        <enclosure url="${baseUrl}/api/hls/${escapeXml(v.id)}/thumb/sprite.jpg" type="image/jpeg" length="0" />`
-            : "";
+            const enclosureEl = v.thumbnailPath
+                ? `\n        <enclosure url="${baseUrl}/api/hls/${escapeXml(v.id)}/thumb/sprite.jpg" type="image/jpeg" length="0" />`
+                : "";
 
-        return `
+            return `
     <item>
         <title>${title}</title>
         <link>${link}</link>
@@ -75,7 +71,8 @@ export async function GET(_req: NextRequest): Promise<Response> {
         <description>${description}</description>
         <source url="${channelFeed}">${escapeXml(v.channelName)}</source>${enclosureEl}
     </item>`;
-    }).join("");
+        })
+        .join("");
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

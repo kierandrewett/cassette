@@ -41,16 +41,12 @@ export const SearchTabs = ({ active }: { active: SearchTabValue }) => {
                         href={hrefFor(t.value)}
                         className={cn(
                             "relative px-3 py-2 text-sm font-medium transition-colors",
-                            isActive
-                                ? "text-foreground"
-                                : "text-muted-foreground hover:text-foreground",
+                            isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                         )}
                         aria-current={isActive ? "page" : undefined}
                     >
                         {t.label}
-                        {isActive ? (
-                            <span className="absolute inset-x-0 -bottom-px h-0.5 bg-foreground" />
-                        ) : null}
+                        {isActive ? <span className="absolute inset-x-0 -bottom-px h-0.5 bg-foreground" /> : null}
                     </Link>
                 );
             })}

@@ -159,9 +159,7 @@ export const QueueRow = ({ playlistId, initialItems }: QueueRowProps) => {
     return (
         <ol className="flex gap-3 overflow-x-auto px-4 pb-2 md:px-6" style={{ scrollbarWidth: "none" }}>
             {items.map((item, index) => {
-                const thumbSrc = item.video.thumbnailPath
-                    ? `/api/hls/${item.video.id}/thumb/sprite.jpg`
-                    : null;
+                const thumbSrc = item.video.thumbnailPath ? `/api/hls/${item.video.id}/thumb/sprite.jpg` : null;
                 const isBusy = busyItemId === item.itemId || reorder.isPending || removeItem.isPending;
                 const isDragTarget = dragOverId === item.itemId;
 
@@ -180,14 +178,17 @@ export const QueueRow = ({ playlistId, initialItems }: QueueRowProps) => {
                         )}
                     >
                         {/* Thumbnail */}
-                        <Link href={`/watch/${item.video.id}`} className="block relative aspect-video overflow-hidden rounded-t-xl bg-secondary">
+                        <Link
+                            href={`/watch/${item.video.id}`}
+                            className="relative block aspect-video overflow-hidden rounded-t-xl bg-secondary"
+                        >
                             {thumbSrc ? (
                                 <Image src={thumbSrc} alt="" fill className="object-cover" sizes="192px" />
                             ) : (
                                 <div className="h-full w-full bg-secondary" />
                             )}
                             {item.video.durationSec != null && item.video.durationSec > 0 && (
-                                <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 text-[10px] font-medium text-white tabular-nums">
+                                <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 text-[10px] font-medium tabular-nums text-white">
                                     {formatDuration(item.video.durationSec)}
                                 </span>
                             )}

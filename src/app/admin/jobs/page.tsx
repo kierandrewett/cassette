@@ -34,10 +34,12 @@ export default async function AdminJobsPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold">Transcode jobs</h1>
-                    <p className="text-sm text-muted-foreground">{rows.length} job{rows.length !== 1 ? "s" : ""} shown</p>
+                    <p className="text-sm text-muted-foreground">
+                        {rows.length} job{rows.length !== 1 ? "s" : ""} shown
+                    </p>
                 </div>
                 <form method="GET" className="flex gap-2">
                     <select
@@ -60,7 +62,7 @@ export default async function AdminJobsPage({ searchParams }: { searchParams: Pr
                 </form>
             </div>
 
-            <div className="rounded-lg border border-border overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-border bg-muted/40">
@@ -77,22 +79,29 @@ export default async function AdminJobsPage({ searchParams }: { searchParams: Pr
                     <tbody>
                         {rows.map(({ job, videoTitle, channelHandle }) => (
                             <tr key={job.id} className="border-b border-border last:border-0 hover:bg-muted/20">
-                                <td className="px-4 py-3 max-w-xs">
-                                    <Link href={`/watch/${job.videoId}`} className="font-medium hover:underline line-clamp-1">
+                                <td className="max-w-xs px-4 py-3">
+                                    <Link
+                                        href={`/watch/${job.videoId}`}
+                                        className="line-clamp-1 font-medium hover:underline"
+                                    >
                                         {videoTitle}
                                     </Link>
                                     <div className="text-xs text-muted-foreground">@{channelHandle}</div>
                                 </td>
                                 <td className="px-4 py-3">
-                                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATE_COLOURS[job.state] ?? ""}`}>
+                                    <span
+                                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATE_COLOURS[job.state] ?? ""}`}
+                                    >
                                         {job.state}
                                     </span>
                                 </td>
                                 <td className="px-4 py-3 text-right tabular-nums">{job.progress}%</td>
-                                <td className="px-4 py-3 text-muted-foreground text-xs">{job.step ?? "—"}</td>
-                                <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(job.startedAt)}</td>
-                                <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(job.finishedAt)}</td>
-                                <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">
+                                <td className="px-4 py-3 text-xs text-muted-foreground">{job.step ?? "—"}</td>
+                                <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(job.startedAt)}</td>
+                                <td className="px-4 py-3 text-xs text-muted-foreground">
+                                    {formatDate(job.finishedAt)}
+                                </td>
+                                <td className="max-w-xs truncate px-4 py-3 text-xs text-muted-foreground">
                                     {job.message ? job.message.slice(-80) : "—"}
                                 </td>
                                 <td className="px-4 py-3 text-right">

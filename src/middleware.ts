@@ -38,8 +38,7 @@ const isAlwaysAllowed = (pathname: string): boolean => {
 // route handlers downstream, which run on Node and have full auth access.
 const COOKIE_NAMES = ["better-auth.session_token", "__Secure-better-auth.session_token"];
 
-const hasSessionCookie = (req: NextRequest): boolean =>
-    COOKIE_NAMES.some((name) => req.cookies.get(name)?.value);
+const hasSessionCookie = (req: NextRequest): boolean => COOKIE_NAMES.some((name) => req.cookies.get(name)?.value);
 
 export async function middleware(req: NextRequest): Promise<NextResponse> {
     const { pathname } = req.nextUrl;

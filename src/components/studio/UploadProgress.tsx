@@ -57,17 +57,15 @@ export const UploadProgress = ({ stage }: UploadProgressProps) => {
             {/* Stage 1 — Upload */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className={cn("text-sm font-medium", isUploading ? "text-foreground" : "text-muted-foreground")}>
+                    <span
+                        className={cn("text-sm font-medium", isUploading ? "text-foreground" : "text-muted-foreground")}
+                    >
                         Uploading
                     </span>
                     {isUploading && (
-                        <span className="text-xs text-muted-foreground">
-                            {formatSpeed(stage.bytesPerSec)}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{formatSpeed(stage.bytesPerSec)}</span>
                     )}
-                    {!isUploading && (
-                        <span className="text-xs text-green-400">Done</span>
-                    )}
+                    {!isUploading && <span className="text-xs text-green-400">Done</span>}
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
@@ -91,9 +89,7 @@ export const UploadProgress = ({ stage }: UploadProgressProps) => {
                     >
                         {isTranscoding ? `Transcoding · ${stage.step}` : "Transcoding"}
                     </span>
-                    {isTranscoding && (
-                        <span className="text-xs text-muted-foreground">{percent}%</span>
-                    )}
+                    {isTranscoding && <span className="text-xs text-muted-foreground">{percent}%</span>}
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div

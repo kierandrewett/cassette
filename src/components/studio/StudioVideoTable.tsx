@@ -94,22 +94,15 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
         setPrivacy.mutate({ videoId: video.id, privacy });
     };
 
-    const thumbUrl =
-        video.status === "ready" ? `/api/hls/${video.id}/thumb/sprite.jpg` : null;
+    const thumbUrl = video.status === "ready" ? `/api/hls/${video.id}/thumb/sprite.jpg` : null;
 
     return (
         <tr className="border-b border-border transition-colors hover:bg-muted/30">
             {/* Thumbnail */}
-            <td className="py-3 pl-4 pr-3 w-24">
+            <td className="w-24 py-3 pl-4 pr-3">
                 {thumbUrl ? (
                     <div className="relative aspect-video w-20 overflow-hidden rounded-md bg-muted">
-                        <Image
-                            src={thumbUrl}
-                            alt={video.title}
-                            fill
-                            sizes="80px"
-                            className="object-cover"
-                        />
+                        <Image src={thumbUrl} alt={video.title} fill sizes="80px" className="object-cover" />
                     </div>
                 ) : (
                     <div className="flex aspect-video w-20 items-center justify-center rounded-md bg-muted">
@@ -121,7 +114,7 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
             </td>
 
             {/* Title */}
-            <td className="px-3 py-3 max-w-xs">
+            <td className="max-w-xs px-3 py-3">
                 <p className="truncate text-sm font-medium text-foreground">{video.title}</p>
                 {video.description && (
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">{video.description}</p>
@@ -129,7 +122,7 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
             </td>
 
             {/* Status */}
-            <td className="px-3 py-3 whitespace-nowrap">
+            <td className="whitespace-nowrap px-3 py-3">
                 <span
                     className={cn(
                         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
@@ -141,7 +134,7 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
             </td>
 
             {/* Privacy */}
-            <td className="px-3 py-3 whitespace-nowrap">
+            <td className="whitespace-nowrap px-3 py-3">
                 <select
                     value={video.privacy}
                     onChange={handlePrivacyChange}
@@ -159,22 +152,22 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
             </td>
 
             {/* Views */}
-            <td className="px-3 py-3 whitespace-nowrap text-sm text-muted-foreground">
+            <td className="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
                 {formatCount(video.viewCount ?? 0)}
             </td>
 
             {/* Likes */}
-            <td className="px-3 py-3 whitespace-nowrap text-sm text-muted-foreground">
+            <td className="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
                 {formatCount(video.likeCount ?? 0)}
             </td>
 
             {/* Date */}
-            <td className="px-3 py-3 whitespace-nowrap text-sm text-muted-foreground">
+            <td className="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
                 {formatRelativeTime(video.createdAt)}
             </td>
 
             {/* Actions */}
-            <td className="py-3 pl-3 pr-4 whitespace-nowrap text-right">
+            <td className="whitespace-nowrap py-3 pl-3 pr-4 text-right">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
@@ -195,12 +188,8 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(video)}>
-                            Edit metadata
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void copyLink(video)}>
-                            Copy link
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(video)}>Edit metadata</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void copyLink(video)}>Copy link</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             onClick={() => onDeleteRequest(video)}
@@ -240,14 +229,19 @@ const DeleteDialog = ({ video, channelId, onClose }: DeleteDialogProps) => {
     });
 
     return (
-        <Dialog open={!!video} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <Dialog
+            open={!!video}
+            onOpenChange={(open) => {
+                if (!open) onClose();
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Delete video?</DialogTitle>
                 </DialogHeader>
                 <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{video?.title}</span> will be permanently
-                    deleted. This action cannot be undone.
+                    <span className="font-medium text-foreground">{video?.title}</span> will be permanently deleted.
+                    This action cannot be undone.
                 </p>
                 <DialogFooter>
                     <button
@@ -260,7 +254,9 @@ const DeleteDialog = ({ video, channelId, onClose }: DeleteDialogProps) => {
                     <button
                         type="button"
                         disabled={deleteVideo.isPending}
-                        onClick={() => { if (video) deleteVideo.mutate({ videoId: video.id }); }}
+                        onClick={() => {
+                            if (video) deleteVideo.mutate({ videoId: video.id });
+                        }}
                         className="inline-flex h-9 items-center justify-center rounded-md bg-destructive px-4 text-sm font-medium text-destructive-foreground shadow transition-colors hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                     >
                         {deleteVideo.isPending ? "Deleting…" : "Delete"}
@@ -336,7 +332,9 @@ export const StudioVideoTable = ({ channelId, videos }: StudioVideoTableProps) =
             {editVideo && (
                 <EditVideoDialog
                     open={!!editVideo}
-                    onOpenChange={(open) => { if (!open) setEditVideo(null); }}
+                    onOpenChange={(open) => {
+                        if (!open) setEditVideo(null);
+                    }}
                     channelId={channelId}
                     video={{
                         id: editVideo.id,
@@ -347,11 +345,7 @@ export const StudioVideoTable = ({ channelId, videos }: StudioVideoTableProps) =
                 />
             )}
 
-            <DeleteDialog
-                video={deleteVideo}
-                channelId={channelId}
-                onClose={() => setDeleteVideo(null)}
-            />
+            <DeleteDialog video={deleteVideo} channelId={channelId} onClose={() => setDeleteVideo(null)} />
         </>
     );
 };

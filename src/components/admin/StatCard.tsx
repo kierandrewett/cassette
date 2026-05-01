@@ -16,8 +16,8 @@ export const StatCard = ({ label, value, sub, icon: Icon, href, className }: Sta
     const content = (
         <div
             className={cn(
-                "rounded-lg border border-border bg-card p-4 flex flex-col gap-2",
-                href && "hover:border-primary/50 transition-colors cursor-pointer",
+                "flex flex-col gap-2 rounded-lg border border-border bg-card p-4",
+                href && "cursor-pointer transition-colors hover:border-primary/50",
                 className,
             )}
         >

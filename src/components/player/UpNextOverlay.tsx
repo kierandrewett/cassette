@@ -60,19 +60,15 @@ export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
 
     return (
         <div
-            className={`
-                pointer-events-auto absolute bottom-24 right-4 z-40 w-64
-                surface-glass rounded-xl overflow-hidden shadow-2xl
-                animate-in slide-in-from-right-4 fade-in duration-300
-            `}
+            className={`surface-glass pointer-events-auto absolute bottom-24 right-4 z-40 w-64 overflow-hidden rounded-xl shadow-2xl duration-300 animate-in fade-in slide-in-from-right-4`}
         >
             {/* Header */}
-            <div className="flex items-center justify-between px-3 pt-3 pb-1">
-                <span className="text-xs font-medium text-white/60 uppercase tracking-wider">Up Next</span>
+            <div className="flex items-center justify-between px-3 pb-1 pt-3">
+                <span className="text-xs font-medium uppercase tracking-wider text-white/60">Up Next</span>
                 <button
                     aria-label="Dismiss"
                     onClick={() => setDismissed(true)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white"
                 >
                     <Cancel01Icon size={16} />
                 </button>
@@ -102,10 +98,10 @@ export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
 
             {/* Meta */}
             <div className="p-3">
-                <p className="line-clamp-2 text-sm font-medium text-white leading-snug">{next.title}</p>
+                <p className="line-clamp-2 text-sm font-medium leading-snug text-white">{next.title}</p>
                 <p className="mt-0.5 text-xs text-white/50">{next.channel.name}</p>
                 {next.durationSec && (
-                    <p className="text-xs text-white/40 tabular-nums">{formatDuration(next.durationSec)}</p>
+                    <p className="text-xs tabular-nums text-white/40">{formatDuration(next.durationSec)}</p>
                 )}
             </div>
         </div>
@@ -135,6 +131,6 @@ const CountdownRing = ({ progress, seconds }: { progress: number; seconds: numbe
                 style={{ transition: "stroke-dashoffset 0.3s linear" }}
             />
         </svg>
-        <span className="text-base font-semibold text-white tabular-nums">{seconds}</span>
+        <span className="text-base font-semibold tabular-nums text-white">{seconds}</span>
     </div>
 );

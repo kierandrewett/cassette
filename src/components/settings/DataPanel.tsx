@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
  */
 export const DataPanel = ({ userEmail }: { userEmail: string }) => {
     return (
-        <div className="rounded-xl border border-border bg-card divide-y divide-border">
+        <div className="divide-y divide-border rounded-xl border border-border bg-card">
             <ExportDataRow />
             <ExportOpmlRow />
             <DeleteAccountRow userEmail={userEmail} />
@@ -73,13 +73,7 @@ const ExportDataRow = () => {
                     Export all of your account data as a JSON file (profile, videos, comments, history).
                 </p>
             </div>
-            <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleExport}
-                disabled={busy}
-                className="shrink-0"
-            >
+            <Button variant="secondary" size="sm" onClick={handleExport} disabled={busy} className="shrink-0">
                 <Download className="mr-2 h-4 w-4" />
                 {busy ? "Preparing…" : "Download"}
             </Button>
@@ -166,9 +160,8 @@ const DeleteAccountRow = ({ userEmail }: { userEmail: string }) => {
                     <DialogHeader>
                         <DialogTitle>Delete your account</DialogTitle>
                         <DialogDescription>
-                            This will permanently delete your account, all channels you own, all videos
-                            those channels contain, and all associated data. This action{" "}
-                            <strong>cannot be undone</strong>.
+                            This will permanently delete your account, all channels you own, all videos those channels
+                            contain, and all associated data. This action <strong>cannot be undone</strong>.
                         </DialogDescription>
                     </DialogHeader>
 

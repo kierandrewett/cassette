@@ -78,10 +78,7 @@ export const StatsOverlay = ({ visible }: StatsOverlayProps) => {
             const resolution = quality?.height ? `${quality.height}p` : na;
 
             // Bandwidth estimate from Vidstack state (bps → kbps).
-            const bwKbps =
-                state && "networkState" in state
-                    ? na
-                    : na; // Vidstack doesn't expose bw estimate directly in headless mode
+            const bwKbps = state && "networkState" in state ? na : na; // Vidstack doesn't expose bw estimate directly in headless mode
 
             // Try to read from the HTMLVideoElement via player.el.
             let bandwidth = bwKbps;
@@ -91,7 +88,11 @@ export const StatsOverlay = ({ visible }: StatsOverlayProps) => {
                 // Dropped frames via the Video Quality API (Chrome/Edge).
                 const videoEl = player.el?.querySelector("video") as HTMLVideoElement | null;
                 if (videoEl) {
-                    const vq = (videoEl as HTMLVideoElement & { getVideoPlaybackQuality?: () => { droppedVideoFrames: number; totalVideoFrames: number } }).getVideoPlaybackQuality?.();
+                    const vq = (
+                        videoEl as HTMLVideoElement & {
+                            getVideoPlaybackQuality?: () => { droppedVideoFrames: number; totalVideoFrames: number };
+                        }
+                    ).getVideoPlaybackQuality?.();
                     if (vq) {
                         droppedFrames = String(vq.droppedVideoFrames);
                     }
@@ -137,13 +138,11 @@ export const StatsOverlay = ({ visible }: StatsOverlayProps) => {
 
     return (
         <div
-            className="player-popover absolute left-3 top-16 z-50 rounded-xl px-3 py-2.5 select-none pointer-events-none"
+            className="player-popover pointer-events-none absolute left-3 top-16 z-50 select-none rounded-xl px-3 py-2.5"
             aria-label="Stats for nerds"
             aria-live="polite"
         >
-            <p className="mb-1 text-xs font-medium text-white/50 uppercase tracking-wider">
-                Stats for nerds
-            </p>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wider text-white/50">Stats for nerds</p>
             <div className="space-y-0.5 text-xs text-white/80">
                 <Row label="Resolution" value={stats.resolution} />
                 <Row label="Bandwidth" value={stats.bandwidth} />

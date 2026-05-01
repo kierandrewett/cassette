@@ -10,7 +10,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     await requireAdmin(await headers());
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-3.5rem)]">
+        <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
             <div className="pt-14">
                 <AdminSubNav />
                 <div className="p-6">{children}</div>

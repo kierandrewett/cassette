@@ -43,7 +43,7 @@ const HighlightedText = ({ text, query }: { text: string; query: string }) => {
     while ((idx = lower.indexOf(lowerQuery, pos)) !== -1) {
         if (idx > pos) parts.push(text.slice(pos, idx));
         parts.push(
-            <mark key={idx} className="bg-yellow-400/40 text-foreground rounded-sm px-0.5">
+            <mark key={idx} className="rounded-sm bg-yellow-400/40 px-0.5 text-foreground">
                 {text.slice(idx, idx + query.length)}
             </mark>,
         );
@@ -83,10 +83,7 @@ const fetchCues = (videoId: string, lang: string, token?: string | null): Promis
 
 export const TranscriptSidebar = ({ videoId, captions, signedToken }: TranscriptSidebarProps) => {
     // Pick the default language (isDefault flag, falling back to first track).
-    const defaultLang = useMemo(
-        () => captions.find((c) => c.isDefault)?.lang ?? captions[0]?.lang ?? "",
-        [captions],
-    );
+    const defaultLang = useMemo(() => captions.find((c) => c.isDefault)?.lang ?? captions[0]?.lang ?? "", [captions]);
 
     const [selectedLang, setSelectedLang] = useState<string>(defaultLang);
     const [cues, setCues] = useState<VttCue[]>([]);
@@ -172,7 +169,12 @@ export const TranscriptSidebar = ({ videoId, captions, signedToken }: Transcript
         flashTimerRef.current = setTimeout(() => setFlashCueIdx(null), 600);
     }, []);
 
-    useEffect(() => () => { if (flashTimerRef.current) clearTimeout(flashTimerRef.current); }, []);
+    useEffect(
+        () => () => {
+            if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        },
+        [],
+    );
 
     // -----------------------------------------------------------------------
     // Render
@@ -231,9 +233,7 @@ export const TranscriptSidebar = ({ videoId, captions, signedToken }: Transcript
                 aria-live="polite"
                 aria-busy={loading}
             >
-                {loading && (
-                    <p className="p-4 text-sm text-muted-foreground">Loading transcript…</p>
-                )}
+                {loading && <p className="p-4 text-sm text-muted-foreground">Loading transcript…</p>}
 
                 {!loading && filtered.length === 0 && cues.length > 0 && (
                     <p className="p-4 text-sm text-muted-foreground">No results for &ldquo;{query}&rdquo;.</p>
@@ -253,7 +253,9 @@ export const TranscriptSidebar = ({ videoId, captions, signedToken }: Transcript
                     return (
                         <button
                             key={cue.originalIdx}
-                            ref={(el) => { rowRefs.current[filteredIdx] = el; }}
+                            ref={(el) => {
+                                rowRefs.current[filteredIdx] = el;
+                            }}
                             role="listitem"
                             type="button"
                             aria-current={isActive ? "true" : undefined}
@@ -270,7 +272,7 @@ export const TranscriptSidebar = ({ videoId, captions, signedToken }: Transcript
                             <span
                                 className={[
                                     "mt-0.5 flex-shrink-0 font-mono text-xs tabular-nums",
-                                    isActive ? "text-primary font-semibold" : "text-muted-foreground",
+                                    isActive ? "font-semibold text-primary" : "text-muted-foreground",
                                 ].join(" ")}
                             >
                                 {formatMmSs(cue.startSec)}

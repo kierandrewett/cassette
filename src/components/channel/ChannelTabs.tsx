@@ -18,11 +18,7 @@ interface ChannelTabsProps {
 // server-rendered route segment or searchParam section.
 export const ChannelTabs = ({ tabs }: ChannelTabsProps) => {
     return (
-        <div
-            className="border-b border-border"
-            role="tablist"
-            aria-label="Channel sections"
-        >
+        <div className="border-b border-border" role="tablist" aria-label="Channel sections">
             <div className="mx-auto max-w-5xl px-4 md:px-6">
                 <nav className="-mb-px flex gap-6">
                     {tabs.map((tab) => (

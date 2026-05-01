@@ -54,12 +54,7 @@ export const maybeFireSignInAlert = async (session: SessionLike): Promise<void> 
                 userAgent: sessionTable.userAgent,
             })
             .from(sessionTable)
-            .where(
-                and(
-                    eq(sessionTable.userId, userId),
-                    gte(sessionTable.createdAt, thirtyDaysAgo),
-                ),
-            )
+            .where(and(eq(sessionTable.userId, userId), gte(sessionTable.createdAt, thirtyDaysAgo)))
             .orderBy(desc(sessionTable.createdAt))
             .limit(100);
 

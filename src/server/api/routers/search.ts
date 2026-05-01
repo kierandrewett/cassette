@@ -15,7 +15,11 @@ const videosInputSchema = z.object({
     uploadedWithin: uploadedWithinSchema,
     duration: durationSchema,
     hasCaptions: z.boolean().optional(),
-    tag: z.string().regex(/^[a-z0-9-]+$/).max(30).optional(),
+    tag: z
+        .string()
+        .regex(/^[a-z0-9-]+$/)
+        .max(30)
+        .optional(),
     cursor: z.number().int().nonnegative().optional(),
     limit: z.number().int().min(1).max(50).default(20),
 });
@@ -49,11 +53,16 @@ const playlistsInputSchema = z.object({
 /** Map uploadedWithin to a Postgres interval string. */
 const uploadedWithinInterval = (v: "hour" | "today" | "week" | "month" | "year"): string => {
     switch (v) {
-        case "hour":  return "1 hour";
-        case "today": return "1 day";
-        case "week":  return "7 days";
-        case "month": return "30 days";
-        case "year":  return "365 days";
+        case "hour":
+            return "1 hour";
+        case "today":
+            return "1 day";
+        case "week":
+            return "7 days";
+        case "month":
+            return "30 days";
+        case "year":
+            return "365 days";
     }
 };
 
@@ -67,64 +76,54 @@ export const searchRouter = createTRPCRouter({
      * Uses websearch_to_tsquery against videos.search_vector (GIN-indexed).
      * Orders by ts_rank DESC then publishedAt DESC for freshness tie-breaking.
      */
-    videos: publicProcedure
-        .input(videosInputSchema)
-        .query(async ({ ctx, input }) => {
-            const { q, uploadedWithin, duration, hasCaptions, tag, cursor = 0, limit } = input;
+    videos: publicProcedure.input(videosInputSchema).query(async ({ ctx, input }) => {
+        const { q, uploadedWithin, duration, hasCaptions, tag, cursor = 0, limit } = input;
 
-            // Build WHERE fragments that get ANDed together in the final query.
-            // We use raw sql template literals because websearch_to_tsquery and
-            // ts_rank are not exposed through Drizzle's typed API.
-            // When q is empty (tag-only search), skip FTS filtering entirely.
-            const ftsClause = q.trim()
-                ? sql`v.search_vector @@ websearch_to_tsquery('simple', ${q})`
-                : sql`TRUE`;
-            const privacyClause = sql`v.privacy = 'public' AND v.status = 'ready'`;
+        // Build WHERE fragments that get ANDed together in the final query.
+        // We use raw sql template literals because websearch_to_tsquery and
+        // ts_rank are not exposed through Drizzle's typed API.
+        // When q is empty (tag-only search), skip FTS filtering entirely.
+        const ftsClause = q.trim() ? sql`v.search_vector @@ websearch_to_tsquery('simple', ${q})` : sql`TRUE`;
+        const privacyClause = sql`v.privacy = 'public' AND v.status = 'ready'`;
 
-            const intervalClause =
-                uploadedWithin
-                    ? sql`v.published_at >= now() - interval ${sql.raw(`'${uploadedWithinInterval(uploadedWithin)}'`)}`
+        const intervalClause = uploadedWithin
+            ? sql`v.published_at >= now() - interval ${sql.raw(`'${uploadedWithinInterval(uploadedWithin)}'`)}`
+            : sql`TRUE`;
+
+        const durationClause =
+            duration === "short"
+                ? sql`v.duration_sec < 240`
+                : duration === "medium"
+                  ? sql`v.duration_sec >= 240 AND v.duration_sec < 1200`
+                  : duration === "long"
+                    ? sql`v.duration_sec >= 1200`
                     : sql`TRUE`;
 
-            const durationClause =
-                duration === "short"
-                    ? sql`v.duration_sec < 240`
-                    : duration === "medium"
-                      ? sql`v.duration_sec >= 240 AND v.duration_sec < 1200`
-                      : duration === "long"
-                        ? sql`v.duration_sec >= 1200`
-                        : sql`TRUE`;
+        const captionsClause =
+            hasCaptions === true
+                ? sql`EXISTS (SELECT 1 FROM video_captions vc WHERE vc.video_id = v.id)`
+                : hasCaptions === false
+                  ? sql`NOT EXISTS (SELECT 1 FROM video_captions vc WHERE vc.video_id = v.id)`
+                  : sql`TRUE`;
 
-            const captionsClause =
-                hasCaptions === true
-                    ? sql`EXISTS (SELECT 1 FROM video_captions vc WHERE vc.video_id = v.id)`
-                    : hasCaptions === false
-                      ? sql`NOT EXISTS (SELECT 1 FROM video_captions vc WHERE vc.video_id = v.id)`
-                      : sql`TRUE`;
+        const tagClause = tag ? sql`v.tags @> ARRAY[${tag}]::text[]` : sql`TRUE`;
 
-            const tagClause =
-                tag
-                    ? sql`v.tags @> ARRAY[${tag}]::text[]`
-                    : sql`TRUE`;
+        type Row = {
+            id: string;
+            title: string;
+            description: string;
+            thumbnailPath: string | null;
+            durationSec: number | null;
+            viewCount: number;
+            publishedAt: Date | null;
+            channelName: string;
+            channelHandle: string;
+            rank: number;
+        };
 
-            type Row = {
-                id: string;
-                title: string;
-                description: string;
-                thumbnailPath: string | null;
-                durationSec: number | null;
-                viewCount: number;
-                publishedAt: Date | null;
-                channelName: string;
-                channelHandle: string;
-                rank: number;
-            };
+        const rankExpr = q.trim() ? sql`ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q}))` : sql`0`;
 
-            const rankExpr = q.trim()
-                ? sql`ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q}))`
-                : sql`0`;
-
-            const rows = await ctx.db.execute<Row>(sql`
+        const rows = await ctx.db.execute<Row>(sql`
                 SELECT
                     v.id,
                     v.title,
@@ -150,49 +149,47 @@ export const searchRouter = createTRPCRouter({
                 OFFSET ${cursor}
             `);
 
-            const items = rows.slice(0, limit);
-            const nextCursor = rows.length > limit ? cursor + limit : null;
+        const items = rows.slice(0, limit);
+        const nextCursor = rows.length > limit ? cursor + limit : null;
 
-            return {
-                items: items.map((r) => ({
-                    id: r.id,
-                    title: r.title,
-                    description: r.description,
-                    thumbnailPath: r.thumbnailPath,
-                    durationSec: r.durationSec,
-                    viewCount: Number(r.viewCount),
-                    publishedAt: r.publishedAt,
-                    channel: {
-                        name: r.channelName,
-                        handle: r.channelHandle,
-                    },
-                })),
-                nextCursor,
-            };
-        }),
+        return {
+            items: items.map((r) => ({
+                id: r.id,
+                title: r.title,
+                description: r.description,
+                thumbnailPath: r.thumbnailPath,
+                durationSec: r.durationSec,
+                viewCount: Number(r.viewCount),
+                publishedAt: r.publishedAt,
+                channel: {
+                    name: r.channelName,
+                    handle: r.channelHandle,
+                },
+            })),
+            nextCursor,
+        };
+    }),
 
     /**
      * Autocomplete suggestions.
      * Unions video titles, channel names, and playlist titles ranked by
      * pg_trgm similarity. Returns at most 10 items total.
      */
-    autocomplete: publicProcedure
-        .input(autocompleteInputSchema)
-        .query(async ({ ctx, input }) => {
-            const { q } = input;
+    autocomplete: publicProcedure.input(autocompleteInputSchema).query(async ({ ctx, input }) => {
+        const { q } = input;
 
-            // Guard: require at least 2 chars so we do not hammer trigram index
-            // on single-character queries.
-            if (q.trim().length < 2) return [];
+        // Guard: require at least 2 chars so we do not hammer trigram index
+        // on single-character queries.
+        if (q.trim().length < 2) return [];
 
-            type SuggestionRow = {
-                kind: "video" | "channel" | "playlist";
-                label: string;
-                href: string;
-                sim: number;
-            };
+        type SuggestionRow = {
+            kind: "video" | "channel" | "playlist";
+            label: string;
+            href: string;
+            sim: number;
+        };
 
-            const rows = await ctx.db.execute<SuggestionRow>(sql`
+        const rows = await ctx.db.execute<SuggestionRow>(sql`
                 SELECT kind, label, href, sim FROM (
                     SELECT
                         'video'                               AS kind,
@@ -237,35 +234,33 @@ export const searchRouter = createTRPCRouter({
                 ORDER BY sim DESC
             `);
 
-            return rows.map((r) => ({
-                kind: r.kind,
-                label: r.label,
-                href: r.href,
-            }));
-        }),
+        return rows.map((r) => ({
+            kind: r.kind,
+            label: r.label,
+            href: r.href,
+        }));
+    }),
 
     /**
      * Channel search via pg_trgm similarity on (name, handle). Returns
      * subscriber count and ready-public video count for the result card.
      */
-    channels: publicProcedure
-        .input(channelsInputSchema)
-        .query(async ({ ctx, input }) => {
-            const { q, cursor = 0, limit } = input;
+    channels: publicProcedure.input(channelsInputSchema).query(async ({ ctx, input }) => {
+        const { q, cursor = 0, limit } = input;
 
-            type Row = {
-                id: string;
-                handle: string;
-                name: string;
-                description: string;
-                avatarPath: string | null;
-                bannerPath: string | null;
-                subscriberCount: number;
-                videoCount: number;
-                sim: number;
-            };
+        type Row = {
+            id: string;
+            handle: string;
+            name: string;
+            description: string;
+            avatarPath: string | null;
+            bannerPath: string | null;
+            subscriberCount: number;
+            videoCount: number;
+            sim: number;
+        };
 
-            const rows = await ctx.db.execute<Row>(sql`
+        const rows = await ctx.db.execute<Row>(sql`
                 SELECT
                     c.id,
                     c.handle,
@@ -287,44 +282,42 @@ export const searchRouter = createTRPCRouter({
                 OFFSET ${cursor}
             `);
 
-            const items = rows.slice(0, limit);
-            const nextCursor = rows.length > limit ? cursor + limit : null;
+        const items = rows.slice(0, limit);
+        const nextCursor = rows.length > limit ? cursor + limit : null;
 
-            return {
-                items: items.map((r) => ({
-                    id: r.id,
-                    handle: r.handle,
-                    name: r.name,
-                    description: r.description,
-                    avatarPath: r.avatarPath,
-                    bannerPath: r.bannerPath,
-                    subscriberCount: r.subscriberCount,
-                    videoCount: r.videoCount,
-                })),
-                nextCursor,
-            };
-        }),
+        return {
+            items: items.map((r) => ({
+                id: r.id,
+                handle: r.handle,
+                name: r.name,
+                description: r.description,
+                avatarPath: r.avatarPath,
+                bannerPath: r.bannerPath,
+                subscriberCount: r.subscriberCount,
+                videoCount: r.videoCount,
+            })),
+            nextCursor,
+        };
+    }),
 
     /**
      * Public user-playlist search via pg_trgm similarity on title.
      * kind='user' AND privacy='public' filter excludes system playlists
      * (queue, watch_later) and unlisted/private user playlists.
      */
-    playlists: publicProcedure
-        .input(playlistsInputSchema)
-        .query(async ({ ctx, input }) => {
-            const { q, cursor = 0, limit } = input;
+    playlists: publicProcedure.input(playlistsInputSchema).query(async ({ ctx, input }) => {
+        const { q, cursor = 0, limit } = input;
 
-            type Row = {
-                id: string;
-                title: string;
-                description: string;
-                ownerName: string;
-                itemCount: number;
-                sim: number;
-            };
+        type Row = {
+            id: string;
+            title: string;
+            description: string;
+            ownerName: string;
+            itemCount: number;
+            sim: number;
+        };
 
-            const rows = await ctx.db.execute<Row>(sql`
+        const rows = await ctx.db.execute<Row>(sql`
                 SELECT
                     p.id,
                     p.title,
@@ -342,45 +335,43 @@ export const searchRouter = createTRPCRouter({
                 OFFSET ${cursor}
             `);
 
-            const items = rows.slice(0, limit);
-            const nextCursor = rows.length > limit ? cursor + limit : null;
+        const items = rows.slice(0, limit);
+        const nextCursor = rows.length > limit ? cursor + limit : null;
 
-            return {
-                items: items.map((r) => ({
-                    id: r.id,
-                    title: r.title,
-                    description: r.description,
-                    ownerName: r.ownerName,
-                    itemCount: r.itemCount,
-                })),
-                nextCursor,
-            };
-        }),
+        return {
+            items: items.map((r) => ({
+                id: r.id,
+                title: r.title,
+                description: r.description,
+                ownerName: r.ownerName,
+                itemCount: r.itemCount,
+            })),
+            nextCursor,
+        };
+    }),
 
     /**
      * Combined search — for v1 this is a thin wrapper over `videos`.
      * Channel and playlist tabs are wired to dedicated procedures above;
      * `all` exists so the client router can call `search.all` uniformly.
      */
-    all: publicProcedure
-        .input(allInputSchema)
-        .query(async ({ ctx, input }) => {
-            const { q, cursor = 0, limit } = input;
+    all: publicProcedure.input(allInputSchema).query(async ({ ctx, input }) => {
+        const { q, cursor = 0, limit } = input;
 
-            type Row = {
-                id: string;
-                title: string;
-                description: string;
-                thumbnailPath: string | null;
-                durationSec: number | null;
-                viewCount: number;
-                publishedAt: Date | null;
-                channelName: string;
-                channelHandle: string;
-                rank: number;
-            };
+        type Row = {
+            id: string;
+            title: string;
+            description: string;
+            thumbnailPath: string | null;
+            durationSec: number | null;
+            viewCount: number;
+            publishedAt: Date | null;
+            channelName: string;
+            channelHandle: string;
+            rank: number;
+        };
 
-            const rows = await ctx.db.execute<Row>(sql`
+        const rows = await ctx.db.execute<Row>(sql`
                 SELECT
                     v.id,
                     v.title,
@@ -403,26 +394,26 @@ export const searchRouter = createTRPCRouter({
                 OFFSET ${cursor}
             `);
 
-            const items = rows.slice(0, limit);
-            const nextCursor = rows.length > limit ? cursor + limit : null;
+        const items = rows.slice(0, limit);
+        const nextCursor = rows.length > limit ? cursor + limit : null;
 
-            return {
-                items: items.map((r) => ({
-                    id: r.id,
-                    title: r.title,
-                    description: r.description,
-                    thumbnailPath: r.thumbnailPath,
-                    durationSec: r.durationSec,
-                    viewCount: Number(r.viewCount),
-                    publishedAt: r.publishedAt,
-                    channel: {
-                        name: r.channelName,
-                        handle: r.channelHandle,
-                    },
-                })),
-                nextCursor,
-            };
-        }),
+        return {
+            items: items.map((r) => ({
+                id: r.id,
+                title: r.title,
+                description: r.description,
+                thumbnailPath: r.thumbnailPath,
+                durationSec: r.durationSec,
+                viewCount: Number(r.viewCount),
+                publishedAt: r.publishedAt,
+                channel: {
+                    name: r.channelName,
+                    handle: r.channelHandle,
+                },
+            })),
+            nextCursor,
+        };
+    }),
 });
 
 // Re-export input types so the page/components can import them.

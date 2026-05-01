@@ -70,7 +70,7 @@ export const SettingsMenu = () => {
                     }}
                     className={cn(
                         "flex h-9 w-9 items-center justify-center rounded-full",
-                        "text-white/80 hover:text-white hover:bg-white/10",
+                        "text-white/80 hover:bg-white/10 hover:text-white",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
                         "transition-colors",
                         open && "bg-white/10 text-white",
@@ -86,14 +86,14 @@ export const SettingsMenu = () => {
 
                         {/* Panel */}
                         <div
-                            className="player-popover absolute bottom-full right-0 mb-2 z-50 w-56 overflow-hidden rounded-xl"
+                            className="player-popover absolute bottom-full right-0 z-50 mb-2 w-56 overflow-hidden rounded-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {panel === "root" && (
                                 <div className="py-2">
                                     <MenuRow
                                         label="Quality"
-                                        value={autoQuality ? "Auto" : (quality?.height ? `${quality.height}p` : "Auto")}
+                                        value={autoQuality ? "Auto" : quality?.height ? `${quality.height}p` : "Auto"}
                                         onClick={() => setPanel("quality")}
                                     />
                                     <MenuRow
@@ -104,7 +104,7 @@ export const SettingsMenu = () => {
                                     <div className="mx-3 my-1 border-t border-white/10" />
                                     {/* Stats for nerds toggle */}
                                     <button
-                                        className="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-white/10 transition-colors"
+                                        className="flex w-full items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-white/10"
                                         onClick={toggleStats}
                                         role="menuitemcheckbox"
                                         aria-checked={statsEnabled}
@@ -124,8 +124,8 @@ export const SettingsMenu = () => {
                                     <button
                                         className={cn(
                                             "flex w-full items-center justify-between px-4 py-2 text-sm",
-                                            "hover:bg-white/10 transition-colors",
-                                            autoQuality ? "text-white font-medium" : "text-white/70",
+                                            "transition-colors hover:bg-white/10",
+                                            autoQuality ? "font-medium text-white" : "text-white/70",
                                         )}
                                         onClick={() => {
                                             remote.changeQuality(-1);
@@ -140,9 +140,9 @@ export const SettingsMenu = () => {
                                             key={q.value}
                                             className={cn(
                                                 "flex w-full items-center justify-between px-4 py-2 text-sm",
-                                                "hover:bg-white/10 transition-colors",
+                                                "transition-colors hover:bg-white/10",
                                                 !autoQuality && quality?.height === parseInt(q.label)
-                                                    ? "text-white font-medium"
+                                                    ? "font-medium text-white"
                                                     : "text-white/70",
                                             )}
                                             onClick={() => {
@@ -165,8 +165,8 @@ export const SettingsMenu = () => {
                                             key={s}
                                             className={cn(
                                                 "flex w-full items-center justify-between px-4 py-2 text-sm",
-                                                "hover:bg-white/10 transition-colors",
-                                                playbackRate === s ? "text-white font-medium" : "text-white/70",
+                                                "transition-colors hover:bg-white/10",
+                                                playbackRate === s ? "font-medium text-white" : "text-white/70",
                                             )}
                                             onClick={() => {
                                                 remote.changePlaybackRate(s);
@@ -189,11 +189,11 @@ export const SettingsMenu = () => {
 
 const MenuRow = ({ label, value, onClick }: { label: string; value: string; onClick: () => void }) => (
     <button
-        className="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-white/10 transition-colors"
+        className="flex w-full items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-white/10"
         onClick={onClick}
     >
         <span className="text-white/70">{label}</span>
-        <span className="flex items-center gap-1 text-white/90 font-medium">
+        <span className="flex items-center gap-1 font-medium text-white/90">
             {value}
             <ChevronRight />
         </span>
@@ -204,7 +204,7 @@ const PanelHeader = ({ label, onBack }: { label: string; onBack: () => void }) =
     <div className="flex items-center gap-2 px-4 pb-2">
         <button
             onClick={onBack}
-            className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Back"
         >
             <ChevronLeft />
@@ -223,7 +223,7 @@ const QuickStats = ({
     quality: { height?: number } | null;
 }) => (
     <div className="px-4 py-2">
-        <p className="mb-1 text-xs font-medium text-white/50 uppercase tracking-wider">Stats for nerds</p>
+        <p className="mb-1 text-xs font-medium uppercase tracking-wider text-white/50">Stats for nerds</p>
         <div className="space-y-1 text-xs text-white/60">
             <div className="flex justify-between">
                 <span>Quality</span>
@@ -231,7 +231,9 @@ const QuickStats = ({
             </div>
             <div className="flex justify-between">
                 <span>Buffered</span>
-                <span>{Math.round(bufferedEnd)}s / {Math.round(duration)}s</span>
+                <span>
+                    {Math.round(bufferedEnd)}s / {Math.round(duration)}s
+                </span>
             </div>
         </div>
     </div>
@@ -244,18 +246,19 @@ const ToggleIndicator = ({ on }: { on: boolean }) => (
             on ? "bg-white/80" : "bg-white/20",
         )}
     >
-        <span
-            className={cn(
-                "ml-0.5 h-3 w-3 rounded-full bg-black transition-transform",
-                on && "translate-x-3",
-            )}
-        />
+        <span className={cn("ml-0.5 h-3 w-3 rounded-full bg-black transition-transform", on && "translate-x-3")} />
     </span>
 );
 
 const Check = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+            d="M2 7l3.5 3.5L12 3"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
     </svg>
 );
 

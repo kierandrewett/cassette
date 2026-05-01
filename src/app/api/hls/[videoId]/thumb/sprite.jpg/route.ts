@@ -74,9 +74,7 @@ export async function GET(
     }
 
     const { start, end, length } = parsed;
-    const stream = Readable.toWeb(
-        createReadStream(filePath, { start, end }),
-    ) as ReadableStream<Uint8Array>;
+    const stream = Readable.toWeb(createReadStream(filePath, { start, end })) as ReadableStream<Uint8Array>;
 
     return new NextResponse(stream, {
         status: 206,

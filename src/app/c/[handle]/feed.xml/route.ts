@@ -15,7 +15,7 @@ const ESC: Record<string, string> = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    "\"": "&quot;",
+    '"': "&quot;",
     "'": "&apos;",
 };
 
@@ -60,13 +60,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
             publishedAt: videos.publishedAt,
         })
         .from(videos)
-        .where(
-            and(
-                eq(videos.channelId, channel.id),
-                eq(videos.privacy, "public"),
-                eq(videos.status, "ready"),
-            ),
-        )
+        .where(and(eq(videos.channelId, channel.id), eq(videos.privacy, "public"), eq(videos.status, "ready")))
         .orderBy(desc(videos.publishedAt))
         .limit(50);
 
@@ -80,17 +74,18 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
 
     const channelLink = `${baseUrl}/c/${escapeXml(channel.handle)}`;
 
-    const items = videoRows.map((v) => {
-        const link = `${baseUrl}/watch/${escapeXml(v.id)}`;
-        const pubDate = v.publishedAt ? v.publishedAt.toUTCString() : new Date(0).toUTCString();
-        const description = escapeXml((v.description ?? "").slice(0, 500));
-        const title = escapeXml(v.title);
+    const items = videoRows
+        .map((v) => {
+            const link = `${baseUrl}/watch/${escapeXml(v.id)}`;
+            const pubDate = v.publishedAt ? v.publishedAt.toUTCString() : new Date(0).toUTCString();
+            const description = escapeXml((v.description ?? "").slice(0, 500));
+            const title = escapeXml(v.title);
 
-        const enclosureEl = v.thumbnailPath
-            ? `\n        <enclosure url="${baseUrl}/api/hls/${escapeXml(v.id)}/thumb/sprite.jpg" type="image/jpeg" length="0" />`
-            : "";
+            const enclosureEl = v.thumbnailPath
+                ? `\n        <enclosure url="${baseUrl}/api/hls/${escapeXml(v.id)}/thumb/sprite.jpg" type="image/jpeg" length="0" />`
+                : "";
 
-        return `
+            return `
     <item>
         <title>${title}</title>
         <link>${link}</link>
@@ -98,7 +93,8 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
         <pubDate>${pubDate}</pubDate>
         <description>${description}</description>${enclosureEl}
     </item>`;
-    }).join("");
+        })
+        .join("");
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

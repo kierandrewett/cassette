@@ -73,9 +73,7 @@ export const ChangePasswordForm = () => {
                         errors.currentPassword && "border-destructive focus-visible:ring-destructive",
                     )}
                 />
-                {errors.currentPassword && (
-                    <p className="text-xs text-destructive">{errors.currentPassword.message}</p>
-                )}
+                {errors.currentPassword && <p className="text-xs text-destructive">{errors.currentPassword.message}</p>}
             </div>
 
             {/* New password */}
@@ -95,9 +93,7 @@ export const ChangePasswordForm = () => {
                         errors.newPassword && "border-destructive focus-visible:ring-destructive",
                     )}
                 />
-                {errors.newPassword && (
-                    <p className="text-xs text-destructive">{errors.newPassword.message}</p>
-                )}
+                {errors.newPassword && <p className="text-xs text-destructive">{errors.newPassword.message}</p>}
             </div>
 
             {/* Confirm password */}
@@ -117,21 +113,25 @@ export const ChangePasswordForm = () => {
                         errors.confirmPassword && "border-destructive focus-visible:ring-destructive",
                     )}
                 />
-                {errors.confirmPassword && (
-                    <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
-                )}
+                {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>}
             </div>
 
             {/* Success */}
             {success && (
-                <p role="status" className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-400">
+                <p
+                    role="status"
+                    className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-400"
+                >
                     Password updated successfully. Other sessions have been signed out.
                 </p>
             )}
 
             {/* Server error */}
             {serverError && (
-                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p
+                    role="alert"
+                    className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                >
                     {serverError}
                 </p>
             )}

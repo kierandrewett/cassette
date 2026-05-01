@@ -101,13 +101,15 @@ export const SessionsPanel = () => {
             {/* Bulk action */}
             <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
-                    {isLoading ? "Loading…" : `${sessions?.length ?? 0} active session${(sessions?.length ?? 0) === 1 ? "" : "s"}`}
+                    {isLoading
+                        ? "Loading…"
+                        : `${sessions?.length ?? 0} active session${(sessions?.length ?? 0) === 1 ? "" : "s"}`}
                 </p>
                 {otherSessionCount > 0 && (
                     <button
                         onClick={handleRevokeAll}
                         disabled={revokeAllOther.isPending}
-                        className="text-xs font-medium text-destructive hover:text-destructive/80 disabled:opacity-50 transition-colors"
+                        className="text-xs font-medium text-destructive transition-colors hover:text-destructive/80 disabled:opacity-50"
                     >
                         {revokeAllOther.isPending ? "Revoking…" : "Revoke all other sessions"}
                     </button>
@@ -116,39 +118,41 @@ export const SessionsPanel = () => {
 
             {/* Error banner */}
             {revokeError && (
-                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p
+                    role="alert"
+                    className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                >
                     {revokeError}
                 </p>
             )}
 
             {/* Session list */}
-            {error && (
-                <p className="text-sm text-destructive">Failed to load sessions.</p>
-            )}
+            {error && <p className="text-sm text-destructive">Failed to load sessions.</p>}
 
             {!isLoading && sessions && (
-                <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                <div className="divide-y divide-border rounded-xl border border-border bg-card">
                     {sessions.map((s) => (
                         <div key={s.id} className="flex items-start justify-between gap-4 px-4 py-3">
                             <div className="min-w-0 space-y-0.5">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-foreground truncate">
+                                    <span className="truncate text-sm font-medium text-foreground">
                                         {parseUserAgent(s.userAgent ?? null)}
                                     </span>
                                     {s.currentSession && (
-                                        <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary uppercase tracking-wide">
+                                        <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                                             This device
                                         </span>
                                     )}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    {s.ipAddress ?? "IP unknown"} &middot; {relativeTime(new Date(s.createdAt))} &middot; {expiresLabel(new Date(s.expiresAt))}
+                                    {s.ipAddress ?? "IP unknown"} &middot; {relativeTime(new Date(s.createdAt))}{" "}
+                                    &middot; {expiresLabel(new Date(s.expiresAt))}
                                 </p>
                             </div>
                             <button
                                 onClick={() => handleRevoke(s.id)}
                                 disabled={s.currentSession || revokeSession.isPending}
-                                className="shrink-0 text-xs font-medium text-destructive hover:text-destructive/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                className="shrink-0 text-xs font-medium text-destructive transition-colors hover:text-destructive/80 disabled:cursor-not-allowed disabled:opacity-30"
                             >
                                 {revokeSession.isPending && revokeSession.variables?.sessionId === s.id
                                     ? "Revoking…"

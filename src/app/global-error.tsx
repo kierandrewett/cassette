@@ -10,8 +10,7 @@ const GlobalErrorPage = ({ reset }: { error: Error & { digest?: string }; reset:
                 style={{
                     background: "#000",
                     color: "#fff",
-                    fontFamily:
-                        'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                     minHeight: "100vh",
                     display: "flex",
                     alignItems: "center",
@@ -24,8 +23,8 @@ const GlobalErrorPage = ({ reset }: { error: Error & { digest?: string }; reset:
                         cassette is offline
                     </h1>
                     <p style={{ opacity: 0.75, marginBottom: "1.5rem" }}>
-                        Something failed before we could render the app. Please refresh; if the problem persists,
-                        check the server logs.
+                        Something failed before we could render the app. Please refresh; if the problem persists, check
+                        the server logs.
                     </p>
                     <button
                         type="button"

@@ -7,14 +7,13 @@ const DEFAULT_TTL_SEC = 4 * 60 * 60;
 
 // Payload embedded in every HLS access token.
 export type TokenPayload = {
-    v: string;       // videoId
+    v: string; // videoId
     u: string | null; // userId (null for unauthenticated viewers)
-    exp: number;     // Unix epoch seconds
+    exp: number; // Unix epoch seconds
 };
 
 // Encode a plain object to base64url JSON.
-const toBase64url = (obj: unknown): string =>
-    Buffer.from(JSON.stringify(obj)).toString("base64url");
+const toBase64url = (obj: unknown): string => Buffer.from(JSON.stringify(obj)).toString("base64url");
 
 // Decode base64url JSON; returns null if anything goes wrong.
 const fromBase64url = (s: string): unknown => {

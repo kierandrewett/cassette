@@ -21,17 +21,19 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold">Users</h1>
-                    <p className="text-sm text-muted-foreground">{items.length} user{items.length !== 1 ? "s" : ""} shown</p>
+                    <p className="text-sm text-muted-foreground">
+                        {items.length} user{items.length !== 1 ? "s" : ""} shown
+                    </p>
                 </div>
                 <form method="GET" className="flex gap-2">
                     <input
                         name="q"
                         defaultValue={q ?? ""}
                         placeholder="Search by name or email…"
-                        className="rounded-md border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-64"
+                        className="w-64 rounded-md border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     <button
                         type="submit"
@@ -42,7 +44,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                 </form>
             </div>
 
-            <div className="rounded-lg border border-border overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-border bg-muted/40">

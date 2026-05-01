@@ -22,10 +22,12 @@ export default async function AdminStoragePage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">Storage</h1>
-                <p className="text-sm text-muted-foreground mt-1">On-disk usage across source files, HLS output, and channel assets.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    On-disk usage across source files, HLS output, and channel assets.
+                </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <StatCard label="Total" value={formatBytes(summary.totalBytes)} />
                 <StatCard label="Source files" value={formatBytes(summary.totalSourceBytes)} />
                 <StatCard label="HLS output" value={formatBytes(summary.totalHlsBytes)} />
@@ -36,7 +38,7 @@ export default async function AdminStoragePage() {
             {summary.topChannels.length > 0 && (
                 <section className="space-y-2">
                     <h2 className="text-lg font-semibold">Top channels by usage</h2>
-                    <div className="rounded-lg border border-border overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/40">
@@ -49,17 +51,30 @@ export default async function AdminStoragePage() {
                             </thead>
                             <tbody>
                                 {summary.topChannels.map((ch) => (
-                                    <tr key={ch.channelId} className="border-b border-border last:border-0 hover:bg-muted/20">
+                                    <tr
+                                        key={ch.channelId}
+                                        className="border-b border-border last:border-0 hover:bg-muted/20"
+                                    >
                                         <td className="px-4 py-3">
                                             <span className="font-medium">{ch.channelName}</span>
                                             {ch.channelHandle && (
-                                                <span className="ml-2 text-xs text-muted-foreground">@{ch.channelHandle}</span>
+                                                <span className="ml-2 text-xs text-muted-foreground">
+                                                    @{ch.channelHandle}
+                                                </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-right tabular-nums">{formatBytes(ch.sourceBytes)}</td>
-                                        <td className="px-4 py-3 text-right tabular-nums">{formatBytes(ch.hlsBytes)}</td>
-                                        <td className="px-4 py-3 text-right tabular-nums">{formatBytes(ch.assetBytes)}</td>
-                                        <td className="px-4 py-3 text-right tabular-nums font-medium">{formatBytes(ch.totalBytes)}</td>
+                                        <td className="px-4 py-3 text-right tabular-nums">
+                                            {formatBytes(ch.sourceBytes)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right tabular-nums">
+                                            {formatBytes(ch.hlsBytes)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right tabular-nums">
+                                            {formatBytes(ch.assetBytes)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-medium tabular-nums">
+                                            {formatBytes(ch.totalBytes)}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -75,25 +90,34 @@ export default async function AdminStoragePage() {
                     <p className="text-sm text-muted-foreground">
                         Per-channel upload quota. Click the quota value to edit inline.
                     </p>
-                    <div className="rounded-lg border border-border overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/40">
                                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Channel</th>
-                                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Source used</th>
+                                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                                        Source used
+                                    </th>
                                     <th className="px-4 py-3 text-right font-medium text-muted-foreground">Quota</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {summary.topChannels.map((ch) => (
-                                    <tr key={ch.channelId} className="border-b border-border last:border-0 hover:bg-muted/20">
+                                    <tr
+                                        key={ch.channelId}
+                                        className="border-b border-border last:border-0 hover:bg-muted/20"
+                                    >
                                         <td className="px-4 py-3">
                                             <span className="font-medium">{ch.channelName}</span>
                                             {ch.channelHandle && (
-                                                <span className="ml-2 text-xs text-muted-foreground">@{ch.channelHandle}</span>
+                                                <span className="ml-2 text-xs text-muted-foreground">
+                                                    @{ch.channelHandle}
+                                                </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-right tabular-nums">{formatBytes(ch.sourceBytes)}</td>
+                                        <td className="px-4 py-3 text-right tabular-nums">
+                                            {formatBytes(ch.sourceBytes)}
+                                        </td>
                                         <td className="px-4 py-3 text-right">
                                             <ChannelQuotaEditor
                                                 channelId={ch.channelId}
@@ -121,8 +145,8 @@ export default async function AdminStoragePage() {
             <section className="space-y-3">
                 <h2 className="text-lg font-semibold">Janitor</h2>
                 <p className="text-sm text-muted-foreground">
-                    Sweep on-disk media for orphaned files whose database row has been deleted.
-                    Run a dry run first to see what would be removed, then apply.
+                    Sweep on-disk media for orphaned files whose database row has been deleted. Run a dry run first to
+                    see what would be removed, then apply.
                 </p>
                 <div className="flex flex-wrap gap-3">
                     <JanitorButton apply={false} />

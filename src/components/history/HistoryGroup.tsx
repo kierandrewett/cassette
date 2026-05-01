@@ -37,9 +37,7 @@ export const HistoryGroup = ({ label, items, onRemove }: HistoryGroupProps) => {
 
             <ul className="space-y-1 px-4 md:px-6">
                 {items.map((item) => {
-                    const thumbSrc = item.video.thumbnailPath
-                        ? `/api/hls/${item.video.id}/thumb/sprite.jpg`
-                        : null;
+                    const thumbSrc = item.video.thumbnailPath ? `/api/hls/${item.video.id}/thumb/sprite.jpg` : null;
 
                     return (
                         <li
@@ -53,18 +51,12 @@ export const HistoryGroup = ({ label, items, onRemove }: HistoryGroupProps) => {
                                 style={{ width: 140, height: 79 }}
                             >
                                 {thumbSrc ? (
-                                    <Image
-                                        src={thumbSrc}
-                                        alt=""
-                                        fill
-                                        className="object-cover"
-                                        sizes="140px"
-                                    />
+                                    <Image src={thumbSrc} alt="" fill className="object-cover" sizes="140px" />
                                 ) : (
                                     <div className="h-full w-full bg-secondary" />
                                 )}
                                 {item.video.durationSec != null && item.video.durationSec > 0 && (
-                                    <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 text-[10px] font-medium text-white tabular-nums">
+                                    <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 text-[10px] font-medium tabular-nums text-white">
                                         {formatDuration(item.video.durationSec)}
                                     </span>
                                 )}
@@ -78,11 +70,8 @@ export const HistoryGroup = ({ label, items, onRemove }: HistoryGroupProps) => {
                                 >
                                     {item.video.title}
                                 </Link>
-                                <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                                    <Link
-                                        href={`/c/${item.channel.handle}`}
-                                        className="hover:underline"
-                                    >
+                                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                    <Link href={`/c/${item.channel.handle}`} className="hover:underline">
                                         {item.channel.name}
                                     </Link>
                                 </p>
@@ -98,7 +87,7 @@ export const HistoryGroup = ({ label, items, onRemove }: HistoryGroupProps) => {
                                 <button
                                     type="button"
                                     onClick={() => onRemove(item.video.id)}
-                                    className="mt-0.5 flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100"
+                                    className="mt-0.5 flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
                                     title="Remove from history"
                                 >
                                     <svg

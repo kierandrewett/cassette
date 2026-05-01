@@ -150,10 +150,10 @@ export const SleepTimer = ({ onSelect, onStateChange }: SleepTimerProps) => {
                 onClick={() => setOpen((v) => !v)}
                 className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-full",
-                    "text-white/80 hover:text-white hover:bg-white/10",
+                    "text-white/80 hover:bg-white/10 hover:text-white",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
                     "transition-colors",
-                    option !== "off" && "text-white bg-white/10",
+                    option !== "off" && "bg-white/10 text-white",
                 )}
             >
                 <Moon02Icon size={20} />
@@ -163,10 +163,10 @@ export const SleepTimer = ({ onSelect, onStateChange }: SleepTimerProps) => {
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
                     <div
-                        className="player-popover absolute bottom-full right-0 mb-2 z-50 w-44 overflow-hidden rounded-xl py-2"
+                        className="player-popover absolute bottom-full right-0 z-50 mb-2 w-44 overflow-hidden rounded-xl py-2"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <p className="px-4 pb-1 pt-0.5 text-xs font-medium text-white/50 uppercase tracking-wider">
+                        <p className="px-4 pb-1 pt-0.5 text-xs font-medium uppercase tracking-wider text-white/50">
                             Sleep timer
                         </p>
                         {OPTIONS.map((o) => (
@@ -174,8 +174,8 @@ export const SleepTimer = ({ onSelect, onStateChange }: SleepTimerProps) => {
                                 key={o.value}
                                 className={cn(
                                     "flex w-full items-center justify-between px-4 py-2 text-sm",
-                                    "hover:bg-white/10 transition-colors",
-                                    option === o.value ? "text-white font-medium" : "text-white/70",
+                                    "transition-colors hover:bg-white/10",
+                                    option === o.value ? "font-medium text-white" : "text-white/70",
                                 )}
                                 onClick={() => handleSelect(o.value)}
                             >
@@ -194,7 +194,7 @@ export const SleepTimer = ({ onSelect, onStateChange }: SleepTimerProps) => {
                             </button>
                         ))}
                         {remainingSec !== null && (
-                            <p className="px-4 pt-1 pb-0.5 text-xs text-white/40 tabular-nums">
+                            <p className="px-4 pb-0.5 pt-1 text-xs tabular-nums text-white/40">
                                 Remaining: {formatRemaining(remainingSec)}
                             </p>
                         )}
@@ -217,11 +217,11 @@ interface SleepTimerChipProps {
 export const SleepTimerChip = ({ remainingSec, option }: SleepTimerChipProps) => {
     if (option === "off") return null;
 
-    const label = option === "end" ? "End of video" : (remainingSec !== null ? formatRemaining(remainingSec) : null);
+    const label = option === "end" ? "End of video" : remainingSec !== null ? formatRemaining(remainingSec) : null;
     if (!label) return null;
 
     return (
-        <div className="absolute bottom-20 right-4 z-40 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm select-none pointer-events-none">
+        <div className="pointer-events-none absolute bottom-20 right-4 z-40 flex select-none items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
             <Moon02Icon size={12} className="shrink-0" />
             <span className="tabular-nums">{label}</span>
         </div>

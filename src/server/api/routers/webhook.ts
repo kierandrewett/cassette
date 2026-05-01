@@ -62,9 +62,12 @@ const byIdInput = z.object({
 const createInput = z.object({
     channelId: z.string().uuid(),
     name: z.string().min(1).max(120),
-    url: z.string().url().refine((u) => u.startsWith("http://") || u.startsWith("https://"), {
-        message: "URL must use http or https.",
-    }),
+    url: z
+        .string()
+        .url()
+        .refine((u) => u.startsWith("http://") || u.startsWith("https://"), {
+            message: "URL must use http or https.",
+        }),
     events: z
         .array(z.string())
         .min(1, "At least one event is required.")
@@ -243,35 +246,28 @@ export const webhookRouter = createTRPCRouter({
      * Post a test ping to the webhook URL via the standard delivery path so
      * the user can verify reachability and check the delivery log.
      */
-    testFire: protectedProcedure
-        .input(testFireInput)
-        .mutation(async ({ ctx, input }) => {
-            // Verify the caller is a member with the right role.
-            const { channelMembers } = await import("@/server/db/schema/channels");
-            const memberRows = await ctx.db
-                .select({ role: channelMembers.role })
-                .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, input.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
-                .limit(1);
+    testFire: protectedProcedure.input(testFireInput).mutation(async ({ ctx, input }) => {
+        // Verify the caller is a member with the right role.
+        const { channelMembers } = await import("@/server/db/schema/channels");
+        const memberRows = await ctx.db
+            .select({ role: channelMembers.role })
+            .from(channelMembers)
+            .where(and(eq(channelMembers.channelId, input.channelId), eq(channelMembers.userId, ctx.user.id)))
+            .limit(1);
 
-            const member = memberRows[0];
-            if (!member || (member.role !== "owner" && member.role !== "manager")) {
-                throw new TRPCError({ code: "FORBIDDEN", message: "Owner or manager role required." });
-            }
+        const member = memberRows[0];
+        if (!member || (member.role !== "owner" && member.role !== "manager")) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Owner or manager role required." });
+        }
 
-            const row = await resolveWebhookForChannel(ctx.db, input.webhookId, input.channelId);
+        const row = await resolveWebhookForChannel(ctx.db, input.webhookId, input.channelId);
 
-            await deliverWebhook({
-                webhookId: row.id,
-                event: "test.ping",
-                payload: { event: "test.ping", at: new Date().toISOString() },
-            });
+        await deliverWebhook({
+            webhookId: row.id,
+            event: "test.ping",
+            payload: { event: "test.ping", at: new Date().toISOString() },
+        });
 
-            return { success: true };
-        }),
+        return { success: true };
+    }),
 });

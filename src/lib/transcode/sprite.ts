@@ -46,10 +46,14 @@ export const generateSprite = async (params: {
 
     // ffmpeg generates the tile sheet directly using the `tile` filter.
     await runFfmpeg([
-        "-i", sourcePath,
-        "-vf", `fps=${fps},scale=${TILE_WIDTH}:-1,tile=${COLS}x${ROWS}`,
-        "-frames:v", "1",
-        "-q:v", "5",
+        "-i",
+        sourcePath,
+        "-vf",
+        `fps=${fps},scale=${TILE_WIDTH}:-1,tile=${COLS}x${ROWS}`,
+        "-frames:v",
+        "1",
+        "-q:v",
+        "5",
         jpgPath,
     ]);
 

@@ -11,7 +11,14 @@ import { FfmpegError, type H264Encoder, resolveH264Encoder, runFfmpeg, spawnFfmp
 import { buildLadder, type Rung } from "@/lib/transcode/ladder";
 import { probe } from "@/lib/transcode/probe";
 import { generateSprite } from "@/lib/transcode/sprite";
-import { ensureDir, hlsDir as makeHlsDir, hlsSpriteJpgPath, hlsSpriteVttPath, hlsThumbnailPath, paths } from "@/lib/paths";
+import {
+    ensureDir,
+    hlsDir as makeHlsDir,
+    hlsSpriteJpgPath,
+    hlsSpriteVttPath,
+    hlsThumbnailPath,
+    paths,
+} from "@/lib/paths";
 import { db } from "@/server/db/client";
 import { transcodeJobs } from "@/server/db/schema/jobs";
 import { videoCaptions, videoChapters, videos, videoVariants } from "@/server/db/schema/videos";
@@ -30,14 +37,14 @@ type StepProgress = {
 };
 
 const STEPS: Record<string, StepProgress> = {
-    probe:      { progress: 5,  step: "probe" },
-    ladder:     { progress: 10, step: "ladder" },
-    transcode:  { progress: 70, step: "transcode" },
-    thumbnail:  { progress: 75, step: "thumbnail" },
-    sprite:     { progress: 85, step: "sprite" },
-    captions:   { progress: 90, step: "captions" },
-    chapters:   { progress: 92, step: "chapters" },
-    finalise:   { progress: 100, step: "finalise" },
+    probe: { progress: 5, step: "probe" },
+    ladder: { progress: 10, step: "ladder" },
+    transcode: { progress: 70, step: "transcode" },
+    thumbnail: { progress: 75, step: "thumbnail" },
+    sprite: { progress: 85, step: "sprite" },
+    captions: { progress: 90, step: "captions" },
+    chapters: { progress: 92, step: "chapters" },
+    finalise: { progress: 100, step: "finalise" },
 };
 
 // ------------------------------------------------------------------
@@ -58,10 +65,7 @@ const markRunning = async (videoId: string): Promise<void> => {
         .update(transcodeJobs)
         .set({ state: "running", startedAt: new Date() })
         .where(eq(transcodeJobs.videoId, videoId));
-    await db
-        .update(videos)
-        .set({ status: "transcoding" })
-        .where(eq(videos.id, videoId));
+    await db.update(videos).set({ status: "transcoding" }).where(eq(videos.id, videoId));
 };
 
 const markCompleted = async (videoId: string): Promise<void> => {
@@ -76,10 +80,7 @@ const markFailed = async (videoId: string, message: string): Promise<void> => {
         .update(transcodeJobs)
         .set({ state: "failed", finishedAt: new Date(), message: message.slice(-4096) })
         .where(eq(transcodeJobs.videoId, videoId));
-    await db
-        .update(videos)
-        .set({ status: "failed" })
-        .where(eq(videos.id, videoId));
+    await db.update(videos).set({ status: "failed" }).where(eq(videos.id, videoId));
 
     // Fire webhook fanout for transcode.failed. Best-effort.
     const { fanoutVideoEvent } = await import("@/lib/webhooks/fanout");
@@ -181,10 +182,7 @@ const runPipeline = async (videoId: string): Promise<void> => {
         onProgress: async (fraction) => {
             // Map transcode progress (0–1) to 10–70% overall.
             const overall = Math.round(10 + fraction * 60);
-            await db
-                .update(transcodeJobs)
-                .set({ progress: overall })
-                .where(eq(transcodeJobs.videoId, videoId));
+            await db.update(transcodeJobs).set({ progress: overall }).where(eq(transcodeJobs.videoId, videoId));
         },
     });
 
@@ -193,13 +191,7 @@ const runPipeline = async (videoId: string): Promise<void> => {
     const thumbPath = hlsThumbnailPath(videoId);
     await ensureDir(join(hlsRoot)); // already exists
     const thumbOffset = Math.max(1, Math.round(meta.durationSec * 0.1));
-    await runFfmpeg([
-        "-ss", String(thumbOffset),
-        "-i", sourcePath,
-        "-frames:v", "1",
-        "-q:v", "3",
-        thumbPath,
-    ]);
+    await runFfmpeg(["-ss", String(thumbOffset), "-i", sourcePath, "-frames:v", "1", "-q:v", "3", thumbPath]);
 
     // ---- 5. sprite (85%) ----
     await updateProgress(videoId, "sprite");
@@ -223,16 +215,19 @@ const runPipeline = async (videoId: string): Promise<void> => {
     });
 
     if (extractedCaptions.length > 0) {
-        await db.insert(videoCaptions).values(
-            extractedCaptions.map((c) => ({
-                videoId,
-                lang: c.lang,
-                label: c.label,
-                source: "embedded" as const,
-                vttPath: relative(paths.hlsRoot, c.vttPath),
-                isDefault: c.isDefault,
-            })),
-        ).onConflictDoNothing();
+        await db
+            .insert(videoCaptions)
+            .values(
+                extractedCaptions.map((c) => ({
+                    videoId,
+                    lang: c.lang,
+                    label: c.label,
+                    source: "embedded" as const,
+                    vttPath: relative(paths.hlsRoot, c.vttPath),
+                    isDefault: c.isDefault,
+                })),
+            )
+            .onConflictDoNothing();
     }
 
     // ---- 7. chapters (92%) ----
@@ -244,32 +239,38 @@ const runPipeline = async (videoId: string): Promise<void> => {
     const finalChapters = withEndSec(merged, meta.durationSec);
 
     if (finalChapters.length > 0) {
-        await db.insert(videoChapters).values(
-            finalChapters.map((c) => ({
-                videoId,
-                startSec: c.startSec,
-                endSec: c.endSec,
-                title: c.title,
-                source: c.source,
-            })),
-        ).onConflictDoNothing();
+        await db
+            .insert(videoChapters)
+            .values(
+                finalChapters.map((c) => ({
+                    videoId,
+                    startSec: c.startSec,
+                    endSec: c.endSec,
+                    title: c.title,
+                    source: c.source,
+                })),
+            )
+            .onConflictDoNothing();
     }
 
     // ---- 8. finalise (100%) ----
     await updateProgress(videoId, "finalise");
 
     // Insert variant rows.
-    await db.insert(videoVariants).values(
-        ladder.map((rung) => ({
-            videoId,
-            rung: rung.name,
-            width: rung.width,
-            height: rung.height,
-            bandwidth: rung.bandwidth,
-            codecs: rung.codecs,
-            playlistPath: join(rung.name, "playlist.m3u8"),
-        })),
-    ).onConflictDoNothing();
+    await db
+        .insert(videoVariants)
+        .values(
+            ladder.map((rung) => ({
+                videoId,
+                rung: rung.name,
+                width: rung.width,
+                height: rung.height,
+                bandwidth: rung.bandwidth,
+                codecs: rung.codecs,
+                playlistPath: join(rung.name, "playlist.m3u8"),
+            })),
+        )
+        .onConflictDoNothing();
 
     // Mark video ready.
     await db
@@ -303,11 +304,9 @@ const runPipeline = async (videoId: string): Promise<void> => {
         const { ensureBoss } = await import("@/worker/boot");
         const boss = await ensureBoss().catch(() => null);
         if (boss) {
-            await boss
-                .send("transcribe-video", { videoId }, { retryLimit: 1, expireInHours: 12 })
-                .catch((err) => {
-                    console.warn("[transcode] could not enqueue transcribe-video:", err);
-                });
+            await boss.send("transcribe-video", { videoId }, { retryLimit: 1, expireInHours: 12 }).catch((err) => {
+                console.warn("[transcode] could not enqueue transcribe-video:", err);
+            });
         }
     }
 };
@@ -335,8 +334,7 @@ const runTranscode = async (opts: RunTranscodeOptions): Promise<void> => {
     const splitOutputs = ladder.map((_, i) => `[v${i}]`).join("");
     const splitFilter = `[0:v]split=${n}${splitOutputs}`;
     const scaleFilters = ladder.map(
-        (rung, i) =>
-            `[v${i}]scale=w=${rung.width}:h=${rung.height}:force_original_aspect_ratio=decrease[v${i}o]`,
+        (rung, i) => `[v${i}]scale=w=${rung.width}:h=${rung.height}:force_original_aspect_ratio=decrease[v${i}o]`,
     );
     const filterComplex = [splitFilter, ...scaleFilters].join("; ");
 
@@ -353,41 +351,50 @@ const runTranscode = async (opts: RunTranscodeOptions): Promise<void> => {
 
         if (encoder === "h264_nvenc") {
             args.push(
-                `-c:v:${i}`, "h264_nvenc",
-                `-preset:v:${i}`, "p4",
-                `-tune:v:${i}`, "hq",
-                `-rc:v:${i}`, "vbr",
-                `-cq:v:${i}`, "21",
+                `-c:v:${i}`,
+                "h264_nvenc",
+                `-preset:v:${i}`,
+                "p4",
+                `-tune:v:${i}`,
+                "hq",
+                `-rc:v:${i}`,
+                "vbr",
+                `-cq:v:${i}`,
+                "21",
             );
         } else if (encoder === "libx264") {
             args.push(
-                `-c:v:${i}`, "libx264",
-                `-preset:v:${i}`, "veryfast",
-                `-profile:v:${i}`, "high",
-                `-level:v:${i}`, "4.1",
+                `-c:v:${i}`,
+                "libx264",
+                `-preset:v:${i}`,
+                "veryfast",
+                `-profile:v:${i}`,
+                "high",
+                `-level:v:${i}`,
+                "4.1",
             );
         } else {
             // libopenh264 supports a much smaller knob surface than libx264.
-            args.push(
-                `-c:v:${i}`, "libopenh264",
-            );
+            args.push(`-c:v:${i}`, "libopenh264");
         }
 
         args.push(
-            `-b:v:${i}`, rung.videoBitrate,
-            `-maxrate:v:${i}`, rung.maxBitrate,
-            `-bufsize:v:${i}`, rung.bufSize,
-            `-g:v:${i}`, "60",
-            `-keyint_min:v:${i}`, "60",
-            `-sc_threshold:v:${i}`, "0",
+            `-b:v:${i}`,
+            rung.videoBitrate,
+            `-maxrate:v:${i}`,
+            rung.maxBitrate,
+            `-bufsize:v:${i}`,
+            rung.bufSize,
+            `-g:v:${i}`,
+            "60",
+            `-keyint_min:v:${i}`,
+            "60",
+            `-sc_threshold:v:${i}`,
+            "0",
         );
 
         if (hasAudio) {
-            args.push(
-                `-c:a:${i}`, "aac",
-                `-b:a:${i}`, rung.audioBitrate,
-                `-ac:a:${i}`, "2",
-            );
+            args.push(`-c:a:${i}`, "aac", `-b:a:${i}`, rung.audioBitrate, `-ac:a:${i}`, "2");
         }
     }
 
@@ -402,14 +409,22 @@ const runTranscode = async (opts: RunTranscodeOptions): Promise<void> => {
     }
 
     args.push(
-        "-f", "hls",
-        "-hls_time", "6",
-        "-hls_segment_type", "mpegts",
-        "-hls_playlist_type", "vod",
-        "-hls_flags", "independent_segments+program_date_time",
-        "-master_pl_name", "master.m3u8",
-        "-hls_segment_filename", join(hlsRoot, "%v/seg-%05d.ts"),
-        "-var_stream_map", varStreamMap,
+        "-f",
+        "hls",
+        "-hls_time",
+        "6",
+        "-hls_segment_type",
+        "mpegts",
+        "-hls_playlist_type",
+        "vod",
+        "-hls_flags",
+        "independent_segments+program_date_time",
+        "-master_pl_name",
+        "master.m3u8",
+        "-hls_segment_filename",
+        join(hlsRoot, "%v/seg-%05d.ts"),
+        "-var_stream_map",
+        varStreamMap,
         join(hlsRoot, "%v/playlist.m3u8"),
     );
 

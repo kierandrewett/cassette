@@ -41,10 +41,10 @@ export const SitePrivacyForm = () => {
     };
 
     return (
-        <div className="rounded-lg border border-border p-6 space-y-6 max-w-2xl">
+        <div className="max-w-2xl space-y-6 rounded-lg border border-border p-6">
             <div>
                 <h2 className="text-lg font-semibold">Site privacy mode</h2>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="mt-1 text-sm text-muted-foreground">
                     Controls who can access the site. Changes take effect within 30 seconds site-wide.
                 </p>
             </div>
@@ -58,7 +58,7 @@ export const SitePrivacyForm = () => {
                         <label
                             key={mode.value}
                             className={[
-                                "flex items-start gap-3 rounded-md border p-4 cursor-pointer transition-colors",
+                                "flex cursor-pointer items-start gap-3 rounded-md border p-4 transition-colors",
                                 current === mode.value
                                     ? "border-primary bg-primary/5"
                                     : "border-border hover:border-muted-foreground/40",
@@ -70,7 +70,7 @@ export const SitePrivacyForm = () => {
                                 value={mode.value}
                                 checked={current === mode.value}
                                 onChange={() => setSelected(mode.value)}
-                                className="mt-0.5 accent-primary shrink-0"
+                                className="mt-0.5 shrink-0 accent-primary"
                             />
                             <div className="space-y-0.5">
                                 <p className="text-sm font-medium leading-none">{mode.label}</p>
@@ -82,14 +82,15 @@ export const SitePrivacyForm = () => {
             )}
 
             {setMode.isError && (
-                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p
+                    role="alert"
+                    className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                >
                     {setMode.error?.message ?? "Failed to save. Please try again."}
                 </p>
             )}
 
-            {setMode.isSuccess && (
-                <p className="text-sm text-green-600 dark:text-green-400">Settings saved.</p>
-            )}
+            {setMode.isSuccess && <p className="text-sm text-green-600 dark:text-green-400">Settings saved.</p>}
 
             <button
                 type="button"

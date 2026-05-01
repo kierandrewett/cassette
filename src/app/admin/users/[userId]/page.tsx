@@ -36,8 +36,8 @@ export default async function AdminUserDetailPage({ params }: Props) {
     const { user, ownedChannels, videoCount, sessions, isAdmin, adminGrant } = data;
 
     return (
-        <div className="space-y-6 max-w-4xl">
-            <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="max-w-4xl space-y-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold">{user.name}</h1>
@@ -48,10 +48,8 @@ export default async function AdminUserDetailPage({ params }: Props) {
                             </span>
                         )}
                     </div>
-                    <p className="text-muted-foreground text-sm">{user.email}</p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                        Joined {formatDate(user.createdAt)}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Joined {formatDate(user.createdAt)}</p>
                 </div>
                 <UserActionsMenu userId={user.id} userName={user.name} isAdmin={isAdmin} />
             </div>
@@ -71,7 +69,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
                 {ownedChannels.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No channels owned.</p>
                 ) : (
-                    <div className="rounded-lg border border-border overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/40">
@@ -84,7 +82,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
                                 {ownedChannels.map((ch) => (
                                     <tr key={ch.id} className="border-b border-border last:border-0">
                                         <td className="px-4 py-2 font-mono text-xs">
-                                            <Link href={`/c/${ch.handle}`} className="hover:underline text-primary">
+                                            <Link href={`/c/${ch.handle}`} className="text-primary hover:underline">
                                                 @{ch.handle}
                                             </Link>
                                         </td>
@@ -105,12 +103,16 @@ export default async function AdminUserDetailPage({ params }: Props) {
                 {sessions.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No sessions found.</p>
                 ) : (
-                    <div className="rounded-lg border border-border overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/40">
-                                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">IP address</th>
-                                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">User agent</th>
+                                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                                        IP address
+                                    </th>
+                                    <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                                        User agent
+                                    </th>
                                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">Created</th>
                                     <th className="px-4 py-2 text-left font-medium text-muted-foreground">Expires</th>
                                 </tr>
@@ -119,11 +121,15 @@ export default async function AdminUserDetailPage({ params }: Props) {
                                 {sessions.map((s) => (
                                     <tr key={s.id} className="border-b border-border last:border-0">
                                         <td className="px-4 py-2 font-mono text-xs">{s.ipAddress ?? "—"}</td>
-                                        <td className="px-4 py-2 text-muted-foreground max-w-xs truncate text-xs">
+                                        <td className="max-w-xs truncate px-4 py-2 text-xs text-muted-foreground">
                                             {s.userAgent ?? "—"}
                                         </td>
-                                        <td className="px-4 py-2 text-muted-foreground text-xs">{formatDate(s.createdAt)}</td>
-                                        <td className="px-4 py-2 text-muted-foreground text-xs">{formatDate(s.expiresAt)}</td>
+                                        <td className="px-4 py-2 text-xs text-muted-foreground">
+                                            {formatDate(s.createdAt)}
+                                        </td>
+                                        <td className="px-4 py-2 text-xs text-muted-foreground">
+                                            {formatDate(s.expiresAt)}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

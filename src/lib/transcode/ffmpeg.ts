@@ -63,10 +63,7 @@ export const resolveH264Encoder = async (preferNvenc = false): Promise<H264Encod
     if (preferNvenc && encoders.has("h264_nvenc")) return "h264_nvenc";
     if (encoders.has("libx264")) return "libx264";
     if (encoders.has("libopenh264")) return "libopenh264";
-    throw new FfmpegError(
-        "no usable H.264 encoder found (looked for h264_nvenc, libx264, libopenh264)",
-        "",
-    );
+    throw new FfmpegError("no usable H.264 encoder found (looked for h264_nvenc, libx264, libopenh264)", "");
 };
 
 // Per-encoder argument profiles. Bitrate / preset / quality knobs differ

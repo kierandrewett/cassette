@@ -49,31 +49,17 @@ const bootOnce = async (): Promise<void> => {
 
     // pg-boss v10 fetches up to batchSize jobs at once. Our handler iterates
     // serially, so batchSize maps onto the v9 teamSize/teamConcurrency knob.
-    await boss.work<TranscodePayload>(
-        "transcode-video",
-        { batchSize: env.TRANSCODE_CONCURRENCY },
-        transcodeHandler,
-    );
+    await boss.work<TranscodePayload>("transcode-video", { batchSize: env.TRANSCODE_CONCURRENCY }, transcodeHandler);
 
-    await boss.work<TranscribePayload>(
-        "transcribe-video",
-        { batchSize: 1 },
-        transcribeHandler,
-    );
+    await boss.work<TranscribePayload>("transcribe-video", { batchSize: 1 }, transcribeHandler);
 
-    await boss.work<Record<string, never>>(
-        "prune-old-videos",
-        { batchSize: 1 },
-        pruneHandler,
-    );
+    await boss.work<Record<string, never>>("prune-old-videos", { batchSize: 1 }, pruneHandler);
 
     // Schedule the prune job to run daily at 03:00 UTC.
     // pg-boss schedule is idempotent so this is safe to call on every boot.
     await boss.schedule("prune-old-videos", "0 3 * * *");
 
-    console.log(
-        `[worker] pg-boss started; registered transcode-video worker (batchSize=${env.TRANSCODE_CONCURRENCY})`,
-    );
+    console.log(`[worker] pg-boss started; registered transcode-video worker (batchSize=${env.TRANSCODE_CONCURRENCY})`);
 };
 
 // registerWorker is called from instrumentation.ts on server boot. Idempotent.

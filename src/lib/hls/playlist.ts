@@ -32,10 +32,7 @@ export const credentialQueryString = (credential: PlaylistCredential): string =>
  *
  * Idempotent: lines already starting with `/api/hls/` are left unchanged.
  */
-export const rewriteMasterPlaylist = async (
-    videoId: string,
-    credential: PlaylistCredential,
-): Promise<string> => {
+export const rewriteMasterPlaylist = async (videoId: string, credential: PlaylistCredential): Promise<string> => {
     const raw = await readFile(hlsMasterPath(videoId), "utf8");
     const qs = credentialQueryString(credential);
     const lines = raw.split("\n");

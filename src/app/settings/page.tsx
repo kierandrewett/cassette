@@ -32,44 +32,36 @@ export default async function SettingsPage() {
 
                 {/* Account section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
-                        Account
-                    </h2>
-                    <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">Account</h2>
+                    <div className="divide-y divide-border rounded-xl border border-border bg-card">
                         <SettingsRow label="Name" value={user.name} />
                         <SettingsRow label="Email" value={user.email} />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Account details are managed by your administrator. Contact them to update your
-                        name or email address.
+                        Account details are managed by your administrator. Contact them to update your name or email
+                        address.
                     </p>
                 </section>
 
                 {/* Appearance section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
-                        Appearance
-                    </h2>
-                    <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">Appearance</h2>
+                    <div className="divide-y divide-border rounded-xl border border-border bg-card">
                         <ThemeToggle />
                     </div>
                 </section>
 
                 {/* Preferences section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
-                        Preferences
-                    </h2>
-                    <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">Preferences</h2>
+                    <div className="divide-y divide-border rounded-xl border border-border bg-card">
                         <PreferencesPanel />
                     </div>
                 </section>
 
                 {/* Password section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
-                        Password
-                    </h2>
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">Password</h2>
                     <div className="rounded-xl border border-border bg-card px-4 py-4">
                         <ChangePasswordForm />
                     </div>
@@ -77,25 +69,27 @@ export default async function SettingsPage() {
 
                 {/* Passkeys section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
-                        Passkeys
-                    </h2>
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">Passkeys</h2>
                     <PasskeysPanel />
                 </section>
 
                 {/* Two-factor authentication section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">
                         Two-factor authentication
                     </h2>
                     <div className="rounded-xl border border-border bg-card px-4 py-4">
-                        <TwoFactorPanel twoFactorEnabled={(user as unknown as { twoFactorEnabled?: boolean }).twoFactorEnabled ?? false} />
+                        <TwoFactorPanel
+                            twoFactorEnabled={
+                                (user as unknown as { twoFactorEnabled?: boolean }).twoFactorEnabled ?? false
+                            }
+                        />
                     </div>
                 </section>
 
                 {/* Sessions section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">
                         Active Sessions
                     </h2>
                     <SessionsPanel />
@@ -103,19 +97,15 @@ export default async function SettingsPage() {
 
                 {/* Security section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
-                        Security
-                    </h2>
-                    <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">Security</h2>
+                    <div className="divide-y divide-border rounded-xl border border-border bg-card">
                         <SignInAlertsToggle />
                     </div>
                 </section>
 
                 {/* Data section */}
                 <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
-                        Data
-                    </h2>
+                    <h2 className="text-base font-semibold uppercase tracking-wider text-foreground/80">Data</h2>
                     <DataPanel userEmail={user.email} />
                 </section>
 
@@ -132,6 +122,6 @@ export default async function SettingsPage() {
 const SettingsRow = ({ label, value }: { label: string; value: string }) => (
     <div className="flex items-center justify-between gap-4 px-4 py-3">
         <span className="text-sm text-muted-foreground">{label}</span>
-        <span className="text-sm font-medium text-foreground truncate max-w-xs text-right">{value}</span>
+        <span className="max-w-xs truncate text-right text-sm font-medium text-foreground">{value}</span>
     </div>
 );

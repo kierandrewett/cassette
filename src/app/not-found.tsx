@@ -16,8 +16,8 @@ const NotFoundPage = () => {
                     We could not find that.
                 </h1>
                 <p className="mx-auto max-w-md text-balance text-sm text-muted-foreground">
-                    The page or video you were looking for does not exist, has been removed, or is not visible to
-                    you. Try heading back to the home page.
+                    The page or video you were looking for does not exist, has been removed, or is not visible to you.
+                    Try heading back to the home page.
                 </p>
             </div>
             <Link

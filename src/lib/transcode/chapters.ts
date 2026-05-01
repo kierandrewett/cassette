@@ -15,8 +15,7 @@ import { type FfprobeChapter } from "./probe";
 //   [2] minutes (1 or 2 digits)
 //   [3] seconds (2 digits)
 //   [4] title (anything after optional separator whitespace)
-export const CHAPTER_REGEX =
-    /^\s*(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\s\-–—]+(\S.*?)\s*$/;
+export const CHAPTER_REGEX = /^\s*(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\s\-–—]+(\S.*?)\s*$/;
 
 export type ParsedChapter = {
     startSec: number;
@@ -65,10 +64,7 @@ export const containerChapters = (raw: FfprobeChapter[]): ParsedChapter[] =>
 // Merge container chapters with description chapters.
 // Description chapters take precedence when both sources have a chapter at the
 // same start time (creator intent over container metadata).
-export const mergeChapters = (
-    container: ParsedChapter[],
-    description: ParsedChapter[],
-): ParsedChapter[] => {
+export const mergeChapters = (container: ParsedChapter[], description: ParsedChapter[]): ParsedChapter[] => {
     if (description.length > 0) {
         // Description wins entirely when it parses successfully (same YouTube
         // convention: a full description timestamp list replaces container chapters).
@@ -79,10 +75,7 @@ export const mergeChapters = (
 
 // Compute endSec for each chapter (= next chapter's startSec, or undefined for
 // the last). Returns chapters with endSec filled in.
-export const withEndSec = (
-    chapters: ParsedChapter[],
-    durationSec: number,
-): Array<ParsedChapter & { endSec: number }> =>
+export const withEndSec = (chapters: ParsedChapter[], durationSec: number): Array<ParsedChapter & { endSec: number }> =>
     chapters.map((ch, i) => ({
         ...ch,
         endSec: chapters[i + 1]?.startSec ?? Math.ceil(durationSec),

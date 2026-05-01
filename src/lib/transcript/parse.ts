@@ -39,12 +39,7 @@ const parseTimeSec = (ts: string): number | null => {
         const m = longMatch[2]!;
         const s = longMatch[3]!;
         const ms = longMatch[4]!;
-        return (
-            parseInt(h, 10) * 3600 +
-            parseInt(m, 10) * 60 +
-            parseInt(s, 10) +
-            parseInt(ms.padEnd(3, "0"), 10) / 1000
-        );
+        return parseInt(h, 10) * 3600 + parseInt(m, 10) * 60 + parseInt(s, 10) + parseInt(ms.padEnd(3, "0"), 10) / 1000;
     }
 
     // Short form: mm:ss.ms  (no explicit hours)
@@ -53,11 +48,7 @@ const parseTimeSec = (ts: string): number | null => {
         const m = shortMatch[1]!;
         const s = shortMatch[2]!;
         const ms = shortMatch[3]!;
-        return (
-            parseInt(m, 10) * 60 +
-            parseInt(s, 10) +
-            parseInt(ms.padEnd(3, "0"), 10) / 1000
-        );
+        return parseInt(m, 10) * 60 + parseInt(s, 10) + parseInt(ms.padEnd(3, "0"), 10) / 1000;
     }
 
     return null;
@@ -106,11 +97,7 @@ export const parseVtt = (raw: string): VttCue[] => {
 
         // Peek at the block to detect NOTE / STYLE / REGION — skip them.
         const firstLine = lines[i]!.trim();
-        if (
-            firstLine.startsWith("NOTE") ||
-            firstLine.startsWith("STYLE") ||
-            firstLine.startsWith("REGION")
-        ) {
+        if (firstLine.startsWith("NOTE") || firstLine.startsWith("STYLE") || firstLine.startsWith("REGION")) {
             // Consume until the next blank line.
             while (i < lines.length && lines[i]!.trim() !== "") i++;
             continue;

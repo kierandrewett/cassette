@@ -67,26 +67,24 @@ export const channelRouter = createTRPCRouter({
     }),
 
     // Public: look up a single channel by its handle
-    byHandle: publicProcedure
-        .input(z.object({ handle: z.string().min(1) }))
-        .query(async ({ ctx, input }) => {
-            const row = await ctx.db.query.channels.findFirst({
-                where: eq(channels.handle, input.handle.toLowerCase()),
-                columns: {
-                    id: true,
-                    handle: true,
-                    name: true,
-                    description: true,
-                    avatarPath: true,
-                    bannerPath: true,
-                    createdAt: true,
-                },
-            });
-            if (!row) {
-                throw new TRPCError({ code: "NOT_FOUND", message: "Channel not found." });
-            }
-            return row;
-        }),
+    byHandle: publicProcedure.input(z.object({ handle: z.string().min(1) })).query(async ({ ctx, input }) => {
+        const row = await ctx.db.query.channels.findFirst({
+            where: eq(channels.handle, input.handle.toLowerCase()),
+            columns: {
+                id: true,
+                handle: true,
+                name: true,
+                description: true,
+                avatarPath: true,
+                bannerPath: true,
+                createdAt: true,
+            },
+        });
+        if (!row) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Channel not found." });
+        }
+        return row;
+    }),
 
     // Protected: list channels the authenticated user is a member of
     listMine: protectedProcedure.query(async ({ ctx }) => {
@@ -168,11 +166,7 @@ export const channelRouter = createTRPCRouter({
             if (updates.bannerPath !== undefined) patch.bannerPath = updates.bannerPath;
             patch.updatedAt = new Date();
 
-            const [updated] = await ctx.db
-                .update(channels)
-                .set(patch)
-                .where(eq(channels.id, channelId))
-                .returning();
+            const [updated] = await ctx.db.update(channels).set(patch).where(eq(channels.id, channelId)).returning();
 
             if (!updated) {
                 throw new TRPCError({ code: "NOT_FOUND", message: "Channel not found." });
@@ -237,7 +231,9 @@ export const channelRouter = createTRPCRouter({
             const [revoked] = await ctx.db
                 .update(apiKeys)
                 .set({ revokedAt: new Date() })
-                .where(and(eq(apiKeys.id, input.keyId), eq(apiKeys.channelId, input.channelId), isNull(apiKeys.revokedAt)))
+                .where(
+                    and(eq(apiKeys.id, input.keyId), eq(apiKeys.channelId, input.channelId), isNull(apiKeys.revokedAt)),
+                )
                 .returning({ id: apiKeys.id });
 
             if (!revoked) {

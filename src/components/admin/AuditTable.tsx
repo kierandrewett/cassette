@@ -55,29 +55,27 @@ const AuditRowItem = ({ row }: { row: AuditRow }) => {
     return (
         <>
             <tr className="border-b border-border last:border-0 hover:bg-muted/20">
-                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                     <span title={row.createdAt.toISOString()}>{relativeTime(row.createdAt)}</span>
                 </td>
                 <td className="px-4 py-3">
                     {row.actorName ? (
                         <div>
                             <span className="font-medium">{row.actorName}</span>
-                            {row.actorEmail && (
-                                <div className="text-xs text-muted-foreground">{row.actorEmail}</div>
-                            )}
+                            {row.actorEmail && <div className="text-xs text-muted-foreground">{row.actorEmail}</div>}
                         </div>
                     ) : (
-                        <span className="text-muted-foreground italic">system</span>
+                        <span className="italic text-muted-foreground">system</span>
                     )}
                 </td>
                 <td className="px-4 py-3">
-                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">{row.action}</code>
+                    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{row.action}</code>
                 </td>
                 <td className="px-4 py-3 text-sm">
                     {row.targetId ? (
                         <div>
                             <span className="text-muted-foreground">{row.targetType}</span>
-                            <div className="text-xs font-mono text-muted-foreground truncate max-w-[160px]">
+                            <div className="max-w-[160px] truncate font-mono text-xs text-muted-foreground">
                                 {row.targetId}
                             </div>
                         </div>
@@ -91,29 +89,23 @@ const AuditRowItem = ({ row }: { row: AuditRow }) => {
                             onClick={() => setExpanded((v) => !v)}
                             className={cn(
                                 "flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors",
-                                "border border-border hover:bg-muted text-muted-foreground hover:text-foreground",
+                                "border border-border text-muted-foreground hover:bg-muted hover:text-foreground",
                             )}
                             aria-expanded={expanded}
                         >
-                            {expanded ? (
-                                <ChevronDown className="h-3 w-3" />
-                            ) : (
-                                <ChevronRight className="h-3 w-3" />
-                            )}
+                            {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                             {expanded ? "Hide" : "Show"}
                         </button>
                     ) : (
                         <span className="text-muted-foreground">—</span>
                     )}
                 </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
-                    {row.ipAddress ?? "—"}
-                </td>
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{row.ipAddress ?? "—"}</td>
             </tr>
             {expanded && hasDetails && (
                 <tr className="border-b border-border bg-muted/10">
                     <td colSpan={6} className="px-4 py-3">
-                        <pre className="overflow-x-auto rounded bg-muted p-3 text-xs font-mono whitespace-pre-wrap break-all">
+                        <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded bg-muted p-3 font-mono text-xs">
                             {JSON.stringify(row.details, null, 2)}
                         </pre>
                     </td>
@@ -137,11 +129,11 @@ export const AuditTable = ({ rows }: AuditTableProps) => {
     }
 
     return (
-        <div className="rounded-lg border border-border overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-sm">
                 <thead>
                     <tr className="border-b border-border bg-muted/40">
-                        <th className="px-4 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">
+                        <th className="whitespace-nowrap px-4 py-3 text-left font-medium text-muted-foreground">
                             When
                         </th>
                         <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actor</th>

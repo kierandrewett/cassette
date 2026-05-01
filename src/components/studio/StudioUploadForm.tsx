@@ -298,7 +298,7 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                         />
                     </div>
                 ) : (
-                    <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-4">
+                    <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -368,7 +368,7 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                                 rows={5}
                                 placeholder="Describe your video…"
                                 className={cn(
-                                    "flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm resize-none",
+                                    "flex w-full resize-none rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm",
                                     "placeholder:text-muted-foreground",
                                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                                     "disabled:cursor-not-allowed disabled:opacity-50",
@@ -379,8 +379,7 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                         {/* Tags */}
                         <div className="space-y-1.5">
                             <label htmlFor="upload-tags" className="text-sm font-medium leading-none">
-                                Tags{" "}
-                                <span className="text-muted-foreground font-normal">(optional)</span>
+                                Tags <span className="font-normal text-muted-foreground">(optional)</span>
                             </label>
                             <input
                                 id="upload-tags"
@@ -431,7 +430,7 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                         <div className="space-y-1.5">
                             <label htmlFor="upload-captions" className="text-sm font-medium leading-none">
                                 Captions{" "}
-                                <span className="text-muted-foreground font-normal">
+                                <span className="font-normal text-muted-foreground">
                                     (optional, .vtt — name as <code className="text-xs">lang-Label.vtt</code>)
                                 </span>
                             </label>

@@ -47,15 +47,15 @@ export const CaptionsMenu = () => {
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
                     <div
-                        className="player-popover absolute bottom-full right-0 mb-2 z-50 w-44 overflow-hidden rounded-xl py-2"
+                        className="player-popover absolute bottom-full right-0 z-50 mb-2 w-44 overflow-hidden rounded-xl py-2"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Off option */}
                         <button
                             className={cn(
                                 "flex w-full items-center justify-between px-4 py-2 text-sm",
-                                "hover:bg-white/10 transition-colors",
-                                !isOn ? "text-white font-medium" : "text-white/70",
+                                "transition-colors hover:bg-white/10",
+                                !isOn ? "font-medium text-white" : "text-white/70",
                             )}
                             onClick={() => {
                                 // Disable all caption tracks by setting mode to 'disabled'.
@@ -82,8 +82,8 @@ export const CaptionsMenu = () => {
                                     key={opt.label}
                                     className={cn(
                                         "flex w-full items-center justify-between px-4 py-2 text-sm",
-                                        "hover:bg-white/10 transition-colors",
-                                        opt.selected ? "text-white font-medium" : "text-white/70",
+                                        "transition-colors hover:bg-white/10",
+                                        opt.selected ? "font-medium text-white" : "text-white/70",
                                     )}
                                     onClick={() => {
                                         opt.select();
@@ -93,7 +93,7 @@ export const CaptionsMenu = () => {
                                     <span className="flex items-center gap-1.5">
                                         {opt.label}
                                         {isAuto && (
-                                            <span className="rounded px-1 py-px text-[10px] font-semibold leading-none bg-white/15 text-white/80 tracking-wide">
+                                            <span className="rounded bg-white/15 px-1 py-px text-[10px] font-semibold leading-none tracking-wide text-white/80">
                                                 AUTO
                                             </span>
                                         )}
@@ -111,6 +111,12 @@ export const CaptionsMenu = () => {
 
 const Check = () => (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+            d="M2 7l3.5 3.5L12 3"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
     </svg>
 );

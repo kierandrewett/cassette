@@ -35,9 +35,7 @@ export const parseSearchFilters = (params: URLSearchParams | Record<string, stri
 
     const rawDuration = get("duration");
     const duration: Duration | undefined =
-        rawDuration && (DURATION_VALUES as string[]).includes(rawDuration)
-            ? (rawDuration as Duration)
-            : undefined;
+        rawDuration && (DURATION_VALUES as string[]).includes(rawDuration) ? (rawDuration as Duration) : undefined;
 
     const rawHasCaptions = get("hasCaptions");
     const hasCaptions: boolean | undefined =
@@ -48,8 +46,7 @@ export const parseSearchFilters = (params: URLSearchParams | Record<string, stri
         rawType && (TYPE_VALUES as string[]).includes(rawType) ? (rawType as SearchType) : undefined;
 
     const rawTag = get("tag");
-    const tag: string | undefined =
-        rawTag && TAG_RE.test(rawTag) && rawTag.length <= 30 ? rawTag : undefined;
+    const tag: string | undefined = rawTag && TAG_RE.test(rawTag) && rawTag.length <= 30 ? rawTag : undefined;
 
     return { q, uploadedWithin, duration, hasCaptions, type, tag };
 };
@@ -67,10 +64,7 @@ export const serialiseSearchFilters = (filters: SearchFilters): string => {
 };
 
 /** Produce a URL for the search page with one filter mutated. */
-export const mutateFilter = (
-    current: SearchFilters,
-    patch: Partial<Omit<SearchFilters, "q">>,
-): string => {
+export const mutateFilter = (current: SearchFilters, patch: Partial<Omit<SearchFilters, "q">>): string => {
     const next: SearchFilters = { ...current, ...patch };
     const qs = serialiseSearchFilters(next);
     return `/search${qs ? `?${qs}` : ""}`;

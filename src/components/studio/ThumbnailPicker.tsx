@@ -49,15 +49,10 @@ export const ThumbnailPicker = ({ videoId, onSaved }: ThumbnailPickerProps) => {
 
     return (
         <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-                Click a frame to set it as the video thumbnail.
-            </p>
+            <p className="text-sm text-muted-foreground">Click a frame to set it as the video thumbnail.</p>
 
             {/* Sprite grid — rendered by clipping the sprite image at each cell position */}
-            <div
-                className="overflow-auto rounded-lg border border-border"
-                style={{ maxHeight: 400 }}
-            >
+            <div className="overflow-auto rounded-lg border border-border" style={{ maxHeight: 400 }}>
                 <div
                     style={{
                         display: "grid",
@@ -85,9 +80,7 @@ export const ThumbnailPicker = ({ videoId, onSaved }: ThumbnailPickerProps) => {
                                 disabled={setThumbnail.isPending}
                                 className={cn(
                                     "relative overflow-hidden border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                    isSelected
-                                        ? "border-primary"
-                                        : "border-transparent hover:border-primary/50",
+                                    isSelected ? "border-primary" : "border-transparent hover:border-primary/50",
                                     setThumbnail.isPending && "pointer-events-none opacity-70",
                                 )}
                                 style={{
@@ -151,9 +144,7 @@ export const ThumbnailPicker = ({ videoId, onSaved }: ThumbnailPickerProps) => {
             </div>
 
             {savedIndex !== null && !setThumbnail.isPending && (
-                <p className="text-xs text-green-400">
-                    Frame {savedIndex + 1} set as thumbnail.
-                </p>
+                <p className="text-xs text-green-400">Frame {savedIndex + 1} set as thumbnail.</p>
             )}
         </div>
     );

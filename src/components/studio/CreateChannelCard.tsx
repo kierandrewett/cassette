@@ -113,8 +113,7 @@ export const CreateChannelCard = () => {
                 {/* Description */}
                 <div className="space-y-1.5">
                     <label htmlFor="description" className="text-sm font-medium leading-none">
-                        Description{" "}
-                        <span className="font-normal text-muted-foreground">(optional)</span>
+                        Description <span className="font-normal text-muted-foreground">(optional)</span>
                     </label>
                     <textarea
                         id="description"
@@ -130,7 +129,10 @@ export const CreateChannelCard = () => {
                 </div>
 
                 {serverError && (
-                    <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p
+                        role="alert"
+                        className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                    >
                         {serverError}
                     </p>
                 )}

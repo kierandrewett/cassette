@@ -47,7 +47,7 @@ export const SignInAlertsToggle = () => {
     return (
         <div className="flex items-center justify-between gap-4 px-4 py-3">
             <div className="flex flex-col gap-0.5">
-                <Label htmlFor="sign-in-alerts" className="text-sm font-medium text-foreground cursor-pointer">
+                <Label htmlFor="sign-in-alerts" className="cursor-pointer text-sm font-medium text-foreground">
                     Sign-in alerts
                 </Label>
                 <p className="text-xs text-muted-foreground">

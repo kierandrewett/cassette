@@ -18,7 +18,6 @@ interface ScrubberPreviewProps {
  * Sprite frames are provided via a WebVTT track with kind="metadata".
  */
 export const ScrubberPreview = ({ videoId, chapters: _chapters }: ScrubberPreviewProps) => {
-
     // useSliderPreview gives us the pointer position and value from the TimeSlider
     // We need the root time slider element; it's provided by SliderPreview inside TimeSlider.
     // This component is rendered inside SliderPreview from PlayerBottomBar.
@@ -31,9 +30,7 @@ export const ScrubberPreview = ({ videoId, chapters: _chapters }: ScrubberPrevie
             {/* Thumbnail placeholder — if sprite VTT is not yet loaded, shows a blank */}
             <ThumbnailFrame videoId={videoId} />
             {/* Time label */}
-            <span className="text-xs font-medium text-white tabular-nums drop-shadow">
-                {formatDuration(0)}
-            </span>
+            <span className="text-xs font-medium tabular-nums text-white drop-shadow">{formatDuration(0)}</span>
         </div>
     );
 };
@@ -43,13 +40,7 @@ const ThumbnailFrame = ({ videoId }: { videoId: string }) => (
         className="surface-glass relative overflow-hidden rounded-lg border border-white/10 shadow-xl"
         style={{ width: 160, height: 90 }}
     >
-        <Image
-            src={`/api/hls/${videoId}/thumb/sprite.jpg`}
-            alt=""
-            fill
-            unoptimized
-            className="object-cover"
-        />
+        <Image src={`/api/hls/${videoId}/thumb/sprite.jpg`} alt="" fill unoptimized className="object-cover" />
     </div>
 );
 
@@ -67,9 +58,7 @@ export const ScrubberPreviewInner = ({
     chapters: VideoChapter[];
 }) => {
     // Find chapter title for this preview time.
-    const chapter = [...chapters]
-        .reverse()
-        .find((ch) => previewTime >= ch.startSec);
+    const chapter = [...chapters].reverse().find((ch) => previewTime >= ch.startSec);
 
     return (
         <div className="pointer-events-none flex flex-col items-center gap-1">
@@ -82,15 +71,9 @@ export const ScrubberPreviewInner = ({
                 className="surface-glass relative overflow-hidden rounded-lg border border-white/10 shadow-xl"
                 style={{ width: 160, height: 90 }}
             >
-                <Image
-                    src={`/api/hls/${videoId}/thumb/sprite.jpg`}
-                    alt=""
-                    fill
-                    unoptimized
-                    className="object-cover"
-                />
+                <Image src={`/api/hls/${videoId}/thumb/sprite.jpg`} alt="" fill unoptimized className="object-cover" />
             </div>
-            <span className="text-xs font-medium text-white tabular-nums drop-shadow">
+            <span className="text-xs font-medium tabular-nums text-white drop-shadow">
                 {formatDuration(previewTime)}
             </span>
         </div>

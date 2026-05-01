@@ -106,9 +106,7 @@ const StudioChannelPage = async ({ params, searchParams }: Props) => {
                         className="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-card/80"
                     >
                         <span className="text-base font-semibold">+ Upload video</span>
-                        <span className="text-sm text-muted-foreground">
-                            Upload a new video to your channel.
-                        </span>
+                        <span className="text-sm text-muted-foreground">Upload a new video to your channel.</span>
                     </a>
                 </div>
             )}

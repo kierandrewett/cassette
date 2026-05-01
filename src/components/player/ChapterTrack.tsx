@@ -27,7 +27,7 @@ export const ChapterTrack = ({ chapters }: ChapterTrackProps) => {
         chapters.length > 0
             ? chapters.map((ch, i) => ({
                   start: ch.startSec,
-                  end: ch.endSec ?? (chapters[i + 1]?.startSec ?? duration),
+                  end: ch.endSec ?? chapters[i + 1]?.startSec ?? duration,
               }))
             : [{ start: 0, end: duration }];
 
@@ -44,7 +44,7 @@ export const ChapterTrack = ({ chapters }: ChapterTrackProps) => {
                 return (
                     <div
                         key={i}
-                        className="relative overflow-hidden rounded-full h-full"
+                        className="relative h-full overflow-hidden rounded-full"
                         style={{
                             width: `${widthPct}%`,
                             minWidth: "2px",

@@ -158,7 +158,7 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
                                     rows={6}
                                     {...register("description")}
                                     className={cn(
-                                        "flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm resize-none",
+                                        "flex w-full resize-none rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm",
                                         "placeholder:text-muted-foreground",
                                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                                         "disabled:cursor-not-allowed disabled:opacity-50",
@@ -173,8 +173,7 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
                             {/* Tags */}
                             <div className="space-y-1.5">
                                 <label htmlFor="edit-tags" className="text-sm font-medium leading-none">
-                                    Tags{" "}
-                                    <span className="text-muted-foreground font-normal">(optional)</span>
+                                    Tags <span className="font-normal text-muted-foreground">(optional)</span>
                                 </label>
                                 <input
                                     id="edit-tags"
@@ -218,7 +217,7 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
                     {/* ---- Thumbnail tab ---- */}
                     <TabsContent value="thumbnail" className="pt-2">
                         {/* Sub-tabs: pick from video | upload custom */}
-                        <div className="mb-4 flex gap-1 rounded-lg border border-border bg-secondary p-1 w-fit">
+                        <div className="mb-4 flex w-fit gap-1 rounded-lg border border-border bg-secondary p-1">
                             <button
                                 type="button"
                                 onClick={() => setThumbTab("pick")}

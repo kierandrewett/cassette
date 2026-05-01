@@ -92,12 +92,12 @@ export const ApiKeysPanel = ({ channelId }: ApiKeysPanelProps) => {
 
             {/* One-time plaintext reveal */}
             {newKey && (
-                <div className="rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-5 space-y-3">
+                <div className="space-y-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-5">
                     <p className="text-sm font-medium text-yellow-400">
                         Save your new key — you won&apos;t see this again.
                     </p>
                     <div className="flex items-center gap-2">
-                        <code className="flex-1 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 text-sm font-mono">
+                        <code className="flex-1 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-sm">
                             {newKey.plaintext}
                         </code>
                         <button

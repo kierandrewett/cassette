@@ -27,9 +27,7 @@ export const ChannelQuotaEditor = ({ channelId, currentQuotaBytes }: ChannelQuot
     });
 
     const handleSave = () => {
-        const quotaBytes = quotaGb.trim() === ""
-            ? null
-            : Math.round(parseFloat(quotaGb) * 1_073_741_824);
+        const quotaBytes = quotaGb.trim() === "" ? null : Math.round(parseFloat(quotaGb) * 1_073_741_824);
         setQuota.mutate({ channelId, quotaBytes });
     };
 
@@ -37,11 +35,9 @@ export const ChannelQuotaEditor = ({ channelId, currentQuotaBytes }: ChannelQuot
         return (
             <button
                 onClick={() => setEditing(true)}
-                className="text-xs text-muted-foreground underline-offset-2 hover:underline hover:text-foreground transition-colors"
+                className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
             >
-                {currentQuotaBytes !== null
-                    ? `${(currentQuotaBytes / 1_073_741_824).toFixed(1)} GB limit`
-                    : "No limit"}
+                {currentQuotaBytes !== null ? `${(currentQuotaBytes / 1_073_741_824).toFixed(1)} GB limit` : "No limit"}
             </button>
         );
     }

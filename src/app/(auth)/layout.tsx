@@ -6,7 +6,10 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="relative flex min-h-screen flex-col">
             {/* Wordmark */}
             <header className="absolute left-0 top-0 p-6">
-                <Link href="/" className="text-sm font-semibold tracking-tight text-foreground hover:text-foreground/80">
+                <Link
+                    href="/"
+                    className="text-sm font-semibold tracking-tight text-foreground hover:text-foreground/80"
+                >
                     cassette
                 </Link>
             </header>

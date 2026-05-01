@@ -46,9 +46,7 @@ export const VideoGrid = ({
     if (!videos || videos.length === 0) {
         return (
             <div className="py-20 text-center">
-                {emptySlot ?? (
-                    <p className="text-sm text-muted-foreground">No videos yet.</p>
-                )}
+                {emptySlot ?? <p className="text-sm text-muted-foreground">No videos yet.</p>}
             </div>
         );
     }
@@ -56,11 +54,7 @@ export const VideoGrid = ({
     return (
         <div className={gridClass}>
             {videos.map((video) => (
-                <VideoCard
-                    key={video.id}
-                    video={video}
-                    progress={progress?.[video.id]}
-                />
+                <VideoCard key={video.id} video={video} progress={progress?.[video.id]} />
             ))}
         </div>
     );

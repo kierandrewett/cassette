@@ -11,12 +11,7 @@ import { transcodeJobs } from "@/server/db/schema/jobs";
 import { videoLikes } from "@/server/db/schema/social";
 import { subscriptions } from "@/server/db/schema/social";
 import { channels } from "@/server/db/schema/channels";
-import {
-    videoCaptions,
-    videoChapters,
-    videos,
-    videoVariants,
-} from "@/server/db/schema/videos";
+import { videoCaptions, videoChapters, videos, videoVariants } from "@/server/db/schema/videos";
 import { viewSessions, watchHistory, watchProgress } from "@/server/db/schema/history";
 
 // Constant-time string compare to prevent timing attacks on unlisted slugs.
@@ -39,53 +34,46 @@ export const videoRouter = createTRPCRouter({
     // ---------------------------------------------------------------------------
     // uploadStatus — poll transcode state from studio
     // ---------------------------------------------------------------------------
-    uploadStatus: protectedProcedure
-        .input(z.object({ videoId: z.string().uuid() }))
-        .query(async ({ ctx, input }) => {
-            // Load the video to determine its channel.
-            const videoRows = await ctx.db
-                .select({ channelId: videos.channelId })
-                .from(videos)
-                .where(eq(videos.id, input.videoId))
-                .limit(1);
+    uploadStatus: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).query(async ({ ctx, input }) => {
+        // Load the video to determine its channel.
+        const videoRows = await ctx.db
+            .select({ channelId: videos.channelId })
+            .from(videos)
+            .where(eq(videos.id, input.videoId))
+            .limit(1);
 
-            const video = videoRows[0];
-            if (!video) {
-                return null;
-            }
+        const video = videoRows[0];
+        if (!video) {
+            return null;
+        }
 
-            // Verify the caller is a member of the channel that owns the video.
-            const memberRows = await ctx.db
-                .select({ role: channelMembers.role })
-                .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
-                .limit(1);
+        // Verify the caller is a member of the channel that owns the video.
+        const memberRows = await ctx.db
+            .select({ role: channelMembers.role })
+            .from(channelMembers)
+            .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
+            .limit(1);
 
-            if (!memberRows[0]) {
-                return null;
-            }
+        if (!memberRows[0]) {
+            return null;
+        }
 
-            // Return the latest transcode_jobs row for this video.
-            const jobRows = await ctx.db
-                .select({
-                    state: transcodeJobs.state,
-                    progress: transcodeJobs.progress,
-                    step: transcodeJobs.step,
-                    message: transcodeJobs.message,
-                    finishedAt: transcodeJobs.finishedAt,
-                })
-                .from(transcodeJobs)
-                .where(eq(transcodeJobs.videoId, input.videoId))
-                .orderBy(desc(transcodeJobs.createdAt))
-                .limit(1);
+        // Return the latest transcode_jobs row for this video.
+        const jobRows = await ctx.db
+            .select({
+                state: transcodeJobs.state,
+                progress: transcodeJobs.progress,
+                step: transcodeJobs.step,
+                message: transcodeJobs.message,
+                finishedAt: transcodeJobs.finishedAt,
+            })
+            .from(transcodeJobs)
+            .where(eq(transcodeJobs.videoId, input.videoId))
+            .orderBy(desc(transcodeJobs.createdAt))
+            .limit(1);
 
-            return jobRows[0] ?? null;
-        }),
+        return jobRows[0] ?? null;
+    }),
 
     // ---------------------------------------------------------------------------
     // byId — load a video with all relations; enforces privacy gate
@@ -149,10 +137,7 @@ export const videoRouter = createTRPCRouter({
                         .select({ role: channelMembers.role })
                         .from(channelMembers)
                         .where(
-                            and(
-                                eq(channelMembers.channelId, video.channelId),
-                                eq(channelMembers.userId, ctx.user.id),
-                            ),
+                            and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)),
                         )
                         .limit(1);
                     isMember = !!memberRows[0];
@@ -165,14 +150,8 @@ export const videoRouter = createTRPCRouter({
 
             // Load variants, captions, chapters in parallel.
             const [variantRows, captionRows, chapterRows] = await Promise.all([
-                ctx.db
-                    .select()
-                    .from(videoVariants)
-                    .where(eq(videoVariants.videoId, video.id)),
-                ctx.db
-                    .select()
-                    .from(videoCaptions)
-                    .where(eq(videoCaptions.videoId, video.id)),
+                ctx.db.select().from(videoVariants).where(eq(videoVariants.videoId, video.id)),
+                ctx.db.select().from(videoCaptions).where(eq(videoCaptions.videoId, video.id)),
                 ctx.db
                     .select()
                     .from(videoChapters)
@@ -189,22 +168,12 @@ export const videoRouter = createTRPCRouter({
                     ctx.db
                         .select({ kind: videoLikes.kind })
                         .from(videoLikes)
-                        .where(
-                            and(
-                                eq(videoLikes.videoId, video.id),
-                                eq(videoLikes.userId, ctx.user.id),
-                            ),
-                        )
+                        .where(and(eq(videoLikes.videoId, video.id), eq(videoLikes.userId, ctx.user.id)))
                         .limit(1),
                     ctx.db
                         .select({ userId: subscriptions.userId })
                         .from(subscriptions)
-                        .where(
-                            and(
-                                eq(subscriptions.channelId, video.channelId),
-                                eq(subscriptions.userId, ctx.user.id),
-                            ),
-                        )
+                        .where(and(eq(subscriptions.channelId, video.channelId), eq(subscriptions.userId, ctx.user.id)))
                         .limit(1),
                 ]);
                 isLikedByMe = likeRows[0]?.kind ?? null;
@@ -287,27 +256,20 @@ export const videoRouter = createTRPCRouter({
     // ---------------------------------------------------------------------------
     // getProgress — read latest watch position
     // ---------------------------------------------------------------------------
-    getProgress: protectedProcedure
-        .input(z.object({ videoId: z.string().uuid() }))
-        .query(async ({ ctx, input }) => {
-            const rows = await ctx.db
-                .select({
-                    positionSec: watchProgress.positionSec,
-                    durationSec: watchProgress.durationSec,
-                    completed: watchProgress.completed,
-                    updatedAt: watchProgress.updatedAt,
-                })
-                .from(watchProgress)
-                .where(
-                    and(
-                        eq(watchProgress.userId, ctx.user.id),
-                        eq(watchProgress.videoId, input.videoId),
-                    ),
-                )
-                .limit(1);
+    getProgress: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).query(async ({ ctx, input }) => {
+        const rows = await ctx.db
+            .select({
+                positionSec: watchProgress.positionSec,
+                durationSec: watchProgress.durationSec,
+                completed: watchProgress.completed,
+                updatedAt: watchProgress.updatedAt,
+            })
+            .from(watchProgress)
+            .where(and(eq(watchProgress.userId, ctx.user.id), eq(watchProgress.videoId, input.videoId)))
+            .limit(1);
 
-            return rows[0] ?? null;
-        }),
+        return rows[0] ?? null;
+    }),
 
     // ---------------------------------------------------------------------------
     // recordView — de-duped 30-min bucket view counting (public, best-effort)
@@ -357,60 +319,58 @@ export const videoRouter = createTRPCRouter({
     // ---------------------------------------------------------------------------
     // nextInChannel — autoplay fallback: next public+ready video in same channel
     // ---------------------------------------------------------------------------
-    nextInChannel: publicProcedure
-        .input(z.object({ videoId: z.string().uuid() }))
-        .query(async ({ ctx, input }) => {
-            // Load the channel for the current video.
-            const videoRows = await ctx.db
-                .select({ channelId: videos.channelId, publishedAt: videos.publishedAt })
-                .from(videos)
-                .where(eq(videos.id, input.videoId))
-                .limit(1);
+    nextInChannel: publicProcedure.input(z.object({ videoId: z.string().uuid() })).query(async ({ ctx, input }) => {
+        // Load the channel for the current video.
+        const videoRows = await ctx.db
+            .select({ channelId: videos.channelId, publishedAt: videos.publishedAt })
+            .from(videos)
+            .where(eq(videos.id, input.videoId))
+            .limit(1);
 
-            const currentVideo = videoRows[0];
-            if (!currentVideo) return null;
+        const currentVideo = videoRows[0];
+        if (!currentVideo) return null;
 
-            // Find the next public + ready video in the same channel, ordered by publishedAt DESC.
-            // "Next" means the most recently published video that is NOT the current one.
-            // TODO (M7): when the queue system lands, use the queue instead of this fallback.
-            const nextRows = await ctx.db
-                .select({
-                    id: videos.id,
-                    title: videos.title,
-                    thumbnailPath: videos.thumbnailPath,
-                    durationSec: videos.durationSec,
-                    viewCount: videos.viewCount,
-                    publishedAt: videos.publishedAt,
-                    channelId: videos.channelId,
-                })
-                .from(videos)
-                .innerJoin(channels, eq(videos.channelId, channels.id))
-                .where(
-                    and(
-                        eq(videos.channelId, currentVideo.channelId),
-                        eq(videos.privacy, "public"),
-                        eq(videos.status, "ready"),
-                        ne(videos.id, input.videoId),
-                        gt(videos.publishedAt, sql`'1970-01-01'::timestamptz`),
-                    ),
-                )
-                .orderBy(desc(videos.publishedAt))
-                .limit(1);
+        // Find the next public + ready video in the same channel, ordered by publishedAt DESC.
+        // "Next" means the most recently published video that is NOT the current one.
+        // TODO (M7): when the queue system lands, use the queue instead of this fallback.
+        const nextRows = await ctx.db
+            .select({
+                id: videos.id,
+                title: videos.title,
+                thumbnailPath: videos.thumbnailPath,
+                durationSec: videos.durationSec,
+                viewCount: videos.viewCount,
+                publishedAt: videos.publishedAt,
+                channelId: videos.channelId,
+            })
+            .from(videos)
+            .innerJoin(channels, eq(videos.channelId, channels.id))
+            .where(
+                and(
+                    eq(videos.channelId, currentVideo.channelId),
+                    eq(videos.privacy, "public"),
+                    eq(videos.status, "ready"),
+                    ne(videos.id, input.videoId),
+                    gt(videos.publishedAt, sql`'1970-01-01'::timestamptz`),
+                ),
+            )
+            .orderBy(desc(videos.publishedAt))
+            .limit(1);
 
-            if (!nextRows[0]) return null;
+        if (!nextRows[0]) return null;
 
-            // Also grab channel info for the card.
-            const channelRows = await ctx.db
-                .select({ handle: channels.handle, name: channels.name, avatarPath: channels.avatarPath })
-                .from(channels)
-                .where(eq(channels.id, nextRows[0].channelId))
-                .limit(1);
+        // Also grab channel info for the card.
+        const channelRows = await ctx.db
+            .select({ handle: channels.handle, name: channels.name, avatarPath: channels.avatarPath })
+            .from(channels)
+            .where(eq(channels.id, nextRows[0].channelId))
+            .limit(1);
 
-            const channel = channelRows[0];
-            if (!channel) return null;
+        const channel = channelRows[0];
+        if (!channel) return null;
 
-            return { ...nextRows[0], channel };
-        }),
+        return { ...nextRows[0], channel };
+    }),
 
     // ---------------------------------------------------------------------------
     // listForChannel — channel-scoped video list for the studio video table.
@@ -430,12 +390,7 @@ export const videoRouter = createTRPCRouter({
             const memberRows = await ctx.db
                 .select({ role: channelMembers.role })
                 .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, input.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
+                .where(and(eq(channelMembers.channelId, input.channelId), eq(channelMembers.userId, ctx.user.id)))
                 .limit(1);
             if (!memberRows[0]) {
                 throw new TRPCError({ code: "FORBIDDEN", message: "Not a member of this channel." });
@@ -482,7 +437,10 @@ export const videoRouter = createTRPCRouter({
                 description: z.string().trim().max(10_000).optional(),
                 tags: z
                     .array(
-                        z.string().regex(/^[a-z0-9-]+$/).max(30),
+                        z
+                            .string()
+                            .regex(/^[a-z0-9-]+$/)
+                            .max(30),
                     )
                     .max(12)
                     .optional(),
@@ -500,12 +458,7 @@ export const videoRouter = createTRPCRouter({
             const memberRows = await ctx.db
                 .select({ role: channelMembers.role })
                 .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
+                .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
                 .limit(1);
             if (!memberRows[0]) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -514,11 +467,7 @@ export const videoRouter = createTRPCRouter({
             if (input.description !== undefined) patch.description = input.description;
             if (input.tags !== undefined) patch.tags = input.tags;
 
-            const [updated] = await ctx.db
-                .update(videos)
-                .set(patch)
-                .where(eq(videos.id, input.videoId))
-                .returning();
+            const [updated] = await ctx.db.update(videos).set(patch).where(eq(videos.id, input.videoId)).returning();
             return updated!;
         }),
 
@@ -545,12 +494,7 @@ export const videoRouter = createTRPCRouter({
             const memberRows = await ctx.db
                 .select({ role: channelMembers.role })
                 .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
+                .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
                 .limit(1);
             if (!memberRows[0]) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -565,11 +509,7 @@ export const videoRouter = createTRPCRouter({
                 patch.unlistedSlug = null;
             }
 
-            const [updated] = await ctx.db
-                .update(videos)
-                .set(patch)
-                .where(eq(videos.id, input.videoId))
-                .returning();
+            const [updated] = await ctx.db.update(videos).set(patch).where(eq(videos.id, input.videoId)).returning();
             return updated!;
         }),
 
@@ -660,12 +600,7 @@ export const videoRouter = createTRPCRouter({
             const memberRows = await ctx.db
                 .select({ role: channelMembers.role })
                 .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
+                .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
                 .limit(1);
             if (!memberRows[0]) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -687,11 +622,16 @@ export const videoRouter = createTRPCRouter({
 
             // Extract the single frame.
             await runFfmpeg([
-                "-ss", String(timestampSec),
-                "-i", video.sourcePath,
-                "-frames:v", "1",
-                "-q:v", "3",
-                "-vf", "scale=1280:-1",
+                "-ss",
+                String(timestampSec),
+                "-i",
+                video.sourcePath,
+                "-frames:v",
+                "1",
+                "-q:v",
+                "3",
+                "-vf",
+                "scale=1280:-1",
                 thumbPath,
             ]);
 
@@ -719,12 +659,14 @@ export const videoRouter = createTRPCRouter({
         .input(
             z.object({
                 videoId: z.string().uuid(),
-                chapters: z.array(
-                    z.object({
-                        startSec: z.number().int().nonnegative(),
-                        title: z.string().trim().min(1).max(200),
-                    }),
-                ).max(200),
+                chapters: z
+                    .array(
+                        z.object({
+                            startSec: z.number().int().nonnegative(),
+                            title: z.string().trim().min(1).max(200),
+                        }),
+                    )
+                    .max(200),
             }),
         )
         .mutation(async ({ ctx, input }) => {
@@ -739,12 +681,7 @@ export const videoRouter = createTRPCRouter({
             const memberRows = await ctx.db
                 .select({ role: channelMembers.role })
                 .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
+                .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
                 .limit(1);
             if (!memberRows[0]) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -753,12 +690,7 @@ export const videoRouter = createTRPCRouter({
             await ctx.db.transaction(async (tx) => {
                 await tx
                     .delete(videoChapters)
-                    .where(
-                        and(
-                            eq(videoChapters.videoId, input.videoId),
-                            eq(videoChapters.source, "manual"),
-                        ),
-                    );
+                    .where(and(eq(videoChapters.videoId, input.videoId), eq(videoChapters.source, "manual")));
 
                 if (input.chapters.length > 0) {
                     await tx.insert(videoChapters).values(
@@ -775,57 +707,50 @@ export const videoRouter = createTRPCRouter({
             return { ok: true };
         }),
 
-    delete: protectedProcedure
-        .input(z.object({ videoId: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            const videoRows = await ctx.db
-                .select({
-                    channelId: videos.channelId,
-                    sourcePath: videos.sourcePath,
-                })
-                .from(videos)
-                .where(eq(videos.id, input.videoId))
-                .limit(1);
-            const video = videoRows[0];
-            if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+    delete: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const videoRows = await ctx.db
+            .select({
+                channelId: videos.channelId,
+                sourcePath: videos.sourcePath,
+            })
+            .from(videos)
+            .where(eq(videos.id, input.videoId))
+            .limit(1);
+        const video = videoRows[0];
+        if (!video) throw new TRPCError({ code: "NOT_FOUND" });
 
-            const memberRows = await ctx.db
-                .select({ role: channelMembers.role })
-                .from(channelMembers)
-                .where(
-                    and(
-                        eq(channelMembers.channelId, video.channelId),
-                        eq(channelMembers.userId, ctx.user.id),
-                    ),
-                )
-                .limit(1);
-            const role = memberRows[0]?.role;
-            if (role !== "owner" && role !== "manager") {
-                throw new TRPCError({ code: "FORBIDDEN", message: "Only owners or managers can delete videos." });
-            }
+        const memberRows = await ctx.db
+            .select({ role: channelMembers.role })
+            .from(channelMembers)
+            .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
+            .limit(1);
+        const role = memberRows[0]?.role;
+        if (role !== "owner" && role !== "manager") {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Only owners or managers can delete videos." });
+        }
 
-            // Capture the channel handle before we delete the video row so
-            // the on-disk cleanup can rebuild the source path even if the
-            // sourcePath column is null.
-            const channelRows = await ctx.db
-                .select({ handle: channels.handle })
-                .from(channels)
-                .where(eq(channels.id, video.channelId))
-                .limit(1);
-            const channelHandle = channelRows[0]?.handle ?? "_orphan";
+        // Capture the channel handle before we delete the video row so
+        // the on-disk cleanup can rebuild the source path even if the
+        // sourcePath column is null.
+        const channelRows = await ctx.db
+            .select({ handle: channels.handle })
+            .from(channels)
+            .where(eq(channels.id, video.channelId))
+            .limit(1);
+        const channelHandle = channelRows[0]?.handle ?? "_orphan";
 
-            await ctx.db.delete(videos).where(eq(videos.id, input.videoId));
+        await ctx.db.delete(videos).where(eq(videos.id, input.videoId));
 
-            // Best-effort filesystem cleanup. Fire-and-forget so the API
-            // returns quickly even on slow disks; errors are logged inside
-            // the helper.
-            const { cleanupVideoFiles } = await import("@/lib/cleanup");
-            void cleanupVideoFiles({
-                videoId: input.videoId,
-                sourcePath: video.sourcePath,
-                channelHandle,
-            });
+        // Best-effort filesystem cleanup. Fire-and-forget so the API
+        // returns quickly even on slow disks; errors are logged inside
+        // the helper.
+        const { cleanupVideoFiles } = await import("@/lib/cleanup");
+        void cleanupVideoFiles({
+            videoId: input.videoId,
+            sourcePath: video.sourcePath,
+            channelHandle,
+        });
 
-            return { ok: true };
-        }),
+        return { ok: true };
+    }),
 });

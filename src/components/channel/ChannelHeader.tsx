@@ -35,19 +35,8 @@ export const ChannelHeader = ({
     return (
         <div>
             {/* Full-bleed banner */}
-            <div
-                className="relative h-32 w-full overflow-hidden bg-gradient-to-br from-secondary to-secondary/40 sm:h-44 md:h-56"
-            >
-                {bannerSrc && (
-                    <Image
-                        src={bannerSrc}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="100vw"
-                        priority
-                    />
-                )}
+            <div className="relative h-32 w-full overflow-hidden bg-gradient-to-br from-secondary to-secondary/40 sm:h-44 md:h-56">
+                {bannerSrc && <Image src={bannerSrc} alt="" fill className="object-cover" sizes="100vw" priority />}
                 {/* Gradient overlay at bottom for text legibility */}
                 <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background/80 to-transparent" />
             </div>
@@ -55,16 +44,10 @@ export const ChannelHeader = ({
             {/* Avatar + info row */}
             <div className="relative mx-auto max-w-5xl px-4 md:px-6">
                 {/* Avatar overlapping banner edge */}
-                <div className="flex items-end gap-4 -mt-8 sm:-mt-10">
+                <div className="-mt-8 flex items-end gap-4 sm:-mt-10">
                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-4 border-background bg-secondary sm:h-24 sm:w-24">
                         {avatarSrc ? (
-                            <Image
-                                src={avatarSrc}
-                                alt={name}
-                                fill
-                                className="object-cover"
-                                sizes="96px"
-                            />
+                            <Image src={avatarSrc} alt={name} fill className="object-cover" sizes="96px" />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
                                 {name.charAt(0).toUpperCase()}
@@ -77,8 +60,12 @@ export const ChannelHeader = ({
                             <h1 className="truncate text-xl font-semibold text-foreground sm:text-2xl">{name}</h1>
                             <p className="text-sm text-muted-foreground">
                                 <span>@{handle}</span>
-                                <span aria-hidden="true" className="mx-1">&middot;</span>
-                                <span>{formatCount(subscriberCount)} subscriber{subscriberCount !== 1 ? "s" : ""}</span>
+                                <span aria-hidden="true" className="mx-1">
+                                    &middot;
+                                </span>
+                                <span>
+                                    {formatCount(subscriberCount)} subscriber{subscriberCount !== 1 ? "s" : ""}
+                                </span>
                             </p>
                         </div>
 
@@ -91,18 +78,13 @@ export const ChannelHeader = ({
                                     Customise channel
                                 </Link>
                             ) : (
-                                <SubscribeButton
-                                    channelId={id}
-                                    initialSubscribed={isSubscribed}
-                                />
+                                <SubscribeButton channelId={id} initialSubscribed={isSubscribed} />
                             )}
                         </div>
                     </div>
                 </div>
 
-                {description && (
-                    <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{description}</p>
-                )}
+                {description && <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{description}</p>}
             </div>
         </div>
     );

@@ -42,17 +42,19 @@ export default async function AdminVideosPage({ searchParams }: { searchParams: 
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold">Videos</h1>
-                    <p className="text-sm text-muted-foreground">{items.length} video{items.length !== 1 ? "s" : ""} shown</p>
+                    <p className="text-sm text-muted-foreground">
+                        {items.length} video{items.length !== 1 ? "s" : ""} shown
+                    </p>
                 </div>
                 <form method="GET" className="flex flex-wrap gap-2">
                     <input
                         name="q"
                         defaultValue={sp.q ?? ""}
                         placeholder="Search title…"
-                        className="rounded-md border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-48"
+                        className="w-48 rounded-md border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     <select
                         name="status"
@@ -84,7 +86,7 @@ export default async function AdminVideosPage({ searchParams }: { searchParams: 
                 </form>
             </div>
 
-            <div className="rounded-lg border border-border overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-border bg-muted/40">
@@ -100,8 +102,11 @@ export default async function AdminVideosPage({ searchParams }: { searchParams: 
                     <tbody>
                         {items.map(({ video, channelHandle }) => (
                             <tr key={video.id} className="border-b border-border last:border-0 hover:bg-muted/20">
-                                <td className="px-4 py-3 max-w-xs">
-                                    <Link href={`/watch/${video.id}`} className="font-medium hover:underline line-clamp-2">
+                                <td className="max-w-xs px-4 py-3">
+                                    <Link
+                                        href={`/watch/${video.id}`}
+                                        className="line-clamp-2 font-medium hover:underline"
+                                    >
                                         {video.title}
                                     </Link>
                                 </td>
@@ -111,16 +116,22 @@ export default async function AdminVideosPage({ searchParams }: { searchParams: 
                                     </Link>
                                 </td>
                                 <td className="px-4 py-3">
-                                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${PRIVACY_COLOURS[video.privacy] ?? ""}`}>
+                                    <span
+                                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${PRIVACY_COLOURS[video.privacy] ?? ""}`}
+                                    >
                                         {video.privacy}
                                     </span>
                                 </td>
                                 <td className="px-4 py-3">
-                                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLOURS[video.status] ?? ""}`}>
+                                    <span
+                                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLOURS[video.status] ?? ""}`}
+                                    >
                                         {video.status}
                                     </span>
                                 </td>
-                                <td className="px-4 py-3 text-right tabular-nums">{video.viewCount.toLocaleString()}</td>
+                                <td className="px-4 py-3 text-right tabular-nums">
+                                    {video.viewCount.toLocaleString()}
+                                </td>
                                 <td className="px-4 py-3 text-muted-foreground">{formatDate(video.createdAt)}</td>
                                 <td className="px-4 py-3 text-right">
                                     <VideoActionsMenu

@@ -26,7 +26,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold">Audit log</h1>
                     <p className="text-sm text-muted-foreground">
@@ -59,13 +59,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
                         <option value="apiKey">apiKey</option>
                         <option value="job">job</option>
                     </select>
-                    {actorId && (
-                        <input
-                            type="hidden"
-                            name="actorId"
-                            value={actorId}
-                        />
-                    )}
+                    {actorId && <input type="hidden" name="actorId" value={actorId} />}
                     <button
                         type="submit"
                         className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -75,7 +69,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
                     {(action || actorId || targetType) && (
                         <a
                             href="/admin/audit"
-                            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
                         >
                             Clear filters
                         </a>

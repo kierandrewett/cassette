@@ -11,7 +11,7 @@ interface DescriptionProps {
  */
 export const Description = ({ text }: DescriptionProps) => {
     if (!text) {
-        return <p className="text-sm text-muted-foreground italic">No description.</p>;
+        return <p className="text-sm italic text-muted-foreground">No description.</p>;
     }
 
     return <DescriptionClient text={text} />;

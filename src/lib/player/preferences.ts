@@ -67,9 +67,7 @@ export const readPreferences = (): PlayerPreferences => {
     const statsRaw = safeGet("statsOverlayEnabled");
 
     const volume = volumeRaw !== null ? Math.max(0, Math.min(1, Number(volumeRaw))) : DEFAULTS.volume;
-    const playbackRate = rateRaw !== null
-        ? Math.max(0.25, Math.min(2, Number(rateRaw)))
-        : DEFAULTS.playbackRate;
+    const playbackRate = rateRaw !== null ? Math.max(0.25, Math.min(2, Number(rateRaw))) : DEFAULTS.playbackRate;
     const captionsLang = captionsRaw === "" || captionsRaw === null ? null : captionsRaw;
     const theatre = theatreRaw === "true";
     // Default true unless explicitly stored as "false".

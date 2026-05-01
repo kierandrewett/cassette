@@ -79,7 +79,9 @@ export const deliverWebhook = async (opts: DeliverWebhookOptions): Promise<void>
         }
 
         const deliveryStatus = statusCode
-            ? (parseInt(statusCode, 10) >= 200 && parseInt(statusCode, 10) < 300 ? "success" : "error")
+            ? parseInt(statusCode, 10) >= 200 && parseInt(statusCode, 10) < 300
+                ? "success"
+                : "error"
             : "error";
 
         // Record delivery attempt.

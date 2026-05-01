@@ -35,7 +35,10 @@ export const VideoActionsMenu = ({ videoId, videoTitle, videoStatus, channelHand
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     const deleteVideo = api.admin.videos.delete.useMutation({
-        onSuccess: () => { setConfirmDelete(false); router.refresh(); },
+        onSuccess: () => {
+            setConfirmDelete(false);
+            router.refresh();
+        },
     });
 
     const transcribeVideo = api.admin.videos.transcribe.useMutation({
@@ -63,7 +66,11 @@ export const VideoActionsMenu = ({ videoId, videoTitle, videoStatus, channelHand
                         </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <a href={`/studio/${channelHandle}/videos/${videoId}`} target="_blank" rel="noopener noreferrer">
+                        <a
+                            href={`/studio/${channelHandle}/videos/${videoId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             Open in Studio
                         </a>
                     </DropdownMenuItem>
@@ -89,11 +96,14 @@ export const VideoActionsMenu = ({ videoId, videoTitle, videoStatus, channelHand
                     <DialogHeader>
                         <DialogTitle>Delete video?</DialogTitle>
                         <DialogDescription>
-                            &ldquo;{videoTitle}&rdquo; will be permanently deleted including all on-disk files. This cannot be undone.
+                            &ldquo;{videoTitle}&rdquo; will be permanently deleted including all on-disk files. This
+                            cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+                            Cancel
+                        </Button>
                         <Button
                             variant="destructive"
                             disabled={deleteVideo.isPending}

@@ -38,12 +38,7 @@ export const extractEmbeddedCaptions = async (params: {
         const vttPath = `${captionsDir}/${lang}.vtt`;
 
         // Map subtitle streams by their absolute stream index.
-        await runFfmpeg([
-            "-i", sourcePath,
-            "-map", `0:${stream.index}`,
-            "-c:s", "webvtt",
-            vttPath,
-        ]);
+        await runFfmpeg(["-i", sourcePath, "-map", `0:${stream.index}`, "-c:s", "webvtt", vttPath]);
 
         results.push({ streamIndex: stream.index, lang, label, vttPath, isDefault });
     }

@@ -35,10 +35,7 @@ export const parseTimestamp = (token: string): number | null => {
  * player remote. When omitted the standard DOM event is dispatched so the
  * player listener in Player.tsx picks it up.
  */
-export const linkifyTimestamps = (
-    text: string,
-    onSeek?: (seconds: number) => void,
-): React.ReactNode[] => {
+export const linkifyTimestamps = (text: string, onSeek?: (seconds: number) => void): React.ReactNode[] => {
     const nodes: React.ReactNode[] = [];
     let pos = 0;
     let key = 0;
@@ -58,9 +55,7 @@ export const linkifyTimestamps = (
             if (onSeek) {
                 onSeek(seconds);
             } else {
-                document.dispatchEvent(
-                    new CustomEvent("cassette:seek", { detail: { seconds } }),
-                );
+                document.dispatchEvent(new CustomEvent("cassette:seek", { detail: { seconds } }));
             }
         };
 
@@ -71,8 +66,7 @@ export const linkifyTimestamps = (
                     key: key++,
                     type: "button",
                     onClick: handleClick,
-                    className:
-                        "font-medium text-blue-400 hover:text-blue-300 hover:underline transition-colors",
+                    className: "font-medium text-blue-400 hover:text-blue-300 hover:underline transition-colors",
                     "aria-label": `Seek to ${token}`,
                 },
                 token,

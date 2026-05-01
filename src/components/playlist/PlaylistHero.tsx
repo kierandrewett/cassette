@@ -41,7 +41,13 @@ export const PlaylistHero = ({
                     </div>
                 )}
                 {thumbs.length === 1 && thumbs[0] && (
-                    <Image src={thumbs[0]} alt="" fill className="object-cover" sizes="(max-width: 640px) 100vw, 400px" />
+                    <Image
+                        src={thumbs[0]}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 400px"
+                    />
                 )}
                 {thumbs.length >= 2 && (
                     <div className="grid h-full w-full grid-cols-2 grid-rows-2">
@@ -50,13 +56,7 @@ export const PlaylistHero = ({
                             return (
                                 <div key={i} className="relative overflow-hidden bg-secondary">
                                     {src ? (
-                                        <Image
-                                            src={src}
-                                            alt=""
-                                            fill
-                                            className="object-cover"
-                                            sizes="200px"
-                                        />
+                                        <Image src={src} alt="" fill className="object-cover" sizes="200px" />
                                     ) : (
                                         <div className="h-full w-full bg-secondary" />
                                     )}
@@ -69,12 +69,12 @@ export const PlaylistHero = ({
 
             {/* Text block */}
             <div className="space-y-1">
-                <h1 className="text-xl font-semibold text-foreground leading-tight">{title}</h1>
-                {description && (
-                    <p className="line-clamp-3 text-sm text-muted-foreground">{description}</p>
-                )}
+                <h1 className="text-xl font-semibold leading-tight text-foreground">{title}</h1>
+                {description && <p className="line-clamp-3 text-sm text-muted-foreground">{description}</p>}
                 <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-muted-foreground">
-                    <span>{itemCount} {itemCount === 1 ? "video" : "videos"}</span>
+                    <span>
+                        {itemCount} {itemCount === 1 ? "video" : "videos"}
+                    </span>
                     {totalRuntimeSec > 0 && (
                         <>
                             <span aria-hidden="true">&middot;</span>
@@ -82,9 +82,7 @@ export const PlaylistHero = ({
                         </>
                     )}
                     <span aria-hidden="true">&middot;</span>
-                    <span
-                        className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
-                    >
+                    <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
                         {privacyLabel[privacy]}
                     </span>
                 </div>

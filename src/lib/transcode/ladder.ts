@@ -9,10 +9,10 @@ export type Rung = {
     name: RungName;
     height: number;
     width: number;
-    videoBitrate: string;   // ffmpeg -b:v value, e.g. "5000k"
-    maxBitrate: string;     // ffmpeg -maxrate value
-    bufSize: string;        // ffmpeg -bufsize value
-    audioBitrate: string;   // ffmpeg -b:a value, e.g. "192k"
+    videoBitrate: string; // ffmpeg -b:v value, e.g. "5000k"
+    maxBitrate: string; // ffmpeg -maxrate value
+    bufSize: string; // ffmpeg -bufsize value
+    audioBitrate: string; // ffmpeg -b:a value, e.g. "192k"
     /** Peak bandwidth in bps for HLS EXT-X-STREAM-INF BANDWIDTH. */
     bandwidth: number;
     /** Codec string for HLS EXT-X-STREAM-INF CODECS. */

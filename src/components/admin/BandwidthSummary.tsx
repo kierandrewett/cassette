@@ -39,7 +39,7 @@ export const BandwidthSummary = () => {
     return (
         <div className="space-y-6">
             {/* Summary stat */}
-            <div className="rounded-lg border border-border bg-card p-4 inline-flex flex-col gap-1">
+            <div className="inline-flex flex-col gap-1 rounded-lg border border-border bg-card p-4">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Total bandwidth (last {data.days} days)
                 </span>
@@ -54,13 +54,15 @@ export const BandwidthSummary = () => {
                         {top10.map((ch) => (
                             <div key={ch.channelId} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="font-medium truncate max-w-[240px]">
+                                    <span className="max-w-[240px] truncate font-medium">
                                         {ch.channelName}
                                         <span className="ml-1 text-xs text-muted-foreground">@{ch.channelHandle}</span>
                                     </span>
-                                    <span className="tabular-nums text-muted-foreground ml-4">{formatBytes(ch.bytes)}</span>
+                                    <span className="ml-4 tabular-nums text-muted-foreground">
+                                        {formatBytes(ch.bytes)}
+                                    </span>
                                 </div>
-                                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                     <div
                                         className="h-2 rounded-full bg-primary"
                                         style={{ width: `${(ch.bytes / topBytes) * 100}%` }}
@@ -76,21 +78,30 @@ export const BandwidthSummary = () => {
             {data.channels.length > 0 && (
                 <section className="space-y-2">
                     <h3 className="text-base font-semibold">Channel breakdown</h3>
-                    <div className="rounded-lg border border-border overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/40">
                                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Channel</th>
-                                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Bytes served</th>
-                                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">% of total</th>
+                                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                                        Bytes served
+                                    </th>
+                                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                                        % of total
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data.channels.map((ch) => (
-                                    <tr key={ch.channelId} className="border-b border-border last:border-0 hover:bg-muted/20">
+                                    <tr
+                                        key={ch.channelId}
+                                        className="border-b border-border last:border-0 hover:bg-muted/20"
+                                    >
                                         <td className="px-4 py-3">
                                             <span className="font-medium">{ch.channelName}</span>
-                                            <span className="ml-2 text-xs text-muted-foreground">@{ch.channelHandle}</span>
+                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                @{ch.channelHandle}
+                                            </span>
                                         </td>
                                         <td className="px-4 py-3 text-right tabular-nums">{formatBytes(ch.bytes)}</td>
                                         <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">

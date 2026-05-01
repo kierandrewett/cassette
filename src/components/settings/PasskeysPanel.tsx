@@ -51,9 +51,14 @@ const usePasskeys = () => {
         setState((prev) => ({ ...prev, isPending: true, error: null }));
         // Better-Auth exposes the atom via authClient.passkey.listPasskeys.
         // Calling it as a store: we use $fetch directly for simplicity.
-        const result = await (authClient as unknown as {
-            $fetch: (path: string, opts: { method: string }) => Promise<{ data: PasskeyRecord[] | null; error: { message?: string } | null }>;
-        }).$fetch("/passkey/list-user-passkeys", { method: "GET" });
+        const result = await (
+            authClient as unknown as {
+                $fetch: (
+                    path: string,
+                    opts: { method: string },
+                ) => Promise<{ data: PasskeyRecord[] | null; error: { message?: string } | null }>;
+            }
+        ).$fetch("/passkey/list-user-passkeys", { method: "GET" });
 
         if (result.error) {
             setState({ passkeys: [], isPending: false, error: result.error.message ?? "Failed to load passkeys." });
@@ -64,7 +69,7 @@ const usePasskeys = () => {
 
     useEffect(() => {
         void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return { ...state, refetch: load };
@@ -132,8 +137,12 @@ export const PasskeysPanel = () => {
                         : `${passkeys.length} passkey${passkeys.length === 1 ? "" : "s"} registered`}
                 </p>
                 <button
-                    onClick={() => { setAddOpen(true); setAddError(null); setAddName(""); }}
-                    className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                    onClick={() => {
+                        setAddOpen(true);
+                        setAddError(null);
+                        setAddName("");
+                    }}
+                    className="text-xs font-medium text-primary transition-colors hover:text-primary/80"
                 >
                     Add a passkey
                 </button>
@@ -141,23 +150,29 @@ export const PasskeysPanel = () => {
 
             {/* Error banners */}
             {error && (
-                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p
+                    role="alert"
+                    className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                >
                     {error}
                 </p>
             )}
             {removeError && (
-                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p
+                    role="alert"
+                    className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                >
                     {removeError}
                 </p>
             )}
 
             {/* Passkey list */}
             {!isPending && passkeys.length > 0 && (
-                <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                <div className="divide-y divide-border rounded-xl border border-border bg-card">
                     {passkeys.map((pk) => (
                         <div key={pk.id} className="flex items-start justify-between gap-4 px-4 py-3">
                             <div className="min-w-0 space-y-0.5">
-                                <span className="text-sm font-medium text-foreground truncate block">
+                                <span className="block truncate text-sm font-medium text-foreground">
                                     {pk.name ?? "Unnamed passkey"}
                                 </span>
                                 <p className="text-xs text-muted-foreground">
@@ -168,7 +183,7 @@ export const PasskeysPanel = () => {
                             <button
                                 onClick={() => void handleRemove(pk.id)}
                                 disabled={removingId === pk.id}
-                                className="shrink-0 text-xs font-medium text-destructive hover:text-destructive/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                className="shrink-0 text-xs font-medium text-destructive transition-colors hover:text-destructive/80 disabled:cursor-not-allowed disabled:opacity-30"
                             >
                                 {removingId === pk.id ? "Removing…" : "Remove"}
                             </button>
@@ -186,7 +201,7 @@ export const PasskeysPanel = () => {
             {/* Add passkey dialog */}
             {addOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
+                    <div className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-card p-6 shadow-xl">
                         <h3 className="text-base font-semibold text-foreground">Add a passkey</h3>
                         <p className="text-sm text-muted-foreground">
                             Give this passkey a name to identify the device or account it belongs to.
@@ -203,7 +218,9 @@ export const PasskeysPanel = () => {
                                 placeholder="e.g. MacBook Pro, iPhone"
                                 value={addName}
                                 onChange={(e) => setAddName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") void handleAdd(); }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") void handleAdd();
+                                }}
                                 className={cn(
                                     "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
                                     "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -213,11 +230,15 @@ export const PasskeysPanel = () => {
                             {addError && <p className="text-xs text-destructive">{addError}</p>}
                         </div>
 
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex justify-end gap-3">
                             <button
-                                onClick={() => { setAddOpen(false); setAddName(""); setAddError(null); }}
+                                onClick={() => {
+                                    setAddOpen(false);
+                                    setAddName("");
+                                    setAddError(null);
+                                }}
                                 disabled={addPending}
-                                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
                             >
                                 Cancel
                             </button>

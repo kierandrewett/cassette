@@ -36,9 +36,7 @@ export const metadata: Metadata = {
     icons: [{ rel: "icon", url: "/favicon.svg" }],
     alternates: {
         types: {
-            "application/rss+xml": [
-                { url: "/feed.xml", title: "cassette · all uploads" },
-            ],
+            "application/rss+xml": [{ url: "/feed.xml", title: "cassette · all uploads" }],
         },
     },
 };

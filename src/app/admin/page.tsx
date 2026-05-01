@@ -20,21 +20,12 @@ export default async function AdminOverviewPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">Overview</h1>
-                <p className="text-sm text-muted-foreground mt-1">Platform-wide statistics at a glance.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Platform-wide statistics at a glance.</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                <StatCard
-                    label="Users"
-                    value={stats.userCount.toLocaleString()}
-                    icon={Users}
-                    href="/admin/users"
-                />
-                <StatCard
-                    label="Channels"
-                    value={stats.channelCount.toLocaleString()}
-                    icon={BarChart3}
-                />
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                <StatCard label="Users" value={stats.userCount.toLocaleString()} icon={Users} href="/admin/users" />
+                <StatCard label="Channels" value={stats.channelCount.toLocaleString()} icon={BarChart3} />
                 <StatCard
                     label="Videos (ready)"
                     value={stats.videoCount.ready.toLocaleString()}
@@ -42,11 +33,7 @@ export default async function AdminOverviewPage() {
                     icon={Video}
                     href="/admin/videos"
                 />
-                <StatCard
-                    label="Comments"
-                    value={stats.commentCount.toLocaleString()}
-                    icon={MessageSquare}
-                />
+                <StatCard label="Comments" value={stats.commentCount.toLocaleString()} icon={MessageSquare} />
                 <StatCard
                     label="Source storage"
                     value={formatBytes(stats.videoBytes)}
@@ -68,13 +55,15 @@ export default async function AdminOverviewPage() {
                 />
             </div>
 
-            <div className="rounded-lg border border-border p-4 space-y-2">
+            <div className="space-y-2 rounded-lg border border-border p-4">
                 <h2 className="text-sm font-semibold">Video status breakdown</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
                     {(["queued", "transcoding", "ready", "failed"] as const).map((status) => (
                         <div key={status} className="flex flex-col">
-                            <span className="capitalize text-muted-foreground text-xs">{status}</span>
-                            <span className="font-semibold tabular-nums">{stats.videoCount[status].toLocaleString()}</span>
+                            <span className="text-xs capitalize text-muted-foreground">{status}</span>
+                            <span className="font-semibold tabular-nums">
+                                {stats.videoCount[status].toLocaleString()}
+                            </span>
                         </div>
                     ))}
                 </div>

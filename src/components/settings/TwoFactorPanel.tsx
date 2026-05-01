@@ -33,7 +33,10 @@ const useQrDataUrl = (uri: string | null): string | null => {
     const [dataUrl, setDataUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!uri) { setDataUrl(null); return; }
+        if (!uri) {
+            setDataUrl(null);
+            return;
+        }
         void QRCode.toDataURL(uri, { width: 200, margin: 2 }).then(setDataUrl);
     }, [uri]);
 
@@ -79,7 +82,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
     // ---- Enable flow -------------------------------------------------------
 
     const handleEnableSubmitPassword = async () => {
-        if (!password) { setPasswordError("Password is required."); return; }
+        if (!password) {
+            setPasswordError("Password is required.");
+            return;
+        }
         setPasswordError(null);
         setServerError(null);
         setPending(true);
@@ -105,7 +111,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
     };
 
     const handleVerifyTotp = async () => {
-        if (totpCode.length !== 6) { setTotpError("Please enter the 6-digit code from your authenticator app."); return; }
+        if (totpCode.length !== 6) {
+            setTotpError("Please enter the 6-digit code from your authenticator app.");
+            return;
+        }
         setTotpError(null);
         setPending(true);
 
@@ -125,7 +134,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
     // ---- Disable flow ------------------------------------------------------
 
     const handleDisable = async () => {
-        if (!password) { setPasswordError("Password is required."); return; }
+        if (!password) {
+            setPasswordError("Password is required.");
+            return;
+        }
         setPasswordError(null);
         setServerError(null);
         setPending(true);
@@ -146,7 +158,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
     // ---- Regenerate backup codes -------------------------------------------
 
     const handleRegenerateBackupCodes = async () => {
-        if (!password) { setPasswordError("Password is required."); return; }
+        if (!password) {
+            setPasswordError("Password is required.");
+            return;
+        }
         setPasswordError(null);
         setServerError(null);
         setPending(true);
@@ -171,10 +186,12 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
         <div className="space-y-4">
             {/* Status indicator */}
             <div className="flex items-center gap-2">
-                <span className={cn(
-                    "inline-flex h-2 w-2 rounded-full",
-                    enabled ? "bg-green-500" : "bg-muted-foreground/40",
-                )} />
+                <span
+                    className={cn(
+                        "inline-flex h-2 w-2 rounded-full",
+                        enabled ? "bg-green-500" : "bg-muted-foreground/40",
+                    )}
+                />
                 <span className="text-sm text-muted-foreground">
                     {enabled ? "Two-factor authentication is enabled." : "Two-factor authentication is disabled."}
                 </span>
@@ -182,7 +199,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
 
             {/* Server error banner */}
             {serverError && (
-                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p
+                    role="alert"
+                    className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                >
                     {serverError}
                 </p>
             )}
@@ -190,7 +210,11 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
             {/* ---- IDLE state -------------------------------------------- */}
             {step === "idle" && !enabled && (
                 <button
-                    onClick={() => { setStep("entering-password-enable"); setPassword(""); setPasswordError(null); }}
+                    onClick={() => {
+                        setStep("entering-password-enable");
+                        setPassword("");
+                        setPasswordError(null);
+                    }}
                     className={cn(
                         "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2",
                         "text-sm font-medium text-primary-foreground shadow transition-colors",
@@ -202,9 +226,13 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
             )}
 
             {step === "idle" && enabled && (
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex flex-wrap gap-3">
                     <button
-                        onClick={() => { setStep("entering-password-regenerate"); setPassword(""); setPasswordError(null); }}
+                        onClick={() => {
+                            setStep("entering-password-regenerate");
+                            setPassword("");
+                            setPasswordError(null);
+                        }}
                         className={cn(
                             "inline-flex h-9 items-center justify-center rounded-md border border-border bg-card px-4 py-2",
                             "text-sm font-medium text-foreground shadow-sm transition-colors",
@@ -214,7 +242,11 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                         Regenerate backup codes
                     </button>
                     <button
-                        onClick={() => { setStep("entering-password-disable"); setPassword(""); setPasswordError(null); }}
+                        onClick={() => {
+                            setStep("entering-password-disable");
+                            setPassword("");
+                            setPasswordError(null);
+                        }}
                         className={cn(
                             "inline-flex h-9 items-center justify-center rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2",
                             "text-sm font-medium text-destructive shadow-sm transition-colors",
@@ -244,7 +276,9 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") void handleEnableSubmitPassword(); }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") void handleEnableSubmitPassword();
+                            }}
                             className={cn(
                                 "flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
                                 "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -254,7 +288,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                         {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={reset} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        <button
+                            onClick={reset}
+                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
                             Cancel
                         </button>
                         <button
@@ -290,10 +327,12 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                                 className="rounded-md border border-border bg-white p-1"
                             />
                         ) : (
-                            <div className="h-[200px] w-[200px] rounded-md border border-border bg-muted animate-pulse" />
+                            <div className="h-[200px] w-[200px] animate-pulse rounded-md border border-border bg-muted" />
                         )}
                         <details className="text-xs text-muted-foreground">
-                            <summary className="cursor-pointer select-none">Can&apos;t scan? Copy the URI manually.</summary>
+                            <summary className="cursor-pointer select-none">
+                                Can&apos;t scan? Copy the URI manually.
+                            </summary>
                             <code className="mt-1 block break-all rounded bg-muted px-2 py-1 font-mono text-[10px]">
                                 {totpUri}
                             </code>
@@ -332,9 +371,11 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                             maxLength={6}
                             value={totpCode}
                             onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
-                            onKeyDown={(e) => { if (e.key === "Enter") void handleVerifyTotp(); }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") void handleVerifyTotp();
+                            }}
                             className={cn(
-                                "flex h-9 w-32 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors font-mono tracking-widest",
+                                "flex h-9 w-32 rounded-md border border-input bg-transparent px-3 py-1 font-mono text-sm tracking-widest shadow-sm transition-colors",
                                 "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                                 totpError && "border-destructive focus-visible:ring-destructive",
                             )}
@@ -342,7 +383,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                         {totpError && <p className="text-xs text-destructive">{totpError}</p>}
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={() => setStep("showing-qr")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        <button
+                            onClick={() => setStep("showing-qr")}
+                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
                             Back
                         </button>
                         <button
@@ -366,14 +410,14 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                 <div className="space-y-3">
                     <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
                         <p className="text-sm font-medium text-amber-400">Save your backup codes</p>
-                        <p className="text-xs text-amber-400/80 mt-0.5">
-                            These codes can be used to access your account if you lose your authenticator.
-                            Each code can only be used once. Store them somewhere safe.
+                        <p className="mt-0.5 text-xs text-amber-400/80">
+                            These codes can be used to access your account if you lose your authenticator. Each code can
+                            only be used once. Store them somewhere safe.
                         </p>
                     </div>
                     <div className="grid grid-cols-2 gap-1.5 rounded-md border border-border bg-card px-4 py-3">
                         {backupCodes.map((code) => (
-                            <code key={code} className="font-mono text-sm text-foreground tracking-wider">
+                            <code key={code} className="font-mono text-sm tracking-wider text-foreground">
                                 {code}
                             </code>
                         ))}
@@ -395,7 +439,8 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
             {step === "entering-password-regenerate" && (
                 <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                        Enter your current password to regenerate backup codes. Your existing backup codes will be invalidated.
+                        Enter your current password to regenerate backup codes. Your existing backup codes will be
+                        invalidated.
                     </p>
                     <div className="space-y-1.5">
                         <label htmlFor="2fa-regen-password" className="text-sm font-medium leading-none">
@@ -409,7 +454,9 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") void handleRegenerateBackupCodes(); }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") void handleRegenerateBackupCodes();
+                            }}
                             className={cn(
                                 "flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
                                 "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -419,7 +466,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                         {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={reset} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        <button
+                            onClick={reset}
+                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
                             Cancel
                         </button>
                         <button
@@ -456,7 +506,9 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") void handleDisable(); }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") void handleDisable();
+                            }}
                             className={cn(
                                 "flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
                                 "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -466,7 +518,10 @@ export const TwoFactorPanel = ({ twoFactorEnabled: initialEnabled }: Props) => {
                         {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={reset} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        <button
+                            onClick={reset}
+                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
                             Cancel
                         </button>
                         <button

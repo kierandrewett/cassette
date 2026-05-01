@@ -20,14 +20,7 @@ export const auditActionValues = [
 
 export type AuditAction = (typeof auditActionValues)[number];
 
-export const auditTargetTypeValues = [
-    "user",
-    "video",
-    "channel",
-    "site",
-    "apiKey",
-    "job",
-] as const;
+export const auditTargetTypeValues = ["user", "video", "channel", "site", "apiKey", "job"] as const;
 
 export type AuditTargetType = (typeof auditTargetTypeValues)[number];
 

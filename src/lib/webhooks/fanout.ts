@@ -17,11 +17,7 @@ const findWebhooksForEvent = async (channelId: string, event: WebhookEvent): Pro
         .select({ id: webhooks.id })
         .from(webhooks)
         .where(
-            and(
-                eq(webhooks.channelId, channelId),
-                eq(webhooks.enabled, true),
-                sql`${event} = ANY(${webhooks.events})`,
-            ),
+            and(eq(webhooks.channelId, channelId), eq(webhooks.enabled, true), sql`${event} = ANY(${webhooks.events})`),
         );
     return rows.map((r) => r.id);
 };

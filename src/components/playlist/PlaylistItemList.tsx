@@ -178,9 +178,7 @@ export const PlaylistItemList = ({ playlistId, items: initialItems, isOwner, onM
     return (
         <ol className="space-y-1">
             {items.map((item, index) => {
-                const thumbSrc = item.video.thumbnailPath
-                    ? `/api/hls/${item.video.id}/thumb/sprite.jpg`
-                    : null;
+                const thumbSrc = item.video.thumbnailPath ? `/api/hls/${item.video.id}/thumb/sprite.jpg` : null;
                 const isBusy = busyItemId === item.itemId || isPending;
                 const isDragTarget = dragOverId === item.itemId;
 
@@ -200,7 +198,7 @@ export const PlaylistItemList = ({ playlistId, items: initialItems, isOwner, onM
                         )}
                     >
                         {/* Position number */}
-                        <span className="w-5 flex-shrink-0 text-center text-xs text-muted-foreground tabular-nums">
+                        <span className="w-5 flex-shrink-0 text-center text-xs tabular-nums text-muted-foreground">
                             {index + 1}
                         </span>
 
@@ -211,18 +209,12 @@ export const PlaylistItemList = ({ playlistId, items: initialItems, isOwner, onM
                             style={{ width: 120, height: 68 }}
                         >
                             {thumbSrc ? (
-                                <Image
-                                    src={thumbSrc}
-                                    alt=""
-                                    fill
-                                    className="object-cover"
-                                    sizes="120px"
-                                />
+                                <Image src={thumbSrc} alt="" fill className="object-cover" sizes="120px" />
                             ) : (
                                 <div className="h-full w-full bg-secondary" />
                             )}
                             {item.video.durationSec != null && item.video.durationSec > 0 && (
-                                <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 text-[10px] font-medium text-white tabular-nums">
+                                <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 text-[10px] font-medium tabular-nums text-white">
                                     {formatDuration(item.video.durationSec)}
                                 </span>
                             )}
@@ -236,7 +228,7 @@ export const PlaylistItemList = ({ playlistId, items: initialItems, isOwner, onM
                             >
                                 {item.video.title}
                             </Link>
-                            <p className="text-xs text-muted-foreground truncate">{item.channel.name}</p>
+                            <p className="truncate text-xs text-muted-foreground">{item.channel.name}</p>
                         </div>
 
                         {/* Actions */}

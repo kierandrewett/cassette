@@ -40,7 +40,7 @@ export const UpNextSidebar = ({ videos }: UpNextSidebarProps) => {
 
     return (
         <div className="flex flex-col gap-2">
-            <h2 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider mb-1">Up Next</h2>
+            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-foreground/80">Up Next</h2>
             {videos.map((v, i) => (
                 <SidebarCard key={v.id} video={v} isNext={i === 0} />
             ))}
@@ -55,13 +55,13 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
     return (
         <Link
             href={`/watch/${video.id}`}
-            className="group flex gap-2 rounded-xl hover:bg-secondary/60 transition-colors p-1.5"
+            className="group flex gap-2 rounded-xl p-1.5 transition-colors hover:bg-secondary/60"
             aria-label={`Watch "${video.title}"`}
         >
             {/* Thumbnail */}
             <div
                 ref={thumbRef}
-                className="relative w-40 flex-shrink-0 overflow-hidden rounded-lg aspect-video bg-secondary"
+                className="relative aspect-video w-40 flex-shrink-0 overflow-hidden rounded-lg bg-secondary"
             >
                 {video.thumbnailPath ? (
                     <Image
@@ -79,15 +79,11 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
 
                 {/* Hover preview — sits above the static thumbnail but below the duration chip */}
                 {video.thumbnailPath && (
-                    <HoverPreview
-                        videoId={video.id}
-                        durationSec={video.durationSec}
-                        triggerRef={thumbRef}
-                    />
+                    <HoverPreview videoId={video.id} durationSec={video.durationSec} triggerRef={thumbRef} />
                 )}
 
                 {hasDuration && (
-                    <span className="absolute bottom-1.5 right-1.5 z-20 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white tabular-nums">
+                    <span className="absolute bottom-1.5 right-1.5 z-20 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium tabular-nums text-white">
                         {formatDuration(video.durationSec!)}
                     </span>
                 )}
@@ -96,7 +92,7 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
             {/* Meta */}
             <div className="flex min-w-0 flex-col justify-center gap-0.5">
                 {isNext && (
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Up Next
                     </span>
                 )}
@@ -104,14 +100,12 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
                     {video.title}
                 </p>
                 <p className="truncate text-[11px] text-muted-foreground">{video.channel.name}</p>
-                <p className="text-[11px] text-muted-foreground tabular-nums">
+                <p className="text-[11px] tabular-nums text-muted-foreground">
                     {formatCount(video.viewCount)} views
                     {video.publishedAt && (
                         <>
                             {" "}
-                            <span aria-hidden="true">&middot;</span>
-                            {" "}
-                            {formatRelativeTime(video.publishedAt)}
+                            <span aria-hidden="true">&middot;</span> {formatRelativeTime(video.publishedAt)}
                         </>
                     )}
                 </p>

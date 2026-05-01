@@ -241,9 +241,7 @@ export const PlayerContextMenu = ({ videoId }: PlayerContextMenuProps) => {
                 Stats for nerds
             </Item>
             <Divider />
-            <p className="px-3 pt-1 pb-0.5 text-[10px] uppercase tracking-wider text-white/35">
-                Powered by cassette
-            </p>
+            <p className="px-3 pb-0.5 pt-1 text-[10px] uppercase tracking-wider text-white/35">Powered by cassette</p>
         </div>
     );
 };
@@ -265,13 +263,13 @@ const Item = ({
         role="menuitem"
         onClick={onClick}
         className={cn(
-            "flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-left transition-colors",
+            "flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm transition-colors",
             "hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none",
             active ? "text-white" : "text-white/85",
         )}
     >
-        <span className="text-white/70 shrink-0">{icon}</span>
-        <span className="flex-1 truncate flex items-center">{children}</span>
+        <span className="shrink-0 text-white/70">{icon}</span>
+        <span className="flex flex-1 items-center truncate">{children}</span>
     </button>
 );
 

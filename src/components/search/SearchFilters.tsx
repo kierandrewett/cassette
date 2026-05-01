@@ -37,19 +37,19 @@ const Chip = ({ active, href, children }: ChipProps) => {
 };
 
 const DATE_OPTIONS: Array<{ label: string; value: UploadedWithin | undefined }> = [
-    { label: "Any time",    value: undefined },
-    { label: "Last hour",   value: "hour" },
-    { label: "Today",       value: "today" },
-    { label: "This week",   value: "week" },
-    { label: "This month",  value: "month" },
-    { label: "This year",   value: "year" },
+    { label: "Any time", value: undefined },
+    { label: "Last hour", value: "hour" },
+    { label: "Today", value: "today" },
+    { label: "This week", value: "week" },
+    { label: "This month", value: "month" },
+    { label: "This year", value: "year" },
 ];
 
 const DURATION_OPTIONS: Array<{ label: string; value: Duration | undefined }> = [
     { label: "Any duration", value: undefined },
-    { label: "Short (< 4 min)",    value: "short" },
-    { label: "Medium (4–20 min)",  value: "medium" },
-    { label: "Long (> 20 min)",    value: "long" },
+    { label: "Short (< 4 min)", value: "short" },
+    { label: "Medium (4–20 min)", value: "medium" },
+    { label: "Long (> 20 min)", value: "long" },
 ];
 
 const TAG_RE = /^[a-z0-9-]+$/;

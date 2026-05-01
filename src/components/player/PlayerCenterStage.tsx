@@ -35,7 +35,7 @@ export const PlayerCenterStage = () => {
             {showSpinner && (
                 <div
                     aria-label="Loading"
-                    className="h-12 w-12 rounded-full border-2 border-white/20 border-t-white animate-spin"
+                    className="h-12 w-12 animate-spin rounded-full border-2 border-white/20 border-t-white"
                 />
             )}
 
@@ -46,9 +46,9 @@ export const PlayerCenterStage = () => {
                     onClick={handleClick}
                     className={cn(
                         "pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full",
-                        "bg-black/40 backdrop-blur-sm border border-white/10",
+                        "border border-white/10 bg-black/40 backdrop-blur-sm",
                         "transition-all duration-200",
-                        "hover:scale-110 hover:bg-black/60 hover:border-white/20",
+                        "hover:scale-110 hover:border-white/20 hover:bg-black/60",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
                         // Apple-TV pulse keyframe from globals.css via Tailwind
                         "active:scale-95",

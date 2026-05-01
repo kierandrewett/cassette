@@ -38,9 +38,7 @@ const groupByDay = (items: HistoryItem[]): Array<{ label: string; items: History
     yesterday.setDate(today.getDate() - 1);
 
     const isSameDay = (a: Date, b: Date): boolean =>
-        a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
+        a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
     for (const item of items) {
         const d = new Date(item.watchedAt);
@@ -100,9 +98,7 @@ export const HistoryPageClient = ({ initialItems }: HistoryPageClientProps) => {
         if (!search.trim()) return localItems;
         const q = search.toLowerCase();
         return localItems.filter(
-            (it) =>
-                it.video.title.toLowerCase().includes(q) ||
-                it.channel.name.toLowerCase().includes(q),
+            (it) => it.video.title.toLowerCase().includes(q) || it.channel.name.toLowerCase().includes(q),
         );
     }, [localItems, search]);
 
@@ -119,12 +115,7 @@ export const HistoryPageClient = ({ initialItems }: HistoryPageClientProps) => {
                         {confirmClear ? (
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-muted-foreground">Clear all history?</span>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={handleClear}
-                                    disabled={isPending}
-                                >
+                                <Button variant="destructive" size="sm" onClick={handleClear} disabled={isPending}>
                                     {isPending ? "Clearing..." : "Confirm"}
                                 </Button>
                                 <Button

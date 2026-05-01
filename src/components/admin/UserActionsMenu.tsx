@@ -35,16 +35,28 @@ export const UserActionsMenu = ({ userId, userName, isAdmin }: UserActionsMenuPr
     const [pending, setPending] = useState<Pending>(null);
 
     const promote = api.admin.users.promote.useMutation({
-        onSuccess: () => { setPending(null); router.refresh(); },
+        onSuccess: () => {
+            setPending(null);
+            router.refresh();
+        },
     });
     const demote = api.admin.users.demote.useMutation({
-        onSuccess: () => { setPending(null); router.refresh(); },
+        onSuccess: () => {
+            setPending(null);
+            router.refresh();
+        },
     });
     const signOutAll = api.admin.users.signOutAll.useMutation({
-        onSuccess: () => { setPending(null); router.refresh(); },
+        onSuccess: () => {
+            setPending(null);
+            router.refresh();
+        },
     });
     const deleteUser = api.admin.users.delete.useMutation({
-        onSuccess: () => { setPending(null); router.refresh(); },
+        onSuccess: () => {
+            setPending(null);
+            router.refresh();
+        },
     });
 
     const busy = promote.isPending || demote.isPending || signOutAll.isPending || deleteUser.isPending;
@@ -64,17 +76,11 @@ export const UserActionsMenu = ({ userId, userName, isAdmin }: UserActionsMenuPr
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {isAdmin ? (
-                        <DropdownMenuItem onSelect={() => setPending("demote")}>
-                            Demote from admin
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setPending("demote")}>Demote from admin</DropdownMenuItem>
                     ) : (
-                        <DropdownMenuItem onSelect={() => setPending("promote")}>
-                            Promote to admin
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setPending("promote")}>Promote to admin</DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onSelect={() => setPending("signout")}>
-                        Sign out all sessions
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setPending("signout")}>Sign out all sessions</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
@@ -95,8 +101,12 @@ export const UserActionsMenu = ({ userId, userName, isAdmin }: UserActionsMenuPr
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPending(null)}>Cancel</Button>
-                        <Button disabled={busy} onClick={() => promote.mutate({ userId })}>Promote</Button>
+                        <Button variant="outline" onClick={() => setPending(null)}>
+                            Cancel
+                        </Button>
+                        <Button disabled={busy} onClick={() => promote.mutate({ userId })}>
+                            Promote
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -106,12 +116,12 @@ export const UserActionsMenu = ({ userId, userName, isAdmin }: UserActionsMenuPr
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Remove admin access?</DialogTitle>
-                        <DialogDescription>
-                            {userName} will lose admin access immediately.
-                        </DialogDescription>
+                        <DialogDescription>{userName} will lose admin access immediately.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPending(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setPending(null)}>
+                            Cancel
+                        </Button>
                         <Button variant="destructive" disabled={busy} onClick={() => demote.mutate({ userId })}>
                             Demote
                         </Button>
@@ -124,12 +134,12 @@ export const UserActionsMenu = ({ userId, userName, isAdmin }: UserActionsMenuPr
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Sign out all sessions?</DialogTitle>
-                        <DialogDescription>
-                            All active sessions for {userName} will be invalidated.
-                        </DialogDescription>
+                        <DialogDescription>All active sessions for {userName} will be invalidated.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPending(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setPending(null)}>
+                            Cancel
+                        </Button>
                         <Button variant="destructive" disabled={busy} onClick={() => signOutAll.mutate({ userId })}>
                             Sign out all
                         </Button>
@@ -147,7 +157,9 @@ export const UserActionsMenu = ({ userId, userName, isAdmin }: UserActionsMenuPr
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPending(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setPending(null)}>
+                            Cancel
+                        </Button>
                         <Button variant="destructive" disabled={busy} onClick={() => deleteUser.mutate({ userId })}>
                             Delete
                         </Button>

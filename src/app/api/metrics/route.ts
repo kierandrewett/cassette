@@ -18,7 +18,11 @@ export const dynamic = "force-dynamic";
 // ---------------------------------------------------------------------------
 
 function gauge(name: string, help: string, value: number, labels?: Record<string, string>): string {
-    const labelStr = labels ? `{${Object.entries(labels).map(([k, v]) => `${k}="${escapeLabelValue(v)}"`).join(",")}}` : "";
+    const labelStr = labels
+        ? `{${Object.entries(labels)
+              .map(([k, v]) => `${k}="${escapeLabelValue(v)}"`)
+              .join(",")}}`
+        : "";
     return `# HELP ${name} ${help}\n# TYPE ${name} gauge\n${name}${labelStr} ${value}\n`;
 }
 
@@ -30,7 +34,9 @@ function gaugeLines(
     const lines: string[] = [`# HELP ${name} ${help}`, `# TYPE ${name} gauge`];
     for (const { labels, value } of rows) {
         const labelStr = labels
-            ? `{${Object.entries(labels).map(([k, v]) => `${k}="${escapeLabelValue(v)}"`).join(",")}}`
+            ? `{${Object.entries(labels)
+                  .map(([k, v]) => `${k}="${escapeLabelValue(v)}"`)
+                  .join(",")}}`
             : "";
         lines.push(`${name}${labelStr} ${value}`);
     }
@@ -38,7 +44,11 @@ function gaugeLines(
 }
 
 function counter(name: string, help: string, value: number, labels?: Record<string, string>): string {
-    const labelStr = labels ? `{${Object.entries(labels).map(([k, v]) => `${k}="${escapeLabelValue(v)}"`).join(",")}}` : "";
+    const labelStr = labels
+        ? `{${Object.entries(labels)
+              .map(([k, v]) => `${k}="${escapeLabelValue(v)}"`)
+              .join(",")}}`
+        : "";
     return `# HELP ${name} ${help}\n# TYPE ${name} counter\n${name}${labelStr} ${value}\n`;
 }
 
@@ -75,8 +85,14 @@ export async function GET(req: NextRequest): Promise<Response> {
     ] = await Promise.all([
         db.select({ cnt: count(user.id) }).from(user),
         db.select({ cnt: count(channels.id) }).from(channels),
-        db.select({ status: videos.status, cnt: count(videos.id) }).from(videos).groupBy(videos.status),
-        db.select({ cnt: count(comments.id) }).from(comments).where(isNull(comments.deletedAt)),
+        db
+            .select({ status: videos.status, cnt: count(videos.id) })
+            .from(videos)
+            .groupBy(videos.status),
+        db
+            .select({ cnt: count(comments.id) })
+            .from(comments)
+            .where(isNull(comments.deletedAt)),
         db
             .select({ cnt: count(transcodeJobs.id) })
             .from(transcodeJobs)
@@ -89,7 +105,10 @@ export async function GET(req: NextRequest): Promise<Response> {
             .select({ cnt: count(videos.id) })
             .from(videos)
             .where(sql`${videos.privacy} = 'public' AND ${videos.status} = 'ready'`),
-        db.select({ cnt: sql<number>`count(*)` }).from(session).where(sql`expires_at > now()`),
+        db
+            .select({ cnt: sql<number>`count(*)` })
+            .from(session)
+            .where(sql`expires_at > now()`),
         db
             .select({
                 channelId: channelBandwidthDaily.channelId,
@@ -129,7 +148,11 @@ export async function GET(req: NextRequest): Promise<Response> {
                 value: statusMap[s] ?? 0,
             })),
         ),
-        gauge("cassette_comments_total", "Total number of non-deleted comments.", Number(commentCountRows[0]?.cnt ?? 0)),
+        gauge(
+            "cassette_comments_total",
+            "Total number of non-deleted comments.",
+            Number(commentCountRows[0]?.cnt ?? 0),
+        ),
         gauge(
             "cassette_transcode_jobs_pending",
             "Number of transcode jobs in queued or running state.",
@@ -170,7 +193,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     // Always emit the _other counter even if 0 when top50 is non-empty, for
     // consistency in dashboards. Skip entirely if no bandwidth data at all.
     if (bandwidthLines.length === 0 && otherBytes === 0) {
-        parts.push(counter("cassette_bandwidth_bytes_total", "Cumulative bytes served per channel across all time.", 0));
+        parts.push(
+            counter("cassette_bandwidth_bytes_total", "Cumulative bytes served per channel across all time.", 0),
+        );
     }
 
     return new Response(parts.join(""), {

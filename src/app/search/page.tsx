@@ -38,8 +38,7 @@ const flattenParams = (params: Record<string, string | string[] | undefined>): R
     return out;
 };
 
-const isTab = (s: string | undefined): s is SearchTabValue =>
-    s === "videos" || s === "channels" || s === "playlists";
+const isTab = (s: string | undefined): s is SearchTabValue => s === "videos" || s === "channels" || s === "playlists";
 
 const SearchPage = async ({ searchParams }: SearchPageProps) => {
     const resolved = await searchParams;

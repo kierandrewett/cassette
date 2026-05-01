@@ -62,19 +62,17 @@ export const notificationRouter = createTRPCRouter({
         return rows[0]?.value ?? 0;
     }),
 
-    markRead: protectedProcedure
-        .input(z.object({ id: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            const result = await ctx.db
-                .update(notifications)
-                .set({ readAt: new Date() })
-                .where(and(eq(notifications.id, input.id), eq(notifications.userId, ctx.user.id)))
-                .returning({ id: notifications.id });
-            if (result.length === 0) {
-                throw new TRPCError({ code: "NOT_FOUND" });
-            }
-            return { ok: true };
-        }),
+    markRead: protectedProcedure.input(z.object({ id: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const result = await ctx.db
+            .update(notifications)
+            .set({ readAt: new Date() })
+            .where(and(eq(notifications.id, input.id), eq(notifications.userId, ctx.user.id)))
+            .returning({ id: notifications.id });
+        if (result.length === 0) {
+            throw new TRPCError({ code: "NOT_FOUND" });
+        }
+        return { ok: true };
+    }),
 
     markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
         const result = await ctx.db

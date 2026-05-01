@@ -24,7 +24,9 @@ export const notifications = pgTable(
     },
     (t) => ({
         userIdx: index("notif_user_idx").on(t.userId, t.createdAt.desc()),
-        unreadIdx: index("notif_unread_idx").on(t.userId).where(sql`read_at is null`),
+        unreadIdx: index("notif_unread_idx")
+            .on(t.userId)
+            .where(sql`read_at is null`),
     }),
 );
 

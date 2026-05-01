@@ -18,12 +18,7 @@ const formatBytes = (bytes: number): string => {
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
 };
 
-export const QuotaPanel = ({
-    channelId,
-    initialUsed,
-    initialQuota,
-    initialAutoPruneDays,
-}: QuotaPanelProps) => {
+export const QuotaPanel = ({ channelId, initialUsed, initialQuota, initialAutoPruneDays }: QuotaPanelProps) => {
     const [quotaGb, setQuotaGb] = useState<string>(
         initialQuota !== null ? String((initialQuota / 1_073_741_824).toFixed(2)) : "",
     );
@@ -36,26 +31,34 @@ export const QuotaPanel = ({
     const [pruneSuccess, setPruneSuccess] = useState(false);
 
     const setMyQuota = api.channel.setMyQuota.useMutation({
-        onSuccess: () => { setQuotaSuccess(true); setQuotaError(null); },
-        onError: (err) => { setQuotaError(err.message); setQuotaSuccess(false); },
+        onSuccess: () => {
+            setQuotaSuccess(true);
+            setQuotaError(null);
+        },
+        onError: (err) => {
+            setQuotaError(err.message);
+            setQuotaSuccess(false);
+        },
     });
 
     const setAutoPruneDays = api.channel.setAutoPruneDays.useMutation({
-        onSuccess: () => { setPruneSuccess(true); setPruneError(null); },
-        onError: (err) => { setPruneError(err.message); setPruneSuccess(false); },
+        onSuccess: () => {
+            setPruneSuccess(true);
+            setPruneError(null);
+        },
+        onError: (err) => {
+            setPruneError(err.message);
+            setPruneSuccess(false);
+        },
     });
 
-    const usedPercent = initialQuota !== null
-        ? Math.min(100, Math.round((initialUsed / initialQuota) * 100))
-        : null;
+    const usedPercent = initialQuota !== null ? Math.min(100, Math.round((initialUsed / initialQuota) * 100)) : null;
 
     const handleSaveQuota = (e: React.FormEvent) => {
         e.preventDefault();
         setQuotaSuccess(false);
         setQuotaError(null);
-        const quotaBytes = quotaGb.trim() === ""
-            ? null
-            : Math.round(parseFloat(quotaGb) * 1_073_741_824);
+        const quotaBytes = quotaGb.trim() === "" ? null : Math.round(parseFloat(quotaGb) * 1_073_741_824);
         setMyQuota.mutate({ channelId, quotaBytes });
     };
 
@@ -79,7 +82,7 @@ export const QuotaPanel = ({
                 {/* Usage bar */}
                 <div className="mb-4 space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-foreground font-medium">{formatBytes(initialUsed)} used</span>
+                        <span className="font-medium text-foreground">{formatBytes(initialUsed)} used</span>
                         {initialQuota !== null && (
                             <span className="text-muted-foreground">of {formatBytes(initialQuota)}</span>
                         )}
@@ -152,7 +155,9 @@ export const QuotaPanel = ({
                     </div>
 
                     {pruneError && <p className="text-sm text-destructive">{pruneError}</p>}
-                    {pruneSuccess && <p className="text-sm text-green-600 dark:text-green-400">Auto-prune policy saved.</p>}
+                    {pruneSuccess && (
+                        <p className="text-sm text-green-600 dark:text-green-400">Auto-prune policy saved.</p>
+                    )}
 
                     <button
                         type="submit"

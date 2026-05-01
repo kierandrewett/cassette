@@ -50,12 +50,7 @@ export const accountRouter = createTRPCRouter({
 
             const deleted = await ctx.db
                 .delete(sessionTable)
-                .where(
-                    and(
-                        eq(sessionTable.id, input.sessionId),
-                        eq(sessionTable.userId, ctx.user.id),
-                    ),
-                )
+                .where(and(eq(sessionTable.id, input.sessionId), eq(sessionTable.userId, ctx.user.id)))
                 .returning({ id: sessionTable.id });
 
             if (!deleted[0]) {
@@ -69,12 +64,7 @@ export const accountRouter = createTRPCRouter({
     revokeAllOtherSessions: protectedProcedure.mutation(async ({ ctx }) => {
         await ctx.db
             .delete(sessionTable)
-            .where(
-                and(
-                    eq(sessionTable.userId, ctx.user.id),
-                    ne(sessionTable.id, ctx.session.session.id),
-                ),
-            );
+            .where(and(eq(sessionTable.userId, ctx.user.id), ne(sessionTable.id, ctx.session.session.id)));
 
         return { revoked: true };
     }),
@@ -95,23 +85,21 @@ export const accountRouter = createTRPCRouter({
     }),
 
     // Enable or disable sign-in alert emails.
-    setSignInAlerts: protectedProcedure
-        .input(z.object({ enabled: z.boolean() }))
-        .mutation(async ({ ctx, input }) => {
-            await ctx.db
-                .insert(userPreferences)
-                .values({
-                    userId: ctx.user.id,
-                    signInAlerts: input.enabled,
-                    updatedAt: new Date(),
-                })
-                .onConflictDoUpdate({
-                    target: [userPreferences.userId],
-                    set: { signInAlerts: input.enabled, updatedAt: new Date() },
-                });
+    setSignInAlerts: protectedProcedure.input(z.object({ enabled: z.boolean() })).mutation(async ({ ctx, input }) => {
+        await ctx.db
+            .insert(userPreferences)
+            .values({
+                userId: ctx.user.id,
+                signInAlerts: input.enabled,
+                updatedAt: new Date(),
+            })
+            .onConflictDoUpdate({
+                target: [userPreferences.userId],
+                set: { signInAlerts: input.enabled, updatedAt: new Date() },
+            });
 
-            return { enabled: input.enabled };
-        }),
+        return { enabled: input.enabled };
+    }),
 
     // --------------------------------------------------------------------------
     // GDPR data export

@@ -9,7 +9,14 @@ import { and, eq, isNull } from "drizzle-orm";
 import { env } from "@/env";
 import { sendMail } from "@/lib/mail";
 import { db } from "@/server/db/client";
-import { account, passkey as passkeyTable, session, twoFactor as twoFactorTable, user, verification } from "@/server/db/schema/auth";
+import {
+    account,
+    passkey as passkeyTable,
+    session,
+    twoFactor as twoFactorTable,
+    user,
+    verification,
+} from "@/server/db/schema/auth";
 import { apiKeys, channels, type Channel } from "@/server/db/schema/channels";
 
 // Better-Auth server instance. Uses the Drizzle adapter against the auth
@@ -87,12 +94,7 @@ const randomKeyBody = (): string => {
     // 22-char URL-safe random string. We use base64url so the alphabet matches
     // typical SDK expectations and the prefix-based lookup index stays sortable.
     const bytes = randomBytes(18);
-    return bytes
-        .toString("base64")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/, "")
-        .slice(0, KEY_RANDOM_LEN);
+    return bytes.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "").slice(0, KEY_RANDOM_LEN);
 };
 
 export type MintedApiKey = {

@@ -51,7 +51,8 @@ async function ensureSystemPlaylist(
             .from(playlists)
             .where(and(eq(playlists.ownerId, userId), eq(playlists.kind, kind)))
             .limit(1);
-        if (!retry[0]) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create system playlist." });
+        if (!retry[0])
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create system playlist." });
         return retry[0].id;
     }
 
@@ -147,12 +148,16 @@ const queueRouter = createTRPCRouter({
                 await tx
                     .update(playlistItems)
                     .set({ position: sql`-(${playlistItems.position} + 1)` })
-                    .where(and(eq(playlistItems.playlistId, playlistId), gt(playlistItems.position, input.position! - 1)));
+                    .where(
+                        and(eq(playlistItems.playlistId, playlistId), gt(playlistItems.position, input.position! - 1)),
+                    );
                 await tx
                     .update(playlistItems)
                     .set({ position: sql`-(${playlistItems.position}) ` })
                     .where(and(eq(playlistItems.playlistId, playlistId), lt(playlistItems.position, 0)));
-                await tx.insert(playlistItems).values({ playlistId, videoId: input.videoId, position: input.position! });
+                await tx
+                    .insert(playlistItems)
+                    .values({ playlistId, videoId: input.videoId, position: input.position! });
             });
             return { playlistId, videoId: input.videoId, position: input.position };
         }),
@@ -188,32 +193,28 @@ const queueRouter = createTRPCRouter({
 // ---------------------------------------------------------------------------
 
 const watchLaterRouter = createTRPCRouter({
-    add: protectedProcedure
-        .input(z.object({ videoId: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            const playlistId = await ensureSystemPlaylist(ctx.db, ctx.user.id, "watch_later");
-            const [result] = await ctx.db
-                .select({ maxPos: max(playlistItems.position) })
-                .from(playlistItems)
-                .where(eq(playlistItems.playlistId, playlistId));
-            const nextPos = (result?.maxPos ?? -1) + 1;
-            const [item] = await ctx.db
-                .insert(playlistItems)
-                .values({ playlistId, videoId: input.videoId, position: nextPos })
-                .onConflictDoNothing()
-                .returning();
-            return item ?? null;
-        }),
+    add: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const playlistId = await ensureSystemPlaylist(ctx.db, ctx.user.id, "watch_later");
+        const [result] = await ctx.db
+            .select({ maxPos: max(playlistItems.position) })
+            .from(playlistItems)
+            .where(eq(playlistItems.playlistId, playlistId));
+        const nextPos = (result?.maxPos ?? -1) + 1;
+        const [item] = await ctx.db
+            .insert(playlistItems)
+            .values({ playlistId, videoId: input.videoId, position: nextPos })
+            .onConflictDoNothing()
+            .returning();
+        return item ?? null;
+    }),
 
-    remove: protectedProcedure
-        .input(z.object({ videoId: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            const playlistId = await ensureSystemPlaylist(ctx.db, ctx.user.id, "watch_later");
-            await ctx.db
-                .delete(playlistItems)
-                .where(and(eq(playlistItems.playlistId, playlistId), eq(playlistItems.videoId, input.videoId)));
-            return { ok: true };
-        }),
+    remove: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const playlistId = await ensureSystemPlaylist(ctx.db, ctx.user.id, "watch_later");
+        await ctx.db
+            .delete(playlistItems)
+            .where(and(eq(playlistItems.playlistId, playlistId), eq(playlistItems.videoId, input.videoId)));
+        return { ok: true };
+    }),
 
     list: protectedProcedure
         .input(
@@ -265,36 +266,9 @@ export const playlistRouter = createTRPCRouter({
     // -------------------------------------------------------------------------
     // Public: list user-kind playlists
     // -------------------------------------------------------------------------
-    list: publicProcedure
-        .input(z.object({ ownerId: z.string().optional() }))
-        .query(async ({ ctx, input }) => {
-            if (input.ownerId) {
-                // Public view: only public playlists for a given owner.
-                return ctx.db
-                    .select({
-                        id: playlists.id,
-                        title: playlists.title,
-                        description: playlists.description,
-                        privacy: playlists.privacy,
-                        createdAt: playlists.createdAt,
-                        updatedAt: playlists.updatedAt,
-                    })
-                    .from(playlists)
-                    .where(
-                        and(
-                            eq(playlists.ownerId, input.ownerId),
-                            eq(playlists.kind, "user"),
-                            eq(playlists.privacy, "public"),
-                        ),
-                    )
-                    .orderBy(desc(playlists.updatedAt));
-            }
-
-            // Authenticated: list all user-kind playlists owned by the caller.
-            if (!ctx.user) {
-                throw new TRPCError({ code: "UNAUTHORIZED" });
-            }
-
+    list: publicProcedure.input(z.object({ ownerId: z.string().optional() })).query(async ({ ctx, input }) => {
+        if (input.ownerId) {
+            // Public view: only public playlists for a given owner.
             return ctx.db
                 .select({
                     id: playlists.id,
@@ -305,9 +279,34 @@ export const playlistRouter = createTRPCRouter({
                     updatedAt: playlists.updatedAt,
                 })
                 .from(playlists)
-                .where(and(eq(playlists.ownerId, ctx.user.id), eq(playlists.kind, "user")))
+                .where(
+                    and(
+                        eq(playlists.ownerId, input.ownerId),
+                        eq(playlists.kind, "user"),
+                        eq(playlists.privacy, "public"),
+                    ),
+                )
                 .orderBy(desc(playlists.updatedAt));
-        }),
+        }
+
+        // Authenticated: list all user-kind playlists owned by the caller.
+        if (!ctx.user) {
+            throw new TRPCError({ code: "UNAUTHORIZED" });
+        }
+
+        return ctx.db
+            .select({
+                id: playlists.id,
+                title: playlists.title,
+                description: playlists.description,
+                privacy: playlists.privacy,
+                createdAt: playlists.createdAt,
+                updatedAt: playlists.updatedAt,
+            })
+            .from(playlists)
+            .where(and(eq(playlists.ownerId, ctx.user.id), eq(playlists.kind, "user")))
+            .orderBy(desc(playlists.updatedAt));
+    }),
 
     // -------------------------------------------------------------------------
     // Public: load a single playlist with its items
@@ -431,7 +430,12 @@ export const playlistRouter = createTRPCRouter({
         )
         .mutation(async ({ ctx, input }) => {
             const playlist = await ctx.db
-                .select({ id: playlists.id, ownerId: playlists.ownerId, privacy: playlists.privacy, unlistedSlug: playlists.unlistedSlug })
+                .select({
+                    id: playlists.id,
+                    ownerId: playlists.ownerId,
+                    privacy: playlists.privacy,
+                    unlistedSlug: playlists.unlistedSlug,
+                })
                 .from(playlists)
                 .where(eq(playlists.id, input.id))
                 .limit(1)
@@ -455,11 +459,7 @@ export const playlistRouter = createTRPCRouter({
                 }
             }
 
-            const [updated] = await ctx.db
-                .update(playlists)
-                .set(patch)
-                .where(eq(playlists.id, input.id))
-                .returning();
+            const [updated] = await ctx.db.update(playlists).set(patch).where(eq(playlists.id, input.id)).returning();
 
             return updated;
         }),
@@ -467,25 +467,23 @@ export const playlistRouter = createTRPCRouter({
     // -------------------------------------------------------------------------
     // Protected: delete a user-kind playlist (owner only, system kinds rejected)
     // -------------------------------------------------------------------------
-    delete: protectedProcedure
-        .input(z.object({ id: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            const playlist = await ctx.db
-                .select({ id: playlists.id, ownerId: playlists.ownerId, kind: playlists.kind })
-                .from(playlists)
-                .where(eq(playlists.id, input.id))
-                .limit(1)
-                .then((r) => r[0]);
+    delete: protectedProcedure.input(z.object({ id: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const playlist = await ctx.db
+            .select({ id: playlists.id, ownerId: playlists.ownerId, kind: playlists.kind })
+            .from(playlists)
+            .where(eq(playlists.id, input.id))
+            .limit(1)
+            .then((r) => r[0]);
 
-            if (!playlist) throw new TRPCError({ code: "NOT_FOUND", message: "Playlist not found." });
-            if (playlist.ownerId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
-            if (playlist.kind !== "user") {
-                throw new TRPCError({ code: "BAD_REQUEST", message: "System playlists cannot be deleted." });
-            }
+        if (!playlist) throw new TRPCError({ code: "NOT_FOUND", message: "Playlist not found." });
+        if (playlist.ownerId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
+        if (playlist.kind !== "user") {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "System playlists cannot be deleted." });
+        }
 
-            await ctx.db.delete(playlists).where(eq(playlists.id, input.id));
-            return { id: input.id };
-        }),
+        await ctx.db.delete(playlists).where(eq(playlists.id, input.id));
+        return { id: input.id };
+    }),
 
     // -------------------------------------------------------------------------
     // Protected: add a video to a playlist (owner only)
@@ -521,23 +519,22 @@ export const playlistRouter = createTRPCRouter({
     // -------------------------------------------------------------------------
     // Protected: remove an item from a playlist (owner only)
     // -------------------------------------------------------------------------
-    removeItem: protectedProcedure
-        .input(z.object({ itemId: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            // Verify ownership via join.
-            const item = await ctx.db
-                .select({ id: playlistItems.id, playlistId: playlistItems.playlistId })
-                .from(playlistItems)
-                .innerJoin(playlists, eq(playlists.id, playlistItems.playlistId))
-                .where(and(eq(playlistItems.id, input.itemId), eq(playlists.ownerId, ctx.user.id)))
-                .limit(1)
-                .then((r) => r[0]);
+    removeItem: protectedProcedure.input(z.object({ itemId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        // Verify ownership via join.
+        const item = await ctx.db
+            .select({ id: playlistItems.id, playlistId: playlistItems.playlistId })
+            .from(playlistItems)
+            .innerJoin(playlists, eq(playlists.id, playlistItems.playlistId))
+            .where(and(eq(playlistItems.id, input.itemId), eq(playlists.ownerId, ctx.user.id)))
+            .limit(1)
+            .then((r) => r[0]);
 
-            if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "Item not found or you do not own this playlist." });
+        if (!item)
+            throw new TRPCError({ code: "NOT_FOUND", message: "Item not found or you do not own this playlist." });
 
-            await ctx.db.delete(playlistItems).where(eq(playlistItems.id, input.itemId));
-            return { id: input.itemId };
-        }),
+        await ctx.db.delete(playlistItems).where(eq(playlistItems.id, input.itemId));
+        return { id: input.itemId };
+    }),
 
     // -------------------------------------------------------------------------
     // Protected: reorder items in a playlist (owner only)

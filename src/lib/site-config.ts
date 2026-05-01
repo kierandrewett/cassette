@@ -23,7 +23,11 @@ export const getPrivacyMode = async (): Promise<PrivacyMode> => {
     }
 
     try {
-        const rows = await db.select({ privacyMode: siteConfig.privacyMode }).from(siteConfig).where(eq(siteConfig.id, 1)).limit(1);
+        const rows = await db
+            .select({ privacyMode: siteConfig.privacyMode })
+            .from(siteConfig)
+            .where(eq(siteConfig.id, 1))
+            .limit(1);
         const mode = rows[0]?.privacyMode ?? "public";
         cachedMode = mode;
         cacheExpiresAt = now + CACHE_TTL_MS;

@@ -4,8 +4,8 @@
 export type ResolvedRange = {
     ok: true;
     start: number;
-    end: number;       // inclusive, clamped to total-1
-    length: number;    // end - start + 1
+    end: number; // inclusive, clamped to total-1
+    length: number; // end - start + 1
 };
 
 export type RangeReject = {

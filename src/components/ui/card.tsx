@@ -4,7 +4,11 @@ import { cn } from "@/lib/utils";
 
 // Card surfaces use --card token (dark: hsl(0 0% 4%)) — nearly black.
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-xl border border-border bg-card text-card-foreground", className)} {...props} />
+    <div
+        ref={ref}
+        className={cn("rounded-xl border border-border bg-card text-card-foreground", className)}
+        {...props}
+    />
 ));
 Card.displayName = "Card";
 

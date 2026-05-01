@@ -67,7 +67,7 @@ export const AddToWatchLaterChip = ({ videoId, className }: AddToWatchLaterChipP
                 "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 saved
-                    ? "bg-secondary text-foreground cursor-default"
+                    ? "cursor-default bg-secondary text-foreground"
                     : "bg-secondary/60 text-foreground/80 hover:bg-secondary/80 hover:text-foreground",
                 className,
             )}
