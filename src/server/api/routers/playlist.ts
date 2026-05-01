@@ -216,6 +216,16 @@ const watchLaterRouter = createTRPCRouter({
         return { ok: true };
     }),
 
+    has: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).query(async ({ ctx, input }) => {
+        const playlistId = await ensureSystemPlaylist(ctx.db, ctx.user.id, "watch_later");
+        const [row] = await ctx.db
+            .select({ id: playlistItems.id })
+            .from(playlistItems)
+            .where(and(eq(playlistItems.playlistId, playlistId), eq(playlistItems.videoId, input.videoId)))
+            .limit(1);
+        return { saved: !!row };
+    }),
+
     list: protectedProcedure
         .input(
             z.object({

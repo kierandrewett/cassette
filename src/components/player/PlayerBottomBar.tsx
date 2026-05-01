@@ -98,12 +98,14 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
                     onPointerLeave={() => setPreviewVisible(false)}
                 >
                     <TimeSlider.Track className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-all duration-150 group-hover/slider:h-[5px]">
-                        {/* Buffered (already-loaded) portion sits below the
-                            played fill in stack order so the played section
-                            paints on top in the brand accent. */}
-                        <TimeSlider.Progress className="absolute inset-y-0 left-0 rounded-full bg-white/35 will-change-[width]" />
+                        {/* Stacking: track (bg) -> Progress (buffered, white)
+                            -> TrackFill (played, violet brand accent). z-index
+                            on TrackFill is explicit because Vidstack's default
+                            element ordering otherwise lets the buffered band
+                            paint over the played fill on some browsers. */}
+                        <TimeSlider.Progress className="absolute inset-y-0 left-0 z-0 rounded-full bg-white/35 will-change-[width]" />
                         <TimeSlider.TrackFill
-                            className="absolute inset-y-0 left-0 rounded-full will-change-[width]"
+                            className="absolute inset-y-0 left-0 z-10 rounded-full will-change-[width]"
                             style={{ background: "hsl(var(--primary))" }}
                         />
                     </TimeSlider.Track>
@@ -159,7 +161,7 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
                             <div className="volume-rail">
                                 <VolumeSlider.Root
                                     aria-label="Volume"
-                                    className="group/vol relative flex h-4 w-[88px] cursor-pointer items-center px-1"
+                                    className="group/vol relative flex h-4 w-[96px] cursor-pointer items-center px-2"
                                 >
                                     <VolumeSlider.Track className="relative h-1 w-full overflow-hidden rounded-full bg-white/20">
                                         <VolumeSlider.TrackFill className="absolute inset-y-0 left-0 rounded-full bg-white/95 will-change-[width]" />

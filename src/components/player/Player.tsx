@@ -29,7 +29,7 @@ import { PlayerBottomBar } from "./PlayerBottomBar";
 import { PlayerGestures } from "./PlayerGestures";
 import { UpNextOverlay } from "./UpNextOverlay";
 import { KeyboardShortcutsOverlay, useShortcutsOverlay } from "./KeyboardShortcutsOverlay";
-import { useWatchBeacon, sendPauseBeacon } from "./useWatchBeacon";
+import { useWatchBeacon, useFlushProgress } from "./useWatchBeacon";
 import { useIdleControls } from "./useIdleControls";
 import { useMediaSession } from "./useMediaSession";
 
@@ -382,6 +382,7 @@ const PlayerInner = ({
     const seek = (seconds: number) => remote.seek(seconds);
 
     useWatchBeacon({ videoId: video.id, getPositionSec, seek });
+    const flushProgress = useFlushProgress(video.id);
 
     // Wire the W3C Media Session so OS lockscreen / MPRIS / Now Playing
     // surfaces show metadata and accept play/pause/seek/prev/next.
@@ -394,7 +395,7 @@ const PlayerInner = ({
 
     // Pause beacon.
     const handlePause = () => {
-        sendPauseBeacon(video.id, getPositionSec());
+        flushProgress(getPositionSec());
     };
 
     // When the auto-advance fires and the candidate came from the caller's

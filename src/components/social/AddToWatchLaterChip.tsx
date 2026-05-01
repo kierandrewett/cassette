@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Clock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,28 +14,54 @@ interface AddToWatchLaterChipProps {
 }
 
 /**
- * Pill button that saves a video to Watch Later with optimistic feedback.
- * Flips to a "Saved" state immediately on click and reconciles on settle.
- * Anonymous viewers are redirected to login.
+ * Pill button that toggles a video into / out of Watch Later. Optimistically
+ * flips on click, reconciles with the server on settle, and seeds initial
+ * state from `playlist.watchLater.has` so the button reflects reality on
+ * mount instead of always starting at "unsaved".
+ *
+ * Anonymous viewers get a sign-in link instead of a real toggle.
  */
 export const AddToWatchLaterChip = ({ videoId, className }: AddToWatchLaterChipProps) => {
     const { data: session } = useSession();
+    const isSignedIn = !!session?.user;
+    const utils = api.useUtils();
+
+    const hasQuery = api.playlist.watchLater.has.useQuery(
+        { videoId },
+        { enabled: isSignedIn, staleTime: 30_000 },
+    );
     const [saved, setSaved] = useState(false);
 
+    useEffect(() => {
+        if (hasQuery.data) setSaved(hasQuery.data.saved);
+    }, [hasQuery.data]);
+
+    const invalidateAfter = () => {
+        void utils.playlist.watchLater.has.invalidate({ videoId });
+        void utils.playlist.watchLater.list.invalidate();
+    };
+
     const addMutation = api.playlist.watchLater.add.useMutation({
-        onMutate: () => {
-            setSaved(true);
-        },
+        onMutate: () => setSaved(true),
         onError: () => {
             setSaved(false);
             toast.error("Failed to save to Watch Later");
         },
-        onSuccess: () => {
-            toast.success("Saved to Watch Later");
-        },
+        onSuccess: () => toast.success("Saved to Watch Later"),
+        onSettled: invalidateAfter,
     });
 
-    if (!session?.user) {
+    const removeMutation = api.playlist.watchLater.remove.useMutation({
+        onMutate: () => setSaved(false),
+        onError: () => {
+            setSaved(true);
+            toast.error("Failed to remove from Watch Later");
+        },
+        onSuccess: () => toast.success("Removed from Watch Later"),
+        onSettled: invalidateAfter,
+    });
+
+    if (!isSignedIn) {
         return (
             <a
                 href="/login"
@@ -52,22 +78,24 @@ export const AddToWatchLaterChip = ({ videoId, className }: AddToWatchLaterChipP
         );
     }
 
+    const busy = addMutation.isPending || removeMutation.isPending;
+
     return (
         <button
             type="button"
             onClick={() => {
-                if (!saved && !addMutation.isPending) {
-                    addMutation.mutate({ videoId });
-                }
+                if (busy) return;
+                if (saved) removeMutation.mutate({ videoId });
+                else addMutation.mutate({ videoId });
             }}
-            disabled={saved || addMutation.isPending}
-            aria-label={saved ? "Saved to Watch Later" : "Save to Watch Later"}
+            disabled={busy}
+            aria-label={saved ? "Remove from Watch Later" : "Save to Watch Later"}
             aria-pressed={saved}
             className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 saved
-                    ? "cursor-default bg-secondary text-foreground"
+                    ? "bg-secondary text-foreground hover:bg-secondary/80"
                     : "bg-secondary/60 text-foreground/80 hover:bg-secondary/80 hover:text-foreground",
                 className,
             )}

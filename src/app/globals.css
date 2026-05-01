@@ -88,9 +88,13 @@
        The fade/translate is wrapped in a reduced-motion guard so users with
        prefers-reduced-motion: reduce get an instant show/hide rather than a
        slide. Idle controls still snap away — they just stop sliding. */
+    /* No backdrop-filter on the bar itself — that would create an isolation
+       stacking context, and child popovers' backdrop-filter would only see
+       the bar's already-rendered output (a flat dark gradient) instead of
+       the video frames behind. The gradient alone gives enough depth at the
+       fade edge; the popovers do the heavy glass work. */
     .player-bar {
         background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
-        backdrop-filter: blur(18px) saturate(140%);
     }
     @media (prefers-reduced-motion: no-preference) {
         .player-bar {
@@ -128,18 +132,14 @@
         background: hsl(var(--popover) / 0.78);
     }
 
-    /* Stronger glass surface for player popovers (Settings / Captions / Sleep
-       timer / right-click context menu / Stats overlay).  Sits over moving
-       video frames so we lean on a darker tint and more aggressive blur.
-       Drop shadow makes the float convincing on bright frames.
-       Lower bg alpha (was 0.78 -> 0.5) so the backdrop-filter actually
-       reads as a glass effect — at high opacity the blur was effectively
-       invisible and the panel just looked solid. */
+    /* Glass surface for player popovers. With .player-bar's isolation
+       context removed, this backdrop-filter now actually blurs video frames
+       beneath. Low bg alpha + heavy blur + saturate = frosted glass over
+       whatever's playing. */
     .player-popover {
-        background: rgba(10, 10, 12, 0.5);
-        backdrop-filter: blur(28px) saturate(180%);
-        -webkit-backdrop-filter: blur(28px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(20, 20, 24, 0.4);
+        backdrop-filter: blur(40px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         box-shadow:
             0 16px 32px -8px rgba(0, 0, 0, 0.6),
             0 4px 8px -2px rgba(0, 0, 0, 0.4);
@@ -189,6 +189,10 @@
         align-items: center;
         gap: 4px;
     }
+    /* The rail is `overflow: hidden` only while collapsed so the slide-in
+       animation looks clean. Once expanded we drop the clip so the thumb
+       isn't sliced in half at min/max. Extra width compensates for the
+       4px overshoot the thumb's translateX(-50%) creates at each end. */
     .volume-stack .volume-rail {
         width: 0;
         overflow: hidden;
@@ -201,7 +205,8 @@
     .volume-stack:hover .volume-rail,
     .volume-stack:focus-within .volume-rail,
     .volume-stack[data-active="true"] .volume-rail {
-        width: 88px;
+        width: 96px;
+        overflow: visible;
     }
 
     /* Theatre mode — toggled by usePlayerStore.theatre via PlayerCanvas's
@@ -305,7 +310,6 @@
     #nprogress .spinner {
         display: none;
     }
-
 }
 
 /* color-scheme is what tells the browser to draw native scrollbars in

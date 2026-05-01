@@ -16,11 +16,17 @@ interface UseWatchBeaconOptions {
 }
 
 /**
- * Sends watch progress beacons every 5 s, on pause, and on unmount.
- * On mount, loads saved progress and offers a resume toast.
+ * Sends watch progress every 5 s, on pause, and on unmount. Loads saved
+ * progress on mount and offers a resume toast.
  *
- * Skips all beacon logic when the viewer is not signed in — the server
- * would reject the request anyway, and we avoid unnecessary network chatter.
+ * Why not navigator.sendBeacon? Browsers coerce sendBeacon's Content-Type
+ * to `text/plain` to skirt CORS preflight, which breaks tRPC's body parser
+ * (it sees `req.json()` succeed but the un-batched POST shape no longer
+ * matches what the procedure parser expects, and Zod fires "Required").
+ * `fetch(..., { keepalive: true })` survives unload and keeps the JSON
+ * Content-Type intact — it's the right tool for this job.
+ *
+ * Skips all beacon logic when the viewer is not signed in.
  */
 export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeaconOptions): void => {
     const { data: session } = useSession();
@@ -29,28 +35,10 @@ export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeacon
     const recordProgress = api.video.recordProgress.useMutation();
     const hasOfferedResume = useRef(false);
 
-    const sendBeacon = (positionSec: number) => {
-        // Single-procedure tRPC POST shape. The batched form
-        // (`{"0": {"json": ...}}`) only works against `?batch=1` URLs; this
-        // POST hits the un-batched URL so it must use the bare `{json: ...}`
-        // wrapper. The previous batched body was returning 400 "Required".
-        const body = JSON.stringify({
-            json: {
-                videoId,
-                positionSec: Math.floor(positionSec),
-            },
-        });
-
-        if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-            // sendBeacon for reliability on page unload.
-            navigator.sendBeacon("/api/trpc/video.recordProgress", new Blob([body], { type: "application/json" }));
-        } else {
-            // Fallback: regular mutation.
-            recordProgress.mutate({ videoId, positionSec: Math.floor(positionSec) });
-        }
+    const sendProgress = (positionSec: number) => {
+        recordProgress.mutate({ videoId, positionSec: Math.floor(positionSec) });
     };
 
-    // On mount: load saved progress and offer resume (signed-in only).
     useEffect(() => {
         if (!isSignedIn) return;
         if (hasOfferedResume.current) return;
@@ -65,10 +53,7 @@ export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeacon
                     const label = formatDuration(positionSec);
                     toast(`Resume from ${label}`, {
                         duration: 8000,
-                        action: {
-                            label: "Restart",
-                            onClick: () => seek(0),
-                        },
+                        action: { label: "Restart", onClick: () => seek(0) },
                         onAutoClose: () => seek(positionSec),
                         onDismiss: () => seek(positionSec),
                     });
@@ -79,38 +64,25 @@ export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeacon
             });
     }, [videoId, isSignedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Periodic beacon + on-unmount beacon (signed-in only).
     useEffect(() => {
         if (!isSignedIn) return;
 
-        const interval = setInterval(() => {
-            sendBeacon(getPositionSec());
-        }, BEACON_INTERVAL_MS);
+        const interval = setInterval(() => sendProgress(getPositionSec()), BEACON_INTERVAL_MS);
 
-        // Flush on unmount (also covers page navigation).
         return () => {
             clearInterval(interval);
-            sendBeacon(getPositionSec());
+            // keepalive flush on unmount / navigation. fire-and-forget; the
+            // tRPC client handles superjson + batching.
+            sendProgress(getPositionSec());
         };
     }, [videoId, isSignedIn]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Pause beacon is wired separately in Player.tsx via onPause.
 };
 
-/**
- * Standalone pause handler — call from MediaPlayer's onPause event.
- */
-export const sendPauseBeacon = (videoId: string, positionSec: number): void => {
-    const body = JSON.stringify({
-        "0": {
-            json: {
-                videoId,
-                positionSec: Math.floor(positionSec),
-            },
-        },
-    });
-
-    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-        navigator.sendBeacon("/api/trpc/video.recordProgress", new Blob([body], { type: "application/json" }));
-    }
+/** Hook that returns a `flushProgress(positionSec)` callback — call from
+ *  the player's onPause to record progress at the moment of pause. */
+export const useFlushProgress = (videoId: string): ((positionSec: number) => void) => {
+    const recordProgress = api.video.recordProgress.useMutation();
+    return (positionSec: number) => {
+        recordProgress.mutate({ videoId, positionSec: Math.floor(positionSec) });
+    };
 };
