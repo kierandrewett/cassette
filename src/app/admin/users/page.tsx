@@ -5,6 +5,7 @@ import { ShieldCheck } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { trpc } from "@/lib/trpc/server";
 import { UserActionsMenu } from "@/components/admin/UserActionsMenu";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 
 interface SearchParams {
     q?: string;
@@ -60,8 +61,15 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                         {items.map((u) => (
                             <tr key={u.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                                 <td className="px-4 py-3">
-                                    <Link href={`/admin/users/${u.id}`} className="font-medium hover:underline">
-                                        {u.name}
+                                    <Link
+                                        href={`/admin/users/${u.id}`}
+                                        className="flex items-center gap-2.5 font-medium hover:underline"
+                                    >
+                                        <UserAvatar
+                                            user={{ name: u.name, email: u.email, image: u.image }}
+                                            size={24}
+                                        />
+                                        <span>{u.name}</span>
                                     </Link>
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
