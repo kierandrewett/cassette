@@ -98,8 +98,14 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
                     onPointerLeave={() => setPreviewVisible(false)}
                 >
                     <TimeSlider.Track className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-all duration-150 group-hover/slider:h-[5px]">
-                        <TimeSlider.TrackFill className="absolute inset-y-0 left-0 rounded-full bg-white/95 will-change-[width]" />
-                        <TimeSlider.Progress className="absolute inset-y-0 left-0 rounded-full bg-white/45 will-change-[width]" />
+                        {/* Buffered (already-loaded) portion sits below the
+                            played fill in stack order so the played section
+                            paints on top in the brand accent. */}
+                        <TimeSlider.Progress className="absolute inset-y-0 left-0 rounded-full bg-white/35 will-change-[width]" />
+                        <TimeSlider.TrackFill
+                            className="absolute inset-y-0 left-0 rounded-full will-change-[width]"
+                            style={{ background: "hsl(var(--primary))" }}
+                        />
                     </TimeSlider.Track>
 
                     {/* Visible playhead — small white dot that grows on hover/drag.
