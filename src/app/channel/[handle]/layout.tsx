@@ -116,7 +116,10 @@ const ChannelLayout = async ({ children, params }: ChannelLayoutProps) => {
 
                 <ChannelTabs handle={channel.handle} />
 
-                <div className="px-4 py-6 md:px-6 lg:px-8">{children}</div>
+                {/* Tab content lives at the same max-w-7xl as the header
+                    above so the video grid lines up with the avatar +
+                    name block instead of stretching to the viewport. */}
+                <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">{children}</div>
             </div>
         </AppShell>
     );
