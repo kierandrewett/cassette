@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
+import { channelProcedure, createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import type { Database } from "@/server/db/client";
 import { gravatarHash } from "@/lib/gravatar";
 import { limit } from "@/lib/ratelimit";
@@ -126,7 +126,12 @@ export const commentRouter = createTRPCRouter({
         // cursor: fetch rows where createdAt < cursor row's createdAt (simple
         // keyset). Pinned rows are always in the first page only — this is an
         // acceptable simplification consistent with YouTube's behaviour.
-        const conditions = [eq(comments.videoId, videoId), isNull(comments.parentId), isNull(comments.deletedAt)];
+        const conditions = [
+            eq(comments.videoId, videoId),
+            isNull(comments.parentId),
+            isNull(comments.deletedAt),
+            eq(comments.isPending, false),
+        ];
 
         if (cursor) {
             // Fetch the cursor row to get its timestamp for keyset pagination.
@@ -253,6 +258,7 @@ export const commentRouter = createTRPCRouter({
             eq(comments.rootId, rootId),
             sql`${comments.parentId} IS NOT NULL`,
             isNull(comments.deletedAt),
+            eq(comments.isPending, false),
         ];
 
         if (cursor) {
@@ -357,6 +363,29 @@ export const commentRouter = createTRPCRouter({
         if (body.length > 5000)
             throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body must be 5000 characters or fewer." });
 
+        // Moderation gate: if the channel that owns this video has
+        // moderate_comments=true, brand new comments land in is_pending=true
+        // and are held out of comment.list until approved. Channel members
+        // (owner/manager/uploader) bypass moderation on their own channel.
+        const channelInfoRows = await ctx.db
+            .select({ channelId: videos.channelId, moderateComments: channels.moderateComments })
+            .from(videos)
+            .innerJoin(channels, eq(videos.channelId, channels.id))
+            .where(eq(videos.id, input.videoId))
+            .limit(1);
+        const channelInfo = channelInfoRows[0];
+        if (!channelInfo) throw new TRPCError({ code: "NOT_FOUND", message: "Video not found." });
+
+        let isPending = !!channelInfo.moderateComments;
+        if (isPending) {
+            const memberRows = await ctx.db
+                .select({ role: channelMembers.role })
+                .from(channelMembers)
+                .where(and(eq(channelMembers.channelId, channelInfo.channelId), eq(channelMembers.userId, ctx.user.id)))
+                .limit(1);
+            if (memberRows[0]) isPending = false;
+        }
+
         if (input.parentId) {
             // Reply path: enforce depth cap.
             const parent = await loadComment(ctx.db, input.parentId);
@@ -373,19 +402,22 @@ export const commentRouter = createTRPCRouter({
                     parentId: input.parentId,
                     rootId,
                     body,
+                    isPending,
                 })
                 .returning();
 
             const reply = inserted[0]!;
 
-            // Best-effort fan-out: notify the parent author. Failures are
-            // logged inside the helper, never thrown.
-            const { notifyCommentReply } = await import("@/lib/notifications/fanout");
-            void notifyCommentReply(reply.id);
+            // Suppress fan-outs for held-for-moderation comments — they
+            // shouldn't notify the parent author or fire webhooks until
+            // they've been approved.
+            if (!isPending) {
+                const { notifyCommentReply } = await import("@/lib/notifications/fanout");
+                void notifyCommentReply(reply.id);
 
-            // Fire webhook fanout. Best-effort; void so failures never propagate.
-            const { fanoutCommentEvent } = await import("@/lib/webhooks/fanout");
-            void fanoutCommentEvent({ comment: reply });
+                const { fanoutCommentEvent } = await import("@/lib/webhooks/fanout");
+                void fanoutCommentEvent({ comment: reply });
+            }
 
             return reply;
         }
@@ -401,6 +433,7 @@ export const commentRouter = createTRPCRouter({
                     videoId: input.videoId,
                     authorId: ctx.user.id,
                     body,
+                    isPending,
                 })
                 .returning();
             if (!row) {
@@ -414,9 +447,11 @@ export const commentRouter = createTRPCRouter({
             return updated ?? { ...row, rootId: row.id };
         });
 
-        // Fire webhook fanout for top-level comment. Best-effort.
-        const { fanoutCommentEvent } = await import("@/lib/webhooks/fanout");
-        void fanoutCommentEvent({ comment: inserted });
+        // Held-for-moderation comments don't fire webhooks until approved.
+        if (!isPending) {
+            const { fanoutCommentEvent } = await import("@/lib/webhooks/fanout");
+            void fanoutCommentEvent({ comment: inserted });
+        }
 
         return inserted;
     }),
@@ -515,6 +550,110 @@ export const commentRouter = createTRPCRouter({
     // Protected: toggle dislike on a comment.
     dislike: protectedProcedure.input(likeInput).mutation(async ({ ctx, input }) => {
         return toggleCommentReaction(ctx.db, input.id, ctx.user.id, "dislike");
+    }),
+
+    // -----------------------------------------------------------------------
+    // Moderation queue: list/approve/reject pending comments. channelProcedure
+    // gates each call to owner+manager (uploaders cannot moderate).
+    // -----------------------------------------------------------------------
+    listPending: channelProcedure("owner", "manager")
+        .input(z.object({ channelId: z.string().uuid(), limit: z.number().int().min(1).max(100).default(50) }))
+        .query(async ({ ctx, input }) => {
+            const rows = await ctx.db
+                .select({
+                    id: comments.id,
+                    videoId: comments.videoId,
+                    parentId: comments.parentId,
+                    body: comments.body,
+                    createdAt: comments.createdAt,
+                    authorId: comments.authorId,
+                    authorName: user.name,
+                    authorImage: user.image,
+                    authorEmail: user.email,
+                    videoTitle: videos.title,
+                    videoPublicId: videos.publicId,
+                })
+                .from(comments)
+                .innerJoin(videos, eq(comments.videoId, videos.id))
+                .leftJoin(user, eq(comments.authorId, user.id))
+                .where(
+                    and(
+                        eq(videos.channelId, input.channelId),
+                        eq(comments.isPending, true),
+                        isNull(comments.deletedAt),
+                    ),
+                )
+                .orderBy(desc(comments.createdAt))
+                .limit(input.limit);
+
+            return rows.map((r) => ({
+                id: r.id,
+                videoId: r.videoId,
+                videoPublicId: r.videoPublicId,
+                videoTitle: r.videoTitle,
+                parentId: r.parentId,
+                body: r.body,
+                createdAt: r.createdAt,
+                author: {
+                    id: r.authorId,
+                    name: r.authorName,
+                    image: r.authorImage,
+                    gravatarHash: r.authorEmail ? gravatarHash(r.authorEmail) : null,
+                },
+            }));
+        }),
+
+    approve: protectedProcedure.input(z.object({ commentId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const comment = await loadComment(ctx.db, input.commentId);
+        const isManager = await isChannelManagerForVideo(ctx.db, comment.videoId, ctx.user.id);
+        if (!isManager) {
+            throw new TRPCError({
+                code: "FORBIDDEN",
+                message: "Only channel owners and managers can moderate comments.",
+            });
+        }
+
+        if (!comment.isPending) {
+            return { ok: true, alreadyApproved: true };
+        }
+
+        const [updated] = await ctx.db
+            .update(comments)
+            .set({ isPending: false })
+            .where(eq(comments.id, input.commentId))
+            .returning();
+
+        // Fire fan-outs that the create-time path skipped while pending.
+        if (updated) {
+            const { fanoutCommentEvent } = await import("@/lib/webhooks/fanout");
+            void fanoutCommentEvent({ comment: updated });
+
+            if (updated.parentId) {
+                const { notifyCommentReply } = await import("@/lib/notifications/fanout");
+                void notifyCommentReply(updated.id);
+            }
+        }
+
+        return { ok: true, alreadyApproved: false };
+    }),
+
+    reject: protectedProcedure.input(z.object({ commentId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const comment = await loadComment(ctx.db, input.commentId);
+        const isManager = await isChannelManagerForVideo(ctx.db, comment.videoId, ctx.user.id);
+        if (!isManager) {
+            throw new TRPCError({
+                code: "FORBIDDEN",
+                message: "Only channel owners and managers can moderate comments.",
+            });
+        }
+
+        // Soft-delete: mirrors comment.softDelete so audit trails stay sane.
+        await ctx.db
+            .update(comments)
+            .set({ deletedAt: new Date(), body: "[rejected]", isPending: false })
+            .where(eq(comments.id, input.commentId));
+
+        return { ok: true };
     }),
 });
 
