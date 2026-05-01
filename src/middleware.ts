@@ -43,6 +43,20 @@ const hasSessionCookie = (req: NextRequest): boolean => COOKIE_NAMES.some((name)
 export async function middleware(req: NextRequest): Promise<NextResponse> {
     const { pathname } = req.nextUrl;
 
+    // Back-compat: the public channel route was /c/<handle>; it's now
+    // /channel/<handle>. Permanent-redirect any /c/... so old bookmarks,
+    // RSS subscribers, and the like keep working. We do this BEFORE the
+    // always-allowed check so the redirect always fires regardless of
+    // privacy mode. Note this only covers the public surface; the studio
+    // path /studio/c/... was renamed to /studio/channel/... in the same
+    // commit and is not redirected — it's an authenticated UI and old
+    // bookmarks should just hit a 404 if anyone has them.
+    if (pathname === "/c" || pathname.startsWith("/c/")) {
+        const target = req.nextUrl.clone();
+        target.pathname = "/channel" + pathname.slice(2);
+        return NextResponse.redirect(target, 308);
+    }
+
     // Cheap pathname checks come first: any always-allowed route exits the
     // middleware without touching the privacy-mode DB query at all. This is
     // what was making /api/auth/get-session sit on a 5s artificial delay —
