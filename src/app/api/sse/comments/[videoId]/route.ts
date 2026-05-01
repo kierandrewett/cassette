@@ -109,7 +109,7 @@ const fetchSince = async (videoId: string, since: Date): Promise<SsePayload[]> =
 
     if (rows.length === 0) return [];
 
-    // Resolve channel handles (one per author) for click-through to /c/<handle>.
+    // Resolve channel handles (one per author) for click-through to /channel/<handle>.
     const authorIds = Array.from(new Set(rows.map((r) => r.authorId).filter((v): v is string => !!v)));
     const handleMap = new Map<string, string>();
     if (authorIds.length > 0) {

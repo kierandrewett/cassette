@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: ChannelPageProps): Promise<Me
         title: name,
         alternates: {
             types: {
-                "application/rss+xml": `/c/${handle}/feed.xml`,
+                "application/rss+xml": `/channel/${handle}/feed.xml`,
             },
         },
     };
@@ -88,9 +88,9 @@ const ChannelPage = async ({ params, searchParams }: ChannelPageProps) => {
     const isSubscribed = subscriptionResult.status === "fulfilled" && subscriptionResult.value.length > 0;
 
     const tabs = [
-        { label: "Videos", href: `/c/${handle}?tab=videos`, active: tab === "videos" },
-        { label: "Playlists", href: `/c/${handle}?tab=playlists`, active: tab === "playlists" },
-        { label: "About", href: `/c/${handle}?tab=about`, active: tab === "about" },
+        { label: "Videos", href: `/channel/${handle}?tab=videos`, active: tab === "videos" },
+        { label: "Playlists", href: `/channel/${handle}?tab=playlists`, active: tab === "playlists" },
+        { label: "About", href: `/channel/${handle}?tab=about`, active: tab === "about" },
     ];
 
     // Load tab content

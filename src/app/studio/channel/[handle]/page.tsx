@@ -136,7 +136,7 @@ const StudioChannelOverviewPage = async ({ params }: Props) => {
                         icon={UploadCircle01Icon}
                         title="Upload your first video"
                         description="Once your videos are uploaded and transcoded, you'll see views, comments, and recent uploads here."
-                        cta={{ label: "Upload video", href: `/studio/c/${handle}/upload` }}
+                        cta={{ label: "Upload video", href: `/studio/channel/${handle}/upload` }}
                     />
                 </div>
             ) : (
@@ -146,7 +146,7 @@ const StudioChannelOverviewPage = async ({ params }: Props) => {
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="text-base">Recent uploads</CardTitle>
                             <Link
-                                href={`/studio/c/${handle}/videos`}
+                                href={`/studio/channel/${handle}/videos`}
                                 className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                             >
                                 View all

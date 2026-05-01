@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { CameraAdd02Icon, ImageAdd02Icon, PencilEdit02Icon } from "hugeicons-react";
+import { CameraAdd02Icon, ImageAdd02Icon, PencilEdit02Icon, RssIcon } from "hugeicons-react";
 import { toast } from "sonner";
 
 import { SubscribeButton } from "@/components/social/SubscribeButton";
 import { AssetUploader } from "@/components/studio/AssetUploader";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api } from "@/lib/trpc/client";
 import { cn, formatCount } from "@/lib/utils";
 
@@ -33,7 +33,7 @@ interface ChannelHeaderProps {
 // an upload dialog, and the name + description become directly editable
 // fields. Save / Cancel replace the customise pill while editing. Settings
 // that don't fit the inline model (channel trailer, comment moderation)
-// still live at /studio/c/<handle>/customise.
+// still live at /studio/channel/<handle>/customise.
 export const ChannelHeader = ({
     id,
     handle,
@@ -54,6 +54,13 @@ export const ChannelHeader = ({
     const [description, setDescription] = useState(initialDescription);
     const [avatarOpen, setAvatarOpen] = useState(false);
     const [bannerOpen, setBannerOpen] = useState(false);
+    const [rssOpen, setRssOpen] = useState(false);
+
+    // Absolute feed URL — rendered into the dialog so the user can copy it
+    // straight into a feed reader. We compute on the client so it's correct
+    // for whichever host they're on (localhost, prod, custom domain).
+    const feedPath = `/channel/${handle}/feed.xml`;
+    const feedUrl = typeof window !== "undefined" ? `${window.location.origin}${feedPath}` : feedPath;
 
     const avatarSrc = avatarPath ? `/api/channel/${id}/asset/avatar` : null;
     const bannerSrc = bannerPath ? `/api/channel/${id}/asset/banner` : null;
@@ -205,7 +212,18 @@ export const ChannelHeader = ({
                                     </button>
                                 )
                             ) : (
-                                <SubscribeButton channelId={id} initialSubscribed={isSubscribed} />
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRssOpen(true)}
+                                        title="Subscribe via RSS"
+                                        aria-label="Subscribe via RSS"
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
+                                    >
+                                        <RssIcon size={16} strokeWidth={1.8} />
+                                    </button>
+                                    <SubscribeButton channelId={id} initialSubscribed={isSubscribed} />
+                                </>
                             )}
                         </div>
                     </div>
@@ -260,6 +278,51 @@ export const ChannelHeader = ({
                             setBannerOpen(false);
                         }}
                     />
+                </DialogContent>
+            </Dialog>
+
+            {/* RSS subscribe dialog — surfaces the feed URL so the user can
+                paste it into a feed reader. Includes a Copy button + a
+                direct link to the raw feed for inline preview. */}
+            <Dialog open={rssOpen} onOpenChange={setRssOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Subscribe via RSS</DialogTitle>
+                        <DialogDescription>
+                            Paste the URL below into your feed reader to follow @{handle} without an account.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="text"
+                            readOnly
+                            value={feedUrl}
+                            className="flex-1 rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            onFocus={(e) => e.currentTarget.select()}
+                        />
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                try {
+                                    await navigator.clipboard.writeText(feedUrl);
+                                    toast.success("Feed URL copied");
+                                } catch {
+                                    toast.error("Could not copy — select and copy manually.");
+                                }
+                            }}
+                            className="rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                        >
+                            Copy
+                        </button>
+                    </div>
+                    <a
+                        href={feedPath}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                    >
+                        Open feed in browser →
+                    </a>
                 </DialogContent>
             </Dialog>
         </div>

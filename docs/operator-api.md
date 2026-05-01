@@ -15,7 +15,7 @@ working examples you can copy.
 cassette has two auth paths, both proven by the end-to-end smoke test:
 
 1. **Channel-scoped API keys** for service-to-service uploads. Mint one in
-   the studio at `/studio/c/<handle>/api-keys`. The plaintext is shown
+   the studio at `/studio/channel/<handle>/api-keys`. The plaintext is shown
    exactly once. Format: `vid_<22-char-base64url>`.
 
 2. **Better-Auth session cookie** for browser users. Used by the studio
@@ -249,7 +249,7 @@ Verify on the receiver before trusting the payload.
 
 ### Manage webhooks
 
-`/studio/c/<handle>/webhooks` — create, edit, rotate secret, test fire,
+`/studio/channel/<handle>/webhooks` — create, edit, rotate secret, test fire,
 delete, view delivery history. Plaintext secret is shown exactly once on
 create + rotate.
 
@@ -257,7 +257,7 @@ create + rotate.
 
 ## RSS feed per channel
 
-`GET /c/<handle>/feed.xml` returns a valid RSS 2.0 feed of the channel's
+`GET /channel/<handle>/feed.xml` returns a valid RSS 2.0 feed of the channel's
 50 most-recent public+ready videos. Cache-Control: `public, max-age=300`.
 Channel pages set `<link rel="alternate" type="application/rss+xml">` so
 feed-reader apps autodiscover.

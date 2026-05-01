@@ -64,7 +64,7 @@ const ExploreChannelsPage = async ({ searchParams }: PageProps) => {
                         {result.items.map((c) => (
                             <li key={c.id}>
                                 <Link
-                                    href={`/c/${c.handle}`}
+                                    href={`/channel/${c.handle}`}
                                     className="flex h-full flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center transition-colors hover:border-primary/40"
                                 >
                                     <Avatar className="h-20 w-20">

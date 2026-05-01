@@ -641,7 +641,7 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                         successful.
                     </p>
                     <Link
-                        href={`/studio/c/${channel.handle}/videos`}
+                        href={`/studio/channel/${channel.handle}/videos`}
                         className="mt-2 inline-flex text-sm font-medium text-primary hover:underline"
                     >
                         Open Studio videos

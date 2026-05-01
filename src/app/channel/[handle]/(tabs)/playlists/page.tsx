@@ -7,7 +7,7 @@ interface PlaylistsTabPageProps {
 // Redirect to the main channel page with the playlists tab selected.
 const ChannelPlaylistsTabPage = async ({ params }: PlaylistsTabPageProps) => {
     const { handle } = await params;
-    redirect(`/c/${handle}?tab=playlists`);
+    redirect(`/channel/${handle}?tab=playlists`);
 };
 
 export default ChannelPlaylistsTabPage;

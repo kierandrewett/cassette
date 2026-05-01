@@ -154,7 +154,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                                         first-letter chip (no Gravatar lookup, the channel
                                         is not a user account). */}
                                     <a
-                                        href={`/c/${channel.handle}`}
+                                        href={`/channel/${channel.handle}`}
                                         className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border/50 transition-all hover:ring-border"
                                         aria-label={`${channel.name}'s channel`}
                                     >
@@ -176,7 +176,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
 
                                     <div>
                                         <a
-                                            href={`/c/${channel.handle}`}
+                                            href={`/channel/${channel.handle}`}
                                             className="block text-sm font-semibold text-foreground transition-colors hover:text-foreground/80"
                                         >
                                             {channel.name}

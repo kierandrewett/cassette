@@ -66,7 +66,7 @@ const StudioPage = async () => {
                                 return (
                                     <li key={channel.id}>
                                         <Link
-                                            href={`/studio/c/${channel.handle}`}
+                                            href={`/studio/channel/${channel.handle}`}
                                             className="flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 transition-colors hover:border-foreground/20 hover:bg-accent/40"
                                         >
                                             <Avatar className="h-12 w-12">

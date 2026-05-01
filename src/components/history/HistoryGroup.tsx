@@ -73,7 +73,7 @@ export const HistoryGroup = ({ label, items, onRemove }: HistoryGroupProps) => {
                                     {item.video.title}
                                 </Link>
                                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                                    <Link href={`/c/${item.channel.handle}`} className="hover:underline">
+                                    <Link href={`/channel/${item.channel.handle}`} className="hover:underline">
                                         {item.channel.name}
                                     </Link>
                                 </p>

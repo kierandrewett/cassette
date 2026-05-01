@@ -211,7 +211,7 @@ export const commentRouter = createTRPCRouter({
         }
 
         // Resolve each author's primary channel handle so the client can
-        // render names as links to /c/<handle> without a second round trip.
+        // render names as links to /channel/<handle> without a second round trip.
         const handleMap = await loadAuthorChannelHandles(
             ctx.db,
             rows.map((r) => r.authorId).filter((id): id is string => !!id),

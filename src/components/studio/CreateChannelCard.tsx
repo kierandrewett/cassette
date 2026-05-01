@@ -31,7 +31,7 @@ export const CreateChannelCard = () => {
 
     const createChannel = api.channel.create.useMutation({
         onSuccess: (channel) => {
-            router.push(`/studio/c/${channel.handle}`);
+            router.push(`/studio/channel/${channel.handle}`);
             router.refresh();
         },
         onError: (err) => {

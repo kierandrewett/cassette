@@ -192,14 +192,14 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                     )}
 
                     {/* User channels list — appears only when the viewer owns one or more
-                        channels. Each row links to /c/<handle>. */}
+                        channels. Each row links to /channel/<handle>. */}
                     {channels.length > 0 && (
                         <>
                             <Divider />
                             <SectionHeader>{t("yourChannels")}</SectionHeader>
                             <ul className="space-y-0.5">
                                 {channels.map((channel) => {
-                                    const href = `/c/${channel.handle}`;
+                                    const href = `/channel/${channel.handle}`;
                                     const active = pathname === href || pathname.startsWith(`${href}/`);
                                     const initials = channel.name.slice(0, 2).toUpperCase();
                                     return (

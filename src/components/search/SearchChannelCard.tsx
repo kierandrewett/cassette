@@ -25,7 +25,7 @@ export const SearchChannelCard = ({ channel }: { channel: SearchChannelResult })
 
     return (
         <Link
-            href={`/c/${channel.handle}`}
+            href={`/channel/${channel.handle}`}
             className="flex items-center gap-4 rounded-2xl px-4 py-3 transition hover:bg-accent/40"
             aria-label={`Channel @${channel.handle}: ${channel.name}`}
         >

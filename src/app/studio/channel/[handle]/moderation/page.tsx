@@ -42,7 +42,7 @@ const ModerationPage = async ({ params }: Props) => {
         <main className="mx-auto max-w-4xl px-4 py-10">
             <div className="mb-8 flex items-center gap-4">
                 <Link
-                    href={`/studio/c/${handle}`}
+                    href={`/studio/channel/${handle}`}
                     className="text-sm text-muted-foreground underline-offset-4 hover:underline"
                 >
                     &#8592; Studio

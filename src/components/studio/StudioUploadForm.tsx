@@ -314,7 +314,7 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                     setIsUploading(false);
                     setStage(null);
                     toast.success(respStatus === "scheduled" ? "Scheduled for later." : "Draft saved.");
-                    setTimeout(() => router.push(`/studio/c/${channel.handle}/videos`), 800);
+                    setTimeout(() => router.push(`/studio/channel/${channel.handle}/videos`), 800);
                     return;
                 }
 

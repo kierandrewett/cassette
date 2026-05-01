@@ -7,7 +7,7 @@ interface AboutTabPageProps {
 // Redirect to the main channel page with the about tab selected.
 const ChannelAboutTabPage = async ({ params }: AboutTabPageProps) => {
     const { handle } = await params;
-    redirect(`/c/${handle}?tab=about`);
+    redirect(`/channel/${handle}?tab=about`);
 };
 
 export default ChannelAboutTabPage;

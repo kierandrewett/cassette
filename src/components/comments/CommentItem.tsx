@@ -154,7 +154,7 @@ export const CommentItem = ({
     const displayDislikes = comment.dislikeCount + dislikeDelta;
 
     const authorName = comment.author.name ?? "[deleted]";
-    const authorHref = comment.author.channelHandle ? `/c/${comment.author.channelHandle}` : null;
+    const authorHref = comment.author.channelHandle ? `/channel/${comment.author.channelHandle}` : null;
 
     return (
         <div className="flex gap-3 py-3">

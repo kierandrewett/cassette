@@ -72,7 +72,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     // to a placeholder that at least produces valid XML.
     const baseUrl = process.env["NEXT_PUBLIC_BASE_URL"]?.replace(/\/$/, "") ?? "http://localhost:3000";
 
-    const channelLink = `${baseUrl}/c/${escapeXml(channel.handle)}`;
+    const channelLink = `${baseUrl}/channel/${escapeXml(channel.handle)}`;
 
     const items = videoRows
         .map((v) => {
@@ -103,7 +103,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     <link>${channelLink}</link>
     <description>${escapeXml(channel.description ?? "")}</description>
     <language>en</language>
-    <atom:link href="${baseUrl}/c/${escapeXml(channel.handle)}/feed.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="${baseUrl}/channel/${escapeXml(channel.handle)}/feed.xml" rel="self" type="application/rss+xml" />
 ${items}
   </channel>
 </rss>`;

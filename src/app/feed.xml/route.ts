@@ -53,7 +53,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
     const items = rows
         .map((v) => {
             const link = `${baseUrl}/watch/${escapeXml(v.id)}`;
-            const channelFeed = `${baseUrl}/c/${escapeXml(v.channelHandle)}/feed.xml`;
+            const channelFeed = `${baseUrl}/channel/${escapeXml(v.channelHandle)}/feed.xml`;
             const pubDate = v.publishedAt ? v.publishedAt.toUTCString() : new Date(0).toUTCString();
             const description = escapeXml((v.description ?? "").slice(0, 500));
             const title = escapeXml(v.title);

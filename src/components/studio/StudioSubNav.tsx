@@ -48,13 +48,13 @@ interface StudioSubNavProps {
 // Channel-scoped sections. Customise/Webhooks/Quotas are owner+manager only,
 // but we still render the link — the page itself enforces the role check.
 const channelItems = (handle: string): SubNavItem[] => [
-    { href: `/studio/c/${handle}`, label: "Overview", icon: DashboardSquare01Icon, exact: true },
-    { href: `/studio/c/${handle}/videos`, label: "Videos", icon: Video01Icon },
-    { href: `/studio/c/${handle}/upload`, label: "Upload", icon: UploadCircle01Icon },
-    { href: `/studio/c/${handle}/api-keys`, label: "API Keys", icon: Key01Icon },
-    { href: `/studio/c/${handle}/webhooks`, label: "Webhooks", icon: WebhookIcon },
-    { href: `/studio/c/${handle}/customise`, label: "Customise", icon: PaintBoardIcon },
-    { href: `/studio/c/${handle}/moderation`, label: "Moderation", icon: ShieldUserIcon },
+    { href: `/studio/channel/${handle}`, label: "Overview", icon: DashboardSquare01Icon, exact: true },
+    { href: `/studio/channel/${handle}/videos`, label: "Videos", icon: Video01Icon },
+    { href: `/studio/channel/${handle}/upload`, label: "Upload", icon: UploadCircle01Icon },
+    { href: `/studio/channel/${handle}/api-keys`, label: "API Keys", icon: Key01Icon },
+    { href: `/studio/channel/${handle}/webhooks`, label: "Webhooks", icon: WebhookIcon },
+    { href: `/studio/channel/${handle}/customise`, label: "Customise", icon: PaintBoardIcon },
+    { href: `/studio/channel/${handle}/moderation`, label: "Moderation", icon: ShieldUserIcon },
 ];
 
 // Top-level /studio (multi-channel overview). Single tab so the surface still
@@ -131,7 +131,7 @@ const ChannelChip = ({ activeChannel, channels }: ChannelChipProps) => {
                             return (
                                 <Link
                                     key={channel.id}
-                                    href={`/studio/c/${channel.handle}`}
+                                    href={`/studio/channel/${channel.handle}`}
                                     onClick={() => setOpen(false)}
                                     className={cn(
                                         "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",

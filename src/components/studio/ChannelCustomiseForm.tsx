@@ -181,7 +181,7 @@ export const ChannelCustomiseForm = ({
                                     New comments from non-channel viewers are held in the moderation queue until
                                     approved. Find the queue at{" "}
                                     <a
-                                        href={`/studio/c/${handle}/moderation`}
+                                        href={`/studio/channel/${handle}/moderation`}
                                         className="underline-offset-4 hover:underline"
                                     >
                                         Studio &rarr; Moderation
@@ -207,7 +207,7 @@ export const ChannelCustomiseForm = ({
                         </button>
 
                         <a
-                            href={`/c/${handle}`}
+                            href={`/channel/${handle}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-muted-foreground underline-offset-4 hover:underline"

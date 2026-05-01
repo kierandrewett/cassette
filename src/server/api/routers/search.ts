@@ -209,7 +209,7 @@ export const searchRouter = createTRPCRouter({
                     SELECT
                         'channel'                            AS kind,
                         c.name                              AS label,
-                        '/c/' || c.handle                   AS href,
+                        '/channel/' || c.handle                   AS href,
                         similarity(c.name, ${q})            AS sim
                     FROM channels c
                     WHERE c.name % ${q}

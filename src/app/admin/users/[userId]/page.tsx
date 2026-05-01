@@ -82,7 +82,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
                                 {ownedChannels.map((ch) => (
                                     <tr key={ch.id} className="border-b border-border last:border-0">
                                         <td className="px-4 py-2 font-mono text-xs">
-                                            <Link href={`/c/${ch.handle}`} className="text-primary hover:underline">
+                                            <Link href={`/channel/${ch.handle}`} className="text-primary hover:underline">
                                                 @{ch.handle}
                                             </Link>
                                         </td>

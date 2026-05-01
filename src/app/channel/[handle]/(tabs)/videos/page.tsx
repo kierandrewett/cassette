@@ -8,7 +8,7 @@ interface VideoTabPageProps {
 // The channel layout renders all content via searchParams.tab on the root [handle]/page.tsx.
 const ChannelVideosTabPage = async ({ params }: VideoTabPageProps) => {
     const { handle } = await params;
-    redirect(`/c/${handle}?tab=videos`);
+    redirect(`/channel/${handle}?tab=videos`);
 };
 
 export default ChannelVideosTabPage;

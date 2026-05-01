@@ -111,7 +111,7 @@ export default async function AdminVideosPage({ searchParams }: { searchParams: 
                                     </Link>
                                 </td>
                                 <td className="px-4 py-3 text-muted-foreground">
-                                    <Link href={`/c/${channelHandle}`} className="hover:underline">
+                                    <Link href={`/channel/${channelHandle}`} className="hover:underline">
                                         @{channelHandle}
                                     </Link>
                                 </td>

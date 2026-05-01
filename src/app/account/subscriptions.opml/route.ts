@@ -52,8 +52,8 @@ export async function GET(_req: NextRequest): Promise<Response> {
 
     const outlines = rows
         .map((ch) => {
-            const htmlUrl = `${baseUrl}/c/${escapeXml(ch.handle)}`;
-            const xmlUrl = `${baseUrl}/c/${escapeXml(ch.handle)}/feed.xml`;
+            const htmlUrl = `${baseUrl}/channel/${escapeXml(ch.handle)}`;
+            const xmlUrl = `${baseUrl}/channel/${escapeXml(ch.handle)}/feed.xml`;
             const text = escapeXml(ch.name);
             return `        <outline type="rss" text="${text}" title="${text}" xmlUrl="${xmlUrl}" htmlUrl="${htmlUrl}" />`;
         })
