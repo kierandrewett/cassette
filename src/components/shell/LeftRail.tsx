@@ -4,15 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-    Home01Icon,
-    Notification03Icon,
-    LibraryIcon,
-    Time04Icon,
+    Home02Icon,
+    Tv01Icon,
+    Album02Icon,
+    Clock01Icon,
+    Playlist01Icon,
     PlusSignIcon,
-    DashboardSquare01Icon,
+    Settings02Icon,
     Crown02Icon,
-    UserMultipleIcon,
-    PlaySquareIcon,
+    UserCircleIcon,
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -42,14 +42,14 @@ interface NavItem {
 type NavItemDef = Omit<NavItem, "label"> & { labelKey: string };
 
 const PRIMARY_ITEMS: NavItemDef[] = [
-    { href: "/", labelKey: "home", icon: Home01Icon },
-    { href: "/subscriptions", labelKey: "subscriptions", icon: Notification03Icon, matchPrefix: true },
+    { href: "/", labelKey: "home", icon: Home02Icon },
+    { href: "/subscriptions", labelKey: "subscriptions", icon: Tv01Icon, matchPrefix: true },
 ];
 
 const LIBRARY_ITEMS: NavItemDef[] = [
-    { href: "/library", labelKey: "library", icon: LibraryIcon, matchPrefix: true },
-    { href: "/history", labelKey: "history", icon: Time04Icon, matchPrefix: true },
-    { href: "/playlist", labelKey: "playlists", icon: PlaySquareIcon, matchPrefix: true },
+    { href: "/library", labelKey: "library", icon: Album02Icon, matchPrefix: true },
+    { href: "/history", labelKey: "history", icon: Clock01Icon, matchPrefix: true },
+    { href: "/playlist", labelKey: "playlists", icon: Playlist01Icon, matchPrefix: true },
 ];
 
 interface LeftRailProps {
@@ -78,35 +78,34 @@ interface RailLinkProps {
     avatar?: React.ReactNode;
 }
 
-// Single rail row. Icon column is fixed at 32 px, label flexes. Active state gets
-// a subtle accent fill plus a 3 px accent left border. Hover bg is the standard
-// `accent` token so it reads in both light and dark themes without hand-rolled
-// rgba values.
+// Single rail row. Compact density (~32px tall) so the rail reads as a list,
+// not a touch target. Active state gets a subtle accent fill plus a 3 px
+// accent left border.
 const RailLink = ({ href, label, Icon, active, badge, avatar }: RailLinkProps) => {
     return (
         <Link
             href={href}
             className={cn(
-                "group relative flex items-center gap-3 rounded-lg py-2 pl-3 pr-3 text-sm font-medium transition-colors",
+                "group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
                 "hover:bg-accent/60 hover:text-foreground",
                 active ? "bg-accent text-accent-foreground" : "text-foreground/85",
             )}
             aria-current={active ? "page" : undefined}
         >
-            {/* Active indicator — 3 px accent strip on the left, anchored within the row's rounded corners. */}
+            {/* Active indicator — 3 px accent strip on the left. */}
             <span
                 aria-hidden="true"
                 className={cn(
-                    "absolute bottom-1.5 left-0 top-1.5 w-[3px] rounded-r-full transition-opacity",
+                    "absolute bottom-1 left-0 top-1 w-[3px] rounded-r-full transition-opacity",
                     active ? "bg-foreground opacity-90" : "bg-foreground opacity-0 group-hover:opacity-30",
                 )}
             />
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center">
-                {avatar ? avatar : <Icon size={20} strokeWidth={active ? 2 : 1.6} />}
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                {avatar ? avatar : <Icon size={18} strokeWidth={active ? 1.8 : 1.5} />}
             </span>
             <span className="flex-1 truncate">{label}</span>
             {badge !== undefined && badge > 0 && (
-                <span className="rounded-full bg-foreground/15 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-foreground">
+                <span className="rounded-full bg-foreground/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-foreground">
                     {badge > 99 ? "99+" : badge}
                 </span>
             )}
@@ -115,12 +114,12 @@ const RailLink = ({ href, label, Icon, active, badge, avatar }: RailLinkProps) =
 };
 
 const SectionHeader = ({ children }: { children: React.ReactNode }) => (
-    <p className="mb-1 mt-2 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80">
+    <p className="mb-1 mt-1 px-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
         {children}
     </p>
 );
 
-const Divider = () => <div className="mx-3 my-3 h-px bg-border/60" aria-hidden="true" />;
+const Divider = () => <div className="mx-2.5 my-2 h-px bg-border/50" aria-hidden="true" />;
 
 export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }: LeftRailProps) => {
     const pathname = usePathname();
@@ -183,7 +182,7 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                                         <RailLink
                                             href="/studio"
                                             label={t("studio")}
-                                            Icon={DashboardSquare01Icon}
+                                            Icon={Settings02Icon}
                                             active={pathname === "/studio" || pathname.startsWith("/studio/")}
                                         />
                                     </li>
@@ -218,17 +217,17 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                                             <RailLink
                                                 href={href}
                                                 label={channel.name}
-                                                Icon={UserMultipleIcon}
+                                                Icon={UserCircleIcon}
                                                 active={active}
                                                 avatar={
-                                                    <Avatar className="h-7 w-7">
+                                                    <Avatar className="h-5 w-5">
                                                         {channel.avatarPath && (
                                                             <AvatarImage
                                                                 src={`/api/channel/${channel.id}/asset/avatar`}
                                                                 alt={channel.name}
                                                             />
                                                         )}
-                                                        <AvatarFallback className="text-[10px]">
+                                                        <AvatarFallback className="text-[9px]">
                                                             {initials}
                                                         </AvatarFallback>
                                                     </Avatar>
@@ -250,12 +249,12 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                                 <Link
                                     href="/account/channels"
                                     className={cn(
-                                        "group flex items-center gap-3 rounded-lg py-2 pl-3 pr-3 text-sm font-medium",
+                                        "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium",
                                         "text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground",
                                     )}
                                 >
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center">
-                                        <PlusSignIcon size={20} strokeWidth={1.6} />
+                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                                        <PlusSignIcon size={18} strokeWidth={1.5} />
                                     </span>
                                     <span className="flex-1 truncate">
                                         {channels.length > 0 ? t("newChannel") : t("createChannel")}
