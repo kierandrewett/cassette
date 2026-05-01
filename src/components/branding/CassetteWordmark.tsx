@@ -15,15 +15,19 @@ interface CassetteWordmarkProps {
 // flex container's leading-none + items-center.
 export const CassetteWordmark = ({ className, iconOnly = false }: CassetteWordmarkProps) => {
     return (
-        <span className={cn("inline-flex items-center gap-2 leading-none", className)}>
-            {/* Cassette tape icon — simplified reel silhouette */}
+        <span className={cn("inline-flex items-center gap-2", className)}>
+            {/* Cassette tape icon — simplified reel silhouette. The 24x24
+                SVG has its bounding-box centre at y=12, but the visible
+                cassette graphic sits a hair lower because the top notch
+                pokes out at y=3.5. translate-y compensates so the icon
+                reads as optically centred against the wordmark text. */}
             <svg
                 width="24"
                 height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 aria-hidden="true"
-                className="block shrink-0 text-primary"
+                className="block shrink-0 -translate-y-px text-primary"
             >
                 {/* Tape body */}
                 <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -44,7 +48,7 @@ export const CassetteWordmark = ({ className, iconOnly = false }: CassetteWordma
                 <rect x="10" y="3.5" width="4" height="2" rx="0.5" fill="currentColor" />
             </svg>
             {!iconOnly && (
-                <span className="select-none align-middle text-base font-semibold tracking-tight text-foreground">
+                <span className="select-none text-base font-semibold leading-none tracking-tight text-foreground">
                     cassette
                 </span>
             )}

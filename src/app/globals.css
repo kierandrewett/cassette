@@ -22,8 +22,13 @@
         --secondary-foreground: 0 0% 9%;
         --muted: 0 0% 93%;
         --muted-foreground: 0 0% 42%;
-        --accent: 252 83% 96%;
-        --accent-foreground: 252 60% 35%;
+        /* --accent is the hover bg for ghost / outline buttons and the
+           focus bg for dropdown items. Keep it neutral so hovers don't
+           flash the brand colour every time the cursor passes over an
+           icon button. --primary stays as the brand accent for actual
+           branded surfaces (Subscribe pill, focus ring, NProgress). */
+        --accent: 0 0% 90%;
+        --accent-foreground: 0 0% 9%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
         --border: 0 0% 87%;
@@ -48,8 +53,8 @@
         --secondary-foreground: 0 0% 98%;
         --muted: 240 5% 17%;
         --muted-foreground: 240 5% 65%;
-        --accent: 252 50% 25%;
-        --accent-foreground: 252 90% 90%;
+        --accent: 240 5% 20%;
+        --accent-foreground: 0 0% 98%;
         --destructive: 0 72.2% 50.6%;
         --destructive-foreground: 0 0% 98%;
         --border: 240 5% 20%;
