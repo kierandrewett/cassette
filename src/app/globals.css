@@ -77,14 +77,21 @@
         font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     }
 
-    /* Player chrome: glass-blur top/bottom bars driven by data-active attribute. */
+    /* Player chrome: glass-blur top/bottom bars driven by data-active attribute.
+       The fade/translate is wrapped in a reduced-motion guard so users with
+       prefers-reduced-motion: reduce get an instant show/hide rather than a
+       slide. Idle controls still snap away — they just stop sliding. */
     .player-bar {
         background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
         backdrop-filter: blur(18px) saturate(140%);
         -webkit-backdrop-filter: blur(18px) saturate(140%);
-        transition:
-            opacity 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
-            transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+        .player-bar {
+            transition:
+                opacity 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
     }
     .player-bar[data-active="false"] {
         opacity: 0;
@@ -125,7 +132,10 @@
     /* Time slider thumb — visible white dot riding on the played fill.
        Vidstack writes --slider-fill (a percentage string like "37.4%") on
        the slider Root element; we anchor the thumb to that.  Grows on
-       hover/drag.  The black ring keeps it readable on light frames. */
+       hover/drag.  The black ring keeps it readable on light frames.
+
+       Grow transition gated on prefers-reduced-motion so users opting out get
+       an instant size change instead of a tween. */
     .player-thumb {
         position: absolute;
         top: 50%;
@@ -138,11 +148,15 @@
         box-shadow:
             0 0 0 2px rgba(0, 0, 0, 0.4),
             0 1px 2px rgba(0, 0, 0, 0.5);
-        transition:
-            width 120ms ease,
-            height 120ms ease;
         pointer-events: none;
         will-change: left, width, height;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+        .player-thumb {
+            transition:
+                width 120ms ease,
+                height 120ms ease;
+        }
     }
     .group\/slider:hover .player-thumb,
     .group\/vol:hover .player-thumb,
@@ -152,7 +166,8 @@
     }
 
     /* Volume control: button + horizontal slider that expands on hover or
-       focus.  Apple-TV pattern — the rail collapses to width 0 by default. */
+       focus.  Apple-TV pattern — the rail collapses to width 0 by default.
+       Width transition gated on prefers-reduced-motion. */
     .volume-stack {
         display: flex;
         align-items: center;
@@ -161,7 +176,11 @@
     .volume-stack .volume-rail {
         width: 0;
         overflow: hidden;
-        transition: width 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+        .volume-stack .volume-rail {
+            transition: width 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
     }
     .volume-stack:hover .volume-rail,
     .volume-stack:focus-within .volume-rail,
@@ -198,6 +217,13 @@
             0 0 10px hsl(var(--destructive)),
             0 0 5px hsl(var(--destructive));
     }
+    /* Drop the trailing glow ("peg") for reduced-motion users — keep the bar
+       itself so the progress is still legible, just without the drift. */
+    @media (prefers-reduced-motion: reduce) {
+        #nprogress .peg {
+            display: none;
+        }
+    }
     #nprogress .spinner {
         display: none;
     }
@@ -216,5 +242,35 @@
     }
     ::-webkit-scrollbar-thumb:hover {
         background-color: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * Reduced-motion belt-and-braces.
+ *
+ * Hand-gated rules above cover the player chrome explicitly. This block is
+ * the global safety net: it neutralises Tailwind animation/transition/
+ * transform utilities (and any inline transitions) for users with
+ * `prefers-reduced-motion: reduce`. Keep this OUT of @layer base so it wins
+ * on specificity-tie via cascade order. !important is unfortunate but
+ * necessary because Tailwind's `transition-*` utilities ship with their own
+ * `transition-property` declarations.
+ *
+ * Smooth scrolling is also forced to instant — covers `scroll-behavior:
+ * smooth` set at the document level and any in-page anchor jumps.
+ *
+ * Trade-off: we keep the `*-in-95` / `slide-in-from-*` Tailwind animation
+ * utilities *running* but at 1 ms duration, so popovers/dropdowns still
+ * announce open/close to assistive tech via the discrete state change.
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        transition-delay: 0ms !important;
+        scroll-behavior: auto !important;
     }
 }

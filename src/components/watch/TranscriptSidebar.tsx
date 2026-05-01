@@ -154,7 +154,10 @@ export const TranscriptSidebar = ({ videoId, captions, signedToken }: Transcript
         const filteredPos = filtered.findIndex((c) => c.originalIdx === activeCueOriginalIdx);
         if (filteredPos === -1) return;
         const el = rowRefs.current[filteredPos];
-        el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        // Respect prefers-reduced-motion: jump instantly instead of smooth-scrolling.
+        const prefersReduced =
+            typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        el?.scrollIntoView({ block: "nearest", behavior: prefersReduced ? "auto" : "smooth" });
     }, [activeCueOriginalIdx, filtered]);
 
     // -----------------------------------------------------------------------
