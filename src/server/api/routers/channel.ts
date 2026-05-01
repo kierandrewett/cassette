@@ -1,11 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { mintApiKey } from "@/lib/auth";
 import { recordAudit } from "@/lib/audit";
 import { isValidHandle } from "@/lib/slug";
 import { apiKeys, channelMembers, channels } from "@/server/db/schema/channels";
+import { videos } from "@/server/db/schema/videos";
 import { channelProcedure, createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 // ---------------------------------------------------------------------------
@@ -30,6 +31,12 @@ const updateChannelInput = z.object({
     description: z.string().max(2000).optional(),
     avatarPath: z.string().optional(),
     bannerPath: z.string().optional(),
+    // Channel trailer / pinned video. Pass null to clear, omit to leave
+    // unchanged, pass a UUID to set. The mutation validates the video
+    // belongs to this channel and is public+ready.
+    pinnedVideoId: z.string().uuid().nullable().optional(),
+    // Hold all new comments for moderation when true.
+    moderateComments: z.boolean().optional(),
 });
 
 const generateApiKeyInput = z.object({
@@ -164,6 +171,42 @@ export const channelRouter = createTRPCRouter({
             if (updates.description !== undefined) patch.description = updates.description;
             if (updates.avatarPath !== undefined) patch.avatarPath = updates.avatarPath;
             if (updates.bannerPath !== undefined) patch.bannerPath = updates.bannerPath;
+            if (updates.moderateComments !== undefined) patch.moderateComments = updates.moderateComments;
+
+            // pinnedVideoId: null clears, otherwise validate that the video
+            // belongs to this channel and is publicly visible. We deliberately
+            // require public+ready+!draft so a private/in-progress video can
+            // never be surfaced as a channel trailer to anonymous viewers.
+            if (updates.pinnedVideoId !== undefined) {
+                if (updates.pinnedVideoId === null) {
+                    patch.pinnedVideoId = null;
+                } else {
+                    const videoRows = await ctx.db
+                        .select({
+                            channelId: videos.channelId,
+                            privacy: videos.privacy,
+                            status: videos.status,
+                            isDraft: videos.isDraft,
+                        })
+                        .from(videos)
+                        .where(eq(videos.id, updates.pinnedVideoId))
+                        .limit(1);
+                    const video = videoRows[0];
+                    if (!video || video.channelId !== channelId) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "Pinned video must belong to this channel.",
+                        });
+                    }
+                    if (video.privacy !== "public" || video.status !== "ready" || video.isDraft) {
+                        throw new TRPCError({
+                            code: "BAD_REQUEST",
+                            message: "Pinned video must be public, ready, and not a draft.",
+                        });
+                    }
+                    patch.pinnedVideoId = updates.pinnedVideoId;
+                }
+            }
             patch.updatedAt = new Date();
 
             const [updated] = await ctx.db.update(channels).set(patch).where(eq(channels.id, channelId)).returning();
@@ -173,6 +216,107 @@ export const channelRouter = createTRPCRouter({
             }
 
             return updated;
+        }),
+
+    // Public: paginated directory of all channels for /explore/channels.
+    // sort=subscribers (default) — descending by subscriber count.
+    // sort=recent — descending by max(videos.publishedAt) for the channel.
+    listPublic: publicProcedure
+        .input(
+            z.object({
+                sort: z.enum(["subscribers", "recent"]).default("subscribers"),
+                cursor: z.number().int().nonnegative().default(0),
+                limit: z.number().int().min(1).max(48).default(24),
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            const { sort, cursor, limit } = input;
+            type Row = {
+                id: string;
+                handle: string;
+                name: string;
+                description: string;
+                avatarPath: string | null;
+                bannerPath: string | null;
+                subscriberCount: number;
+                videoCount: number;
+                lastUploadAt: Date | null;
+            };
+
+            // Two flavours: order by subscribers, or by most-recent upload.
+            // We compute both metrics in subqueries so a single row carries
+            // everything the UI needs for the card and so pagination is
+            // a simple OFFSET/LIMIT.
+            const rows =
+                sort === "subscribers"
+                    ? await ctx.db.execute<Row>(sql`
+                          SELECT
+                              c.id,
+                              c.handle,
+                              c.name,
+                              c.description,
+                              c.avatar_path                                 AS "avatarPath",
+                              c.banner_path                                 AS "bannerPath",
+                              (SELECT count(*) FROM subscriptions s
+                                  WHERE s.channel_id = c.id)::int           AS "subscriberCount",
+                              (SELECT count(*) FROM videos v
+                                  WHERE v.channel_id = c.id
+                                    AND v.privacy = 'public'
+                                    AND v.status = 'ready'
+                                    AND v.is_draft = false)::int            AS "videoCount",
+                              (SELECT max(v.published_at) FROM videos v
+                                  WHERE v.channel_id = c.id
+                                    AND v.privacy = 'public'
+                                    AND v.status = 'ready'
+                                    AND v.is_draft = false)                 AS "lastUploadAt"
+                          FROM channels c
+                          ORDER BY "subscriberCount" DESC, c.created_at ASC
+                          LIMIT ${limit + 1}
+                          OFFSET ${cursor}
+                      `)
+                    : await ctx.db.execute<Row>(sql`
+                          SELECT
+                              c.id,
+                              c.handle,
+                              c.name,
+                              c.description,
+                              c.avatar_path                                 AS "avatarPath",
+                              c.banner_path                                 AS "bannerPath",
+                              (SELECT count(*) FROM subscriptions s
+                                  WHERE s.channel_id = c.id)::int           AS "subscriberCount",
+                              (SELECT count(*) FROM videos v
+                                  WHERE v.channel_id = c.id
+                                    AND v.privacy = 'public'
+                                    AND v.status = 'ready'
+                                    AND v.is_draft = false)::int            AS "videoCount",
+                              (SELECT max(v.published_at) FROM videos v
+                                  WHERE v.channel_id = c.id
+                                    AND v.privacy = 'public'
+                                    AND v.status = 'ready'
+                                    AND v.is_draft = false)                 AS "lastUploadAt"
+                          FROM channels c
+                          ORDER BY "lastUploadAt" DESC NULLS LAST, c.created_at DESC
+                          LIMIT ${limit + 1}
+                          OFFSET ${cursor}
+                      `);
+
+            const hasMore = rows.length > limit;
+            const items = hasMore ? rows.slice(0, limit) : rows;
+
+            return {
+                items: items.map((r) => ({
+                    id: r.id,
+                    handle: r.handle,
+                    name: r.name,
+                    description: r.description,
+                    avatarPath: r.avatarPath,
+                    bannerPath: r.bannerPath,
+                    subscriberCount: Number(r.subscriberCount ?? 0),
+                    videoCount: Number(r.videoCount ?? 0),
+                    lastUploadAt: r.lastUploadAt,
+                })),
+                nextCursor: hasMore ? cursor + limit : null,
+            };
         }),
 
     // Protected (owner or manager): list non-revoked API keys for a channel

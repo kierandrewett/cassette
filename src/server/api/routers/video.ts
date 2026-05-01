@@ -118,6 +118,26 @@ export const videoRouter = createTRPCRouter({
 
             const { video, channel } = row;
 
+            // Drafts are channel-only. Treat them as private regardless of
+            // their privacy column so the watch URL doesn't leak unfinished
+            // uploads.
+            if (video.isDraft) {
+                if (!ctx.user) throw new TRPCError({ code: "NOT_FOUND" });
+                const isUploader = video.uploaderId === ctx.user.id;
+                let isMember = isUploader;
+                if (!isUploader) {
+                    const memberRows = await ctx.db
+                        .select({ role: channelMembers.role })
+                        .from(channelMembers)
+                        .where(
+                            and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)),
+                        )
+                        .limit(1);
+                    isMember = !!memberRows[0];
+                }
+                if (!isMember) throw new TRPCError({ code: "NOT_FOUND" });
+            }
+
             // Privacy gate.
             if (video.privacy === "unlisted") {
                 // Unlisted: require slug to match the stored unlistedSlug.
@@ -706,6 +726,161 @@ export const videoRouter = createTRPCRouter({
 
             return { ok: true };
         }),
+
+    // ---------------------------------------------------------------------------
+    // publish — flip a draft to live and enqueue transcode immediately.
+    // Caller must be a channel member.
+    // ---------------------------------------------------------------------------
+    publish: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+        const videoRows = await ctx.db
+            .select({
+                channelId: videos.channelId,
+                isDraft: videos.isDraft,
+                status: videos.status,
+            })
+            .from(videos)
+            .where(eq(videos.id, input.videoId))
+            .limit(1);
+        const video = videoRows[0];
+        if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+
+        const memberRows = await ctx.db
+            .select({ role: channelMembers.role })
+            .from(channelMembers)
+            .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
+            .limit(1);
+        if (!memberRows[0]) throw new TRPCError({ code: "FORBIDDEN" });
+
+        if (!video.isDraft) {
+            // Idempotent: already live.
+            return { ok: true, alreadyLive: true };
+        }
+
+        await ctx.db
+            .update(videos)
+            .set({ isDraft: false, publishAt: null, updatedAt: new Date() })
+            .where(eq(videos.id, input.videoId));
+
+        // Insert a transcode_jobs row if missing, then enqueue the boss job.
+        const existingJob = await ctx.db
+            .select({ id: transcodeJobs.id })
+            .from(transcodeJobs)
+            .where(eq(transcodeJobs.videoId, input.videoId))
+            .limit(1);
+
+        let mirrorJobId: string | null = existingJob[0]?.id ?? null;
+        if (!mirrorJobId) {
+            const [jobRow] = await ctx.db
+                .insert(transcodeJobs)
+                .values({ videoId: input.videoId, state: "queued", progress: 0 })
+                .returning({ id: transcodeJobs.id });
+            mirrorJobId = jobRow?.id ?? null;
+        }
+
+        const { ensureBoss } = await import("@/worker/boot");
+        const boss = await ensureBoss();
+        const pgbossJobId = await boss.send(
+            "transcode-video",
+            { videoId: input.videoId },
+            { retryLimit: 2, retryBackoff: true, expireInHours: 6, singletonKey: input.videoId },
+        );
+
+        if (pgbossJobId && mirrorJobId) {
+            await ctx.db.update(transcodeJobs).set({ pgbossJobId }).where(eq(transcodeJobs.id, mirrorJobId));
+        }
+
+        return { ok: true, alreadyLive: false };
+    }),
+
+    // ---------------------------------------------------------------------------
+    // schedule — set/clear publishAt on a draft. The caller can both schedule
+    // a draft for later release and reschedule a previously-scheduled draft.
+    // Setting publishAt=null with isDraft=true keeps it as an indefinite draft.
+    // ---------------------------------------------------------------------------
+    schedule: protectedProcedure
+        .input(
+            z.object({
+                videoId: z.string().uuid(),
+                publishAt: z.date().nullable(),
+            }),
+        )
+        .mutation(async ({ ctx, input }) => {
+            const videoRows = await ctx.db
+                .select({ channelId: videos.channelId, isDraft: videos.isDraft })
+                .from(videos)
+                .where(eq(videos.id, input.videoId))
+                .limit(1);
+            const video = videoRows[0];
+            if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+
+            const memberRows = await ctx.db
+                .select({ role: channelMembers.role })
+                .from(channelMembers)
+                .where(and(eq(channelMembers.channelId, video.channelId), eq(channelMembers.userId, ctx.user.id)))
+                .limit(1);
+            if (!memberRows[0]) throw new TRPCError({ code: "FORBIDDEN" });
+
+            if (!video.isDraft) {
+                throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: "Only drafts can be scheduled. Re-upload or revert to draft first.",
+                });
+            }
+
+            await ctx.db
+                .update(videos)
+                .set({ publishAt: input.publishAt, updatedAt: new Date() })
+                .where(eq(videos.id, input.videoId));
+
+            // Enqueue or skip the publish-video boss job. We don't currently
+            // cancel a previously-scheduled job — the publishHandler is
+            // idempotent (skips when isDraft=false) so a stale schedule
+            // becomes a no-op.
+            if (input.publishAt && input.publishAt.getTime() > Date.now()) {
+                const { ensureBoss } = await import("@/worker/boot");
+                const boss = await ensureBoss();
+                await boss
+                    .send(
+                        "publish-video",
+                        { videoId: input.videoId },
+                        {
+                            retryLimit: 2,
+                            retryBackoff: true,
+                            expireInHours: 24 * 30,
+                            startAfter: input.publishAt,
+                            singletonKey: input.videoId,
+                        },
+                    )
+                    .catch((err) => {
+                        console.warn("[video.schedule] failed to enqueue publish-video:", err);
+                    });
+            }
+
+            return { ok: true };
+        }),
+
+    // ---------------------------------------------------------------------------
+    // random — pick a single random public+ready video. Powers the dice button.
+    // Uses ORDER BY random() LIMIT 1; for a personal-scale video set this is
+    // fine. Switch to TABLESAMPLE if/when the table grows past a few million
+    // rows.
+    // ---------------------------------------------------------------------------
+    random: publicProcedure.query(async ({ ctx }) => {
+        const rows = await ctx.db.execute<{
+            id: string;
+            publicId: string;
+            unlistedSlug: string | null;
+        }>(sql`
+            SELECT id, public_id AS "publicId", unlisted_slug AS "unlistedSlug"
+            FROM videos
+            WHERE privacy = 'public'
+              AND status = 'ready'
+              AND is_draft = false
+            ORDER BY random()
+            LIMIT 1
+        `);
+        return rows[0] ?? null;
+    }),
 
     delete: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
         const videoRows = await ctx.db

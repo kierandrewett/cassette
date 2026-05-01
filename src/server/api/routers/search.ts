@@ -351,6 +351,33 @@ export const searchRouter = createTRPCRouter({
     }),
 
     /**
+     * Trending tags — top N most-frequently-used tags across public+ready
+     * videos. Caller is expected to wrap this in `unstable_cache` for a
+     * 5-minute TTL on the home page; the procedure itself just runs the
+     * aggregate.
+     *
+     * `tags` is a text[] column with a GIN index. UNNEST + GROUP BY scales
+     * fine until the row count gets into the millions; switch to a
+     * materialised view if/when that becomes a problem.
+     */
+    trendingTags: publicProcedure
+        .input(z.object({ limit: z.number().int().min(1).max(50).default(12) }))
+        .query(async ({ ctx, input }) => {
+            type Row = { tag: string; uses: number };
+            const rows = await ctx.db.execute<Row>(sql`
+                SELECT tag, count(*)::int AS uses
+                FROM videos v, unnest(v.tags) AS tag
+                WHERE v.privacy = 'public'
+                  AND v.status = 'ready'
+                  AND v.is_draft = false
+                GROUP BY tag
+                ORDER BY uses DESC, tag ASC
+                LIMIT ${input.limit}
+            `);
+            return rows.map((r) => ({ tag: r.tag, uses: Number(r.uses) }));
+        }),
+
+    /**
      * Combined search — for v1 this is a thin wrapper over `videos`.
      * Channel and playlist tabs are wired to dedicated procedures above;
      * `all` exists so the client router can call `search.all` uniformly.
