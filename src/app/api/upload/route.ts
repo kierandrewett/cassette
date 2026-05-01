@@ -14,10 +14,11 @@ import { limit } from "@/lib/ratelimit";
 import { checkQuota } from "@/lib/quota";
 import { unlistedSlug } from "@/lib/slug";
 import { parseMultipart } from "@/lib/upload/multipart";
+import { parseYtDlpSidecar, type ParsedSidecar } from "@/lib/yt-dlp/sidecar";
 import { db } from "@/server/db/client";
 import { channelMembers, channels } from "@/server/db/schema/channels";
 import { transcodeJobs, type TranscodeJobState } from "@/server/db/schema/jobs";
-import { videos } from "@/server/db/schema/videos";
+import { videoChapters, videos } from "@/server/db/schema/videos";
 import { ensureBoss } from "@/worker/boot";
 
 export const runtime = "nodejs";
@@ -160,18 +161,53 @@ export async function POST(req: NextRequest): Promise<Response> {
         return new Response(JSON.stringify({ error: (err as Error).message }), { status: 400 });
     }
 
-    // ---- 3. Extract and validate fields ----
+    // ---- 3. Parse yt-dlp sidecar (if any) ----
 
-    const title = parsed.fields["title"]?.trim();
+    // The first `info[]` file we accept is treated as authoritative; any
+    // others (theoretically possible if the operator passes multiple) are
+    // ignored. Sidecar values are only used to backfill — explicit form
+    // fields always win.
+    let sidecar: ParsedSidecar = {};
+    if (parsed.info.length > 0) {
+        sidecar = parseYtDlpSidecar(parsed.info[0]!.data);
+    }
+
+    // ---- 4. Extract and validate fields ----
+
+    const formTitle = parsed.fields["title"]?.trim();
+    const title = formTitle && formTitle.length > 0 ? formTitle : sidecar.title;
     if (!title) {
         await cleanupTmp(tmpPath);
         return new Response(JSON.stringify({ error: "title is required" }), { status: 400 });
     }
 
-    const description = clamp(parsed.fields["description"]?.trim() ?? "", 10_000);
+    const formDescription = parsed.fields["description"]?.trim();
+    const description = clamp(
+        formDescription && formDescription.length > 0 ? formDescription : (sidecar.description ?? ""),
+        10_000,
+    );
     const privacyRaw = parsed.fields["privacy"]?.trim() ?? "public";
     const privacy: Privacy = isPrivacy(privacyRaw) ? privacyRaw : "public";
-    const tags = parseTags(parsed.fields["tags"]);
+    const formTags = parseTags(parsed.fields["tags"]);
+    const tags = formTags.length > 0 ? formTags : (sidecar.tags ?? []);
+
+    // Drafts: client may set draft=true (or 1/yes) to upload the source file
+    // without enqueuing a transcode job. Drafts can be flipped to live later
+    // via video.publish, or scheduled by setting publishAt to a future time.
+    const draftRaw = parsed.fields["draft"]?.trim().toLowerCase() ?? "";
+    const draftFlag = draftRaw === "true" || draftRaw === "1" || draftRaw === "yes";
+
+    // publishAt: ISO-8601 timestamp. A future timestamp combined with the
+    // draft flag schedules a publish-video pg-boss job; past timestamps are
+    // ignored and the upload follows the normal transcode flow.
+    const publishAtRaw = parsed.fields["publishAt"]?.trim() ?? "";
+    let publishAt: Date | null = null;
+    if (publishAtRaw) {
+        const parsedDate = new Date(publishAtRaw);
+        if (!isNaN(parsedDate.getTime())) publishAt = parsedDate;
+    }
+    const isFuturePublish = publishAt !== null && publishAt.getTime() > Date.now();
+    const isDraft = draftFlag || isFuturePublish;
 
     // If session auth and channelId not in query, read from form.
     if (!channelId) {
@@ -264,10 +300,21 @@ export async function POST(req: NextRequest): Promise<Response> {
             description,
             privacy,
             unlistedSlug: slugValue,
+            // Drafts and scheduled-publish: we still persist the row but
+            // leave it queued/un-transcoded. The publish-video job (or a
+            // manual video.publish call) is what actually enqueues the
+            // transcode pipeline later.
             status: "queued",
+            isDraft,
+            publishAt: publishAt ?? undefined,
             tags,
             // Temporary placeholder; updated to final path below.
             sourcePath: `.tmp/${tmpName}`,
+            // Backfill publishedAt from the sidecar when present. The
+            // transcode worker only sets publishedAt at finalise-time when
+            // the column is null, so this preserves the original publish
+            // date without introducing a special-case.
+            publishedAt: sidecar.publishedAt ?? undefined,
         })
         .returning();
 
@@ -329,44 +376,98 @@ export async function POST(req: NextRequest): Promise<Response> {
         }
     }
 
-    // ---- 9. Insert transcode_jobs mirror row ----
+    // ---- 8b. Seed sidecar chapters (yt-dlp .info.json) ----
+    //
+    // The transcode worker's chapters step skips the description/container
+    // parse when chapters already exist for the video (onConflictDoNothing
+    // on the same composite). Pre-seeding here means the sidecar wins over
+    // both, which matches operator intent: if you went to the trouble of
+    // capturing the original chapter list, that is what should ship.
 
-    const [jobRow] = await db
-        .insert(transcodeJobs)
-        .values({
-            videoId,
-            state: "queued" as TranscodeJobState,
-            progress: 0,
-        })
-        .returning();
-
-    // ---- 10. Enqueue pg-boss job ----
-
-    // ensureBoss boots the worker on demand if instrumentation has not yet
-    // landed it (this can happen on cold-start race in dev mode where the
-    // request lands before instrumentation.ts has fully run).
-    const boss = await ensureBoss();
-    const pgbossJobId = await boss.send(
-        "transcode-video",
-        { videoId },
-        {
-            retryLimit: 2,
-            retryBackoff: true,
-            expireInHours: 6,
-            singletonKey: videoId,
-        },
-    );
-
-    if (pgbossJobId && jobRow) {
-        await db.update(transcodeJobs).set({ pgbossJobId }).where(eq(transcodeJobs.id, jobRow.id));
+    if (sidecar.chapters && sidecar.chapters.length > 0) {
+        await db
+            .insert(videoChapters)
+            .values(
+                sidecar.chapters.map((c) => ({
+                    videoId,
+                    startSec: c.startSec,
+                    endSec: c.endSec ?? undefined,
+                    title: c.title,
+                    source: "container" as const,
+                })),
+            )
+            .onConflictDoNothing();
     }
 
-    // ---- 11. Respond 201 ----
+    // ---- 9. Insert transcode_jobs mirror row + enqueue ----
+    //
+    // Drafts skip the transcode mirror row and the transcode-video pg-boss
+    // job; the user explicitly asked us to hold the upload. If publishAt is
+    // set, we also schedule a publish-video job that will flip the draft
+    // and enqueue the transcode at the appointed time.
+
+    const boss = await ensureBoss();
+    let respondStatus: "queued" | "draft" | "scheduled" = "queued";
+
+    if (isDraft) {
+        if (isFuturePublish && publishAt) {
+            await boss
+                .send(
+                    "publish-video",
+                    { videoId },
+                    {
+                        retryLimit: 2,
+                        retryBackoff: true,
+                        expireInHours: 24 * 30,
+                        startAfter: publishAt,
+                        singletonKey: videoId,
+                    },
+                )
+                .catch((err) => {
+                    // The video row remains a draft; the operator can
+                    // re-schedule from the studio. We log but don't fail
+                    // the upload so the source file is preserved.
+                    console.warn("[upload] failed to schedule publish-video job:", err);
+                });
+            respondStatus = "scheduled";
+        } else {
+            respondStatus = "draft";
+        }
+    } else {
+        const [jobRow] = await db
+            .insert(transcodeJobs)
+            .values({
+                videoId,
+                state: "queued" as TranscodeJobState,
+                progress: 0,
+            })
+            .returning();
+
+        // ensureBoss boots the worker on demand if instrumentation has not yet
+        // landed it (this can happen on cold-start race in dev mode where the
+        // request lands before instrumentation.ts has fully run).
+        const pgbossJobId = await boss.send(
+            "transcode-video",
+            { videoId },
+            {
+                retryLimit: 2,
+                retryBackoff: true,
+                expireInHours: 6,
+                singletonKey: videoId,
+            },
+        );
+
+        if (pgbossJobId && jobRow) {
+            await db.update(transcodeJobs).set({ pgbossJobId }).where(eq(transcodeJobs.id, jobRow.id));
+        }
+    }
+
+    // ---- 10. Respond 201 ----
 
     return new Response(
         JSON.stringify({
             videoId,
-            status: "queued",
+            status: respondStatus,
             statusUrl: `/api/trpc/video.uploadStatus?input=${encodeURIComponent(JSON.stringify({ videoId }))}`,
             watchUrl: privacy === "unlisted" && slugValue ? `/watch/${videoId}?slug=${slugValue}` : `/watch/${videoId}`,
         }),
