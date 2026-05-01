@@ -41,6 +41,7 @@ import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover"
 import { CassetteWordmark } from "@/components/branding/CassetteWordmark";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
+import { PwaInstallButton } from "@/components/shell/PwaInstallButton";
 
 export interface AppHeaderUser {
     name: string;
@@ -312,6 +313,12 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                                     Settings
                                 </Link>
                             </DropdownMenuItem>
+
+                            {/* Install-app shortcut. The component returns
+                                null unless `beforeinstallprompt` fires, so
+                                non-PWA-capable browsers see nothing. */}
+                            <PwaInstallButton />
+
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                                 className="cursor-pointer text-destructive focus:text-destructive"

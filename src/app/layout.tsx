@@ -27,13 +27,35 @@ const THEME_SCRIPT = `
 })();
 `.trim();
 
+// Service worker registration. Runs after the initial load so it never delays
+// first paint. The SW itself is at /public/sw.js (root-scoped). We register
+// only when the API is present; embeds and crawlers without service-worker
+// support simply skip it.
+const SW_SCRIPT = `
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function(){});
+    });
+}
+`.trim();
+
 export const metadata: Metadata = {
     title: {
         default: "cassette",
         template: "%s · cassette",
     },
     description: "A self-hosted, YouTube-shaped personal video platform.",
-    icons: [{ rel: "icon", url: "/favicon.svg" }],
+    applicationName: "cassette",
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+        capable: true,
+        title: "cassette",
+        statusBarStyle: "black-translucent",
+    },
+    icons: [
+        { rel: "icon", url: "/favicon.svg" },
+        { rel: "apple-touch-icon", url: "/icon-192.png" },
+    ],
     alternates: {
         types: {
             "application/rss+xml": [{ url: "/feed.xml", title: "cassette · all uploads" }],
@@ -55,6 +77,10 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
                 {/* Apply persisted theme before first paint to avoid flash. */}
                 {/* eslint-disable-next-line react/no-danger */}
                 <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+                {/* Register the PWA service worker after `load` so it never
+                    blocks first paint. The SW is a static asset at /sw.js. */}
+                {/* eslint-disable-next-line react/no-danger */}
+                <script dangerouslySetInnerHTML={{ __html: SW_SCRIPT }} />
                 {/* Version tag for support / debug tooling. */}
                 <meta name="data-cassette-version" content="0.1.0" />
             </head>
