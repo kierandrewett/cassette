@@ -10,6 +10,7 @@ import { type NextRequest } from "next/server";
 import { env } from "@/env";
 import { auth, verifyApiKey } from "@/lib/auth";
 import { ensureDir, paths, sourcePathForChannel, sourcePathForVideo } from "@/lib/paths";
+import { limit } from "@/lib/ratelimit";
 import { unlistedSlug } from "@/lib/slug";
 import { parseMultipart } from "@/lib/upload/multipart";
 import { db } from "@/server/db/client";
@@ -32,6 +33,28 @@ const isPrivacy = (v: string): v is Privacy => PRIVACY_VALUES.includes(v as Priv
 
 const clamp = (s: string, max: number): string => s.slice(0, max);
 
+const TAG_RE = /^[a-z0-9-]+$/;
+const MAX_TAGS = 12;
+const MAX_TAG_LEN = 30;
+
+/**
+ * Parse, normalise, deduplicate and validate a comma-separated tags string.
+ * Returns an empty array when the input is absent or empty.
+ */
+const parseTags = (raw: string | undefined): string[] => {
+    if (!raw) return [];
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const part of raw.split(",")) {
+        const tag = part.trim().toLowerCase().slice(0, MAX_TAG_LEN);
+        if (!tag || !TAG_RE.test(tag) || seen.has(tag)) continue;
+        seen.add(tag);
+        result.push(tag);
+        if (result.length >= MAX_TAGS) break;
+    }
+    return result;
+};
+
 // ------------------------------------------------------------------
 // Route handler
 // ------------------------------------------------------------------
@@ -53,6 +76,15 @@ export async function POST(req: NextRequest): Promise<Response> {
         channelId = verified.channel.id;
         // API keys are channel-scoped; no user id available for the uploader field.
         uploaderId = null;
+
+        // Rate limit: 60 uploads/hour per API key (key id as identifier).
+        const rl = limit({ key: "upload", identifier: verified.apiKeyId, windowMs: 3_600_000, max: 60 });
+        if (!rl.allowed) {
+            return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+                status: 429,
+                headers: { "Retry-After": String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) },
+            });
+        }
     } else {
         // Auth path B: Better-Auth session
         const session = await auth.api.getSession({ headers: req.headers }).catch(() => null);
@@ -60,6 +92,15 @@ export async function POST(req: NextRequest): Promise<Response> {
             return json401("not authenticated");
         }
         uploaderId = session.user.id;
+
+        // Rate limit: 12 uploads/hour per session user.
+        const rl = limit({ key: "upload", identifier: uploaderId, windowMs: 3_600_000, max: 12 });
+        if (!rl.allowed) {
+            return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+                status: 429,
+                headers: { "Retry-After": String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) },
+            });
+        }
 
         // channelId must come from the form (parsed later) OR from a query param.
         // We peek at the query string to allow pre-auth channel resolution.
@@ -128,6 +169,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const description = clamp(parsed.fields["description"]?.trim() ?? "", 10_000);
     const privacyRaw = parsed.fields["privacy"]?.trim() ?? "public";
     const privacy: Privacy = isPrivacy(privacyRaw) ? privacyRaw : "public";
+    const tags = parseTags(parsed.fields["tags"]);
 
     // If session auth and channelId not in query, read from form.
     if (!channelId) {
@@ -187,6 +229,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             privacy,
             unlistedSlug: slugValue,
             status: "queued",
+            tags,
             // Temporary placeholder; updated to final path below.
             sourcePath: `.tmp/${tmpName}`,
         })

@@ -10,6 +10,7 @@ import {
     searchRouter,
     subscriptionRouter,
     videoRouter,
+    webhookRouter,
 } from "./routers";
 
 // The application router. Every domain router is registered here; the
@@ -31,6 +32,7 @@ export const appRouter = createTRPCRouter({
     history: historyRouter,
     search: searchRouter,
     notification: notificationRouter,
+    webhook: webhookRouter,
 });
 
 export type AppRouter = typeof appRouter;

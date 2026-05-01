@@ -29,6 +29,7 @@ interface FileEntry {
     file: File;
     title: string;
     description: string;
+    tags: string;
     privacy: PrivacyValue;
     status: FileStatus;
     progress: number; // 0-100
@@ -171,6 +172,7 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
             formData.set("description", entry.description.trim());
             formData.set("privacy", entry.privacy);
             formData.set("channelId", channel.id);
+            if (entry.tags.trim()) formData.set("tags", entry.tags.trim());
             formData.set("file", entry.file, entry.file.name);
 
             const xhr = new XMLHttpRequest();
@@ -281,6 +283,7 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
             file: f,
             title: stripExtension(f.name),
             description: "",
+            tags: "",
             privacy: "public",
             status: "queued",
             progress: 0,
@@ -483,6 +486,18 @@ export const BulkUploadForm = ({ channel }: BulkUploadFormProps) => {
                                                     placeholder="Description (optional)"
                                                     className={cn(
                                                         "flex w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm resize-none",
+                                                        "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                                        "disabled:pointer-events-none disabled:opacity-50",
+                                                    )}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={entry.tags}
+                                                    onChange={(e) => updateField(entry.id, "tags", e.target.value)}
+                                                    disabled={isActive || isFinal}
+                                                    placeholder="Tags, e.g. cooking, knife-skills"
+                                                    className={cn(
+                                                        "flex h-7 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm transition-colors",
                                                         "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                                                         "disabled:pointer-events-none disabled:opacity-50",
                                                     )}

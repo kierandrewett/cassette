@@ -342,6 +342,7 @@ export const StudioVideoTable = ({ channelId, videos }: StudioVideoTableProps) =
                         id: editVideo.id,
                         title: editVideo.title,
                         description: editVideo.description,
+                        tags: editVideo.tags,
                     }}
                 />
             )}

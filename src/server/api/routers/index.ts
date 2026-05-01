@@ -9,3 +9,4 @@ export { playlistRouter } from "./playlist";
 export { subscriptionRouter } from "./subscription";
 export { searchRouter } from "./search";
 export { videoRouter } from "./video";
+export { webhookRouter } from "./webhook";

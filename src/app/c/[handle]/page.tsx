@@ -27,7 +27,17 @@ export async function generateMetadata({ params }: ChannelPageProps): Promise<Me
         .where(eq(channels.handle, handle.toLowerCase()))
         .limit(1)
         .then((r) => r[0]);
-    return { title: channel?.name ?? "Channel" };
+
+    const name = channel?.name ?? "Channel";
+
+    return {
+        title: name,
+        alternates: {
+            types: {
+                "application/rss+xml": `/c/${handle}/feed.xml`,
+            },
+        },
+    };
 }
 
 const ChannelPage = async ({ params, searchParams }: ChannelPageProps) => {

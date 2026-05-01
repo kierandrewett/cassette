@@ -12,11 +12,13 @@ export interface SearchFilters {
     duration?: Duration;
     hasCaptions?: boolean;
     type?: SearchType;
+    tag?: string;
 }
 
 const UPLOADED_WITHIN_VALUES: UploadedWithin[] = ["hour", "today", "week", "month", "year"];
 const DURATION_VALUES: Duration[] = ["short", "medium", "long"];
 const TYPE_VALUES: SearchType[] = ["video", "channel", "playlist"];
+const TAG_RE = /^[a-z0-9-]+$/;
 
 /** Parse a URLSearchParams (or plain object) into a typed SearchFilters. */
 export const parseSearchFilters = (params: URLSearchParams | Record<string, string>): SearchFilters => {
@@ -45,7 +47,11 @@ export const parseSearchFilters = (params: URLSearchParams | Record<string, stri
     const type: SearchType | undefined =
         rawType && (TYPE_VALUES as string[]).includes(rawType) ? (rawType as SearchType) : undefined;
 
-    return { q, uploadedWithin, duration, hasCaptions, type };
+    const rawTag = get("tag");
+    const tag: string | undefined =
+        rawTag && TAG_RE.test(rawTag) && rawTag.length <= 30 ? rawTag : undefined;
+
+    return { q, uploadedWithin, duration, hasCaptions, type, tag };
 };
 
 /** Serialise a SearchFilters back into a URLSearchParams string. */
@@ -56,6 +62,7 @@ export const serialiseSearchFilters = (filters: SearchFilters): string => {
     if (filters.duration) params.set("duration", filters.duration);
     if (filters.hasCaptions !== undefined) params.set("hasCaptions", String(filters.hasCaptions));
     if (filters.type) params.set("type", filters.type);
+    if (filters.tag) params.set("tag", filters.tag);
     return params.toString();
 };
 

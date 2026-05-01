@@ -79,6 +79,10 @@ const markFailed = async (videoId: string, message: string): Promise<void> => {
         .update(videos)
         .set({ status: "failed" })
         .where(eq(videos.id, videoId));
+
+    // Fire webhook fanout for transcode.failed. Best-effort.
+    const { fanoutVideoEvent } = await import("@/lib/webhooks/fanout");
+    void fanoutVideoEvent({ videoId, event: "transcode.failed" });
 };
 
 // ------------------------------------------------------------------
@@ -284,6 +288,11 @@ const runPipeline = async (videoId: string): Promise<void> => {
     // notifications outage cannot fail the transcode itself.
     const { notifyNewUpload } = await import("@/lib/notifications/fanout");
     await notifyNewUpload(videoId);
+
+    // Fire webhook fanout for transcode.completed. Best-effort; void so a
+    // webhooks failure can never propagate into the pipeline.
+    const { fanoutVideoEvent } = await import("@/lib/webhooks/fanout");
+    void fanoutVideoEvent({ videoId, event: "transcode.completed" });
 };
 
 // ------------------------------------------------------------------

@@ -17,12 +17,32 @@ import { cn } from "@/lib/utils";
 // Schema
 // ---------------------------------------------------------------------------
 
+const TAG_RE = /^[a-z0-9-]*$/;
+
 const editSchema = z.object({
     title: z.string().trim().min(1, "Title is required.").max(200, "Title cannot exceed 200 characters."),
     description: z.string().trim().max(10_000, "Description cannot exceed 10,000 characters.").default(""),
+    tagsRaw: z.string().default(""),
 });
 
 type EditValues = z.infer<typeof editSchema>;
+
+/**
+ * Parse a comma-separated tags string into a validated array.
+ * Same rules as the server: lower-case, [a-z0-9-], ≤30 chars, ≤12 tags.
+ */
+const parseTagsInput = (raw: string): string[] => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const part of raw.split(",")) {
+        const tag = part.trim().toLowerCase().slice(0, 30);
+        if (!tag || !TAG_RE.test(tag) || seen.has(tag)) continue;
+        seen.add(tag);
+        result.push(tag);
+        if (result.length >= 12) break;
+    }
+    return result;
+};
 
 // ---------------------------------------------------------------------------
 // Props
@@ -36,6 +56,7 @@ type EditVideoDialogProps = {
         id: string;
         title: string;
         description: string;
+        tags?: string[];
     };
 };
 
@@ -53,13 +74,21 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
         formState: { errors, isSubmitting },
     } = useForm<EditValues>({
         resolver: zodResolver(editSchema),
-        defaultValues: { title: video.title, description: video.description },
+        defaultValues: {
+            title: video.title,
+            description: video.description,
+            tagsRaw: (video.tags ?? []).join(", "),
+        },
     });
 
     // Keep form in sync when the dialog opens for a different video.
     useEffect(() => {
-        reset({ title: video.title, description: video.description });
-    }, [video.id, video.title, video.description, reset]);
+        reset({
+            title: video.title,
+            description: video.description,
+            tagsRaw: (video.tags ?? []).join(", "),
+        });
+    }, [video.id, video.title, video.description, video.tags, reset]);
 
     const updateMetadata = api.video.updateMetadata.useMutation({
         onSuccess: async () => {
@@ -73,7 +102,8 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
     });
 
     const onSubmit = (values: EditValues) => {
-        updateMetadata.mutate({ videoId: video.id, ...values });
+        const tags = parseTagsInput(values.tagsRaw);
+        updateMetadata.mutate({ videoId: video.id, title: values.title, description: values.description, tags });
     };
 
     return (
@@ -130,6 +160,27 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
                                 {errors.description && (
                                     <p className="text-xs text-destructive">{errors.description.message}</p>
                                 )}
+                            </div>
+
+                            {/* Tags */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="edit-tags" className="text-sm font-medium leading-none">
+                                    Tags{" "}
+                                    <span className="text-muted-foreground font-normal">(optional)</span>
+                                </label>
+                                <input
+                                    id="edit-tags"
+                                    type="text"
+                                    {...register("tagsRaw")}
+                                    placeholder="Comma-separated, e.g. cooking, knife-skills"
+                                    className={cn(
+                                        "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+                                        "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                    )}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Lowercase letters, numbers and hyphens only. Up to 12 tags, each ≤ 30 characters.
+                                </p>
                             </div>
 
                             <DialogFooter>

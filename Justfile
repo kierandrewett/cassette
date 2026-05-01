@@ -110,3 +110,11 @@ janitor:
 # Actually apply the cleanup (deletes orphan files and HLS dirs).
 janitor-apply:
     yarn tsx scripts/janitor.ts --apply
+
+# Snapshot the database + media to ./backups/<UTC-timestamp>.
+backup:
+    bash scripts/backup.sh
+
+# Restore from a backup directory. Pass --yes to skip the confirm prompt.
+restore dir *args:
+    bash scripts/restore.sh {{dir}} {{args}}

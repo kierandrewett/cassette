@@ -13,6 +13,7 @@ import { CommentTree } from "@/components/comments/CommentTree";
 import { ShareButton } from "@/components/watch/ShareButton";
 import { AddToPlaylistButton } from "@/components/playlist/AddToPlaylistButton";
 import { AddToWatchLaterChip } from "@/components/social/AddToWatchLaterChip";
+import { TagChipRow } from "@/components/video/TagChip";
 import { formatCount, formatRelativeTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -124,6 +125,10 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                         {/* Video header */}
                         <div className="mt-4 space-y-3">
                             <h1 className="text-xl font-semibold leading-snug text-foreground">{video.title}</h1>
+
+                            {video.tags.length > 0 && (
+                                <TagChipRow tags={video.tags} />
+                            )}
 
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 {/* Channel + stats */}

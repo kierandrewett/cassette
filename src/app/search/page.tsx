@@ -47,8 +47,10 @@ const SearchPage = async ({ searchParams }: SearchPageProps) => {
     const filters = parseSearchFilters(flat);
     const tab: SearchTabValue = isTab(flat["tab"]) ? flat["tab"] : "videos";
 
-    const { q, uploadedWithin, duration, hasCaptions } = filters;
+    const { q, uploadedWithin, duration, hasCaptions, tag } = filters;
     const trimmed = q.trim();
+    // Allow tag-only searches with an empty query string.
+    const hasQuery = trimmed.length > 0 || !!tag;
 
     const ctx = await createTRPCContext({ headers: await headers() });
     const caller = createSearchCaller(() => Promise.resolve(ctx));
@@ -57,22 +59,27 @@ const SearchPage = async ({ searchParams }: SearchPageProps) => {
     let channelItems: SearchChannelResult[] = [];
     let playlistItems: SearchPlaylistResult[] = [];
 
-    if (trimmed.length > 0) {
+    if (hasQuery) {
         if (tab === "videos") {
             const r = await caller.search.videos({
                 q: trimmed,
                 uploadedWithin,
                 duration,
                 hasCaptions,
+                tag,
                 limit: 20,
             });
             videoItems = r.items;
         } else if (tab === "channels") {
-            const r = await caller.search.channels({ q: trimmed, limit: 20 });
-            channelItems = r.items;
+            if (trimmed.length > 0) {
+                const r = await caller.search.channels({ q: trimmed, limit: 20 });
+                channelItems = r.items;
+            }
         } else {
-            const r = await caller.search.playlists({ q: trimmed, limit: 20 });
-            playlistItems = r.items;
+            if (trimmed.length > 0) {
+                const r = await caller.search.playlists({ q: trimmed, limit: 20 });
+                playlistItems = r.items;
+            }
         }
     }
 
@@ -94,7 +101,7 @@ const SearchPage = async ({ searchParams }: SearchPageProps) => {
                     </Suspense>
                 ) : null}
 
-                {trimmed.length === 0 ? (
+                {!hasQuery ? (
                     <p className="text-muted-foreground">Enter a search query above.</p>
                 ) : empty ? (
                     <div className="py-16 text-center">

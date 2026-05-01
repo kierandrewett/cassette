@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import type { Database } from "@/server/db/client";
+import { limit } from "@/lib/ratelimit";
 import { channelMembers } from "@/server/db/schema/channels";
 import { commentLikes, comments } from "@/server/db/schema/social";
 import type { ReactionKind } from "@/server/db/schema/social";
@@ -290,6 +291,12 @@ export const commentRouter = createTRPCRouter({
 
     // Protected: create a new comment or reply.
     create: protectedProcedure.input(createInput).mutation(async ({ ctx, input }) => {
+        // Rate limit: 30 comments/minute per user.
+        const rl = limit({ key: "comment.create", identifier: ctx.user.id, windowMs: 60_000, max: 30 });
+        if (!rl.allowed) {
+            throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "You are posting comments too quickly. Please wait a moment." });
+        }
+
         const body = input.body.trim();
         if (body.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body cannot be empty." });
         if (body.length > 5000) throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body must be 5000 characters or fewer." });
@@ -320,6 +327,10 @@ export const commentRouter = createTRPCRouter({
             const { notifyCommentReply } = await import("@/lib/notifications/fanout");
             void notifyCommentReply(reply.id);
 
+            // Fire webhook fanout. Best-effort; void so failures never propagate.
+            const { fanoutCommentEvent } = await import("@/lib/webhooks/fanout");
+            void fanoutCommentEvent({ comment: reply });
+
             return reply;
         }
 
@@ -346,6 +357,10 @@ export const commentRouter = createTRPCRouter({
                 .returning();
             return updated ?? { ...row, rootId: row.id };
         });
+
+        // Fire webhook fanout for top-level comment. Best-effort.
+        const { fanoutCommentEvent } = await import("@/lib/webhooks/fanout");
+        void fanoutCommentEvent({ comment: inserted });
 
         return inserted;
     }),

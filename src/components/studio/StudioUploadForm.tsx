@@ -60,6 +60,7 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
     const [captionFiles, setCaptionFiles] = useState<File[]>([]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [tags, setTags] = useState("");
     const [privacy, setPrivacy] = useState<PrivacyValue>("public");
     const [isDragging, setIsDragging] = useState(false);
 
@@ -166,6 +167,7 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
         formData.set("description", description.trim());
         formData.set("privacy", privacy);
         formData.set("channelId", channel.id);
+        if (tags.trim()) formData.set("tags", tags.trim());
         formData.set("file", selectedFile, selectedFile.name);
 
         for (const cap of captionFiles) {
@@ -370,6 +372,27 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                                     "placeholder:text-muted-foreground",
                                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                                     "disabled:cursor-not-allowed disabled:opacity-50",
+                                )}
+                            />
+                        </div>
+
+                        {/* Tags */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="upload-tags" className="text-sm font-medium leading-none">
+                                Tags{" "}
+                                <span className="text-muted-foreground font-normal">(optional)</span>
+                            </label>
+                            <input
+                                id="upload-tags"
+                                type="text"
+                                value={tags}
+                                onChange={(e) => setTags(e.target.value)}
+                                disabled={formDisabled}
+                                placeholder="Comma-separated, e.g. cooking, knife-skills"
+                                className={cn(
+                                    "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+                                    "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                    "disabled:pointer-events-none disabled:opacity-50",
                                 )}
                             />
                         </div>

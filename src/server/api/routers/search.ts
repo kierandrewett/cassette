@@ -11,10 +11,11 @@ const uploadedWithinSchema = z.enum(["hour", "today", "week", "month", "year"]).
 const durationSchema = z.enum(["short", "medium", "long"]).optional();
 
 const videosInputSchema = z.object({
-    q: z.string().min(1).max(200),
+    q: z.string().max(200).default(""),
     uploadedWithin: uploadedWithinSchema,
     duration: durationSchema,
     hasCaptions: z.boolean().optional(),
+    tag: z.string().regex(/^[a-z0-9-]+$/).max(30).optional(),
     cursor: z.number().int().nonnegative().optional(),
     limit: z.number().int().min(1).max(50).default(20),
 });
@@ -69,12 +70,15 @@ export const searchRouter = createTRPCRouter({
     videos: publicProcedure
         .input(videosInputSchema)
         .query(async ({ ctx, input }) => {
-            const { q, uploadedWithin, duration, hasCaptions, cursor = 0, limit } = input;
+            const { q, uploadedWithin, duration, hasCaptions, tag, cursor = 0, limit } = input;
 
             // Build WHERE fragments that get ANDed together in the final query.
             // We use raw sql template literals because websearch_to_tsquery and
             // ts_rank are not exposed through Drizzle's typed API.
-            const ftsClause = sql`v.search_vector @@ websearch_to_tsquery('simple', ${q})`;
+            // When q is empty (tag-only search), skip FTS filtering entirely.
+            const ftsClause = q.trim()
+                ? sql`v.search_vector @@ websearch_to_tsquery('simple', ${q})`
+                : sql`TRUE`;
             const privacyClause = sql`v.privacy = 'public' AND v.status = 'ready'`;
 
             const intervalClause =
@@ -98,6 +102,11 @@ export const searchRouter = createTRPCRouter({
                       ? sql`NOT EXISTS (SELECT 1 FROM video_captions vc WHERE vc.video_id = v.id)`
                       : sql`TRUE`;
 
+            const tagClause =
+                tag
+                    ? sql`v.tags @> ARRAY[${tag}]::text[]`
+                    : sql`TRUE`;
+
             type Row = {
                 id: string;
                 title: string;
@@ -111,6 +120,10 @@ export const searchRouter = createTRPCRouter({
                 rank: number;
             };
 
+            const rankExpr = q.trim()
+                ? sql`ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q}))`
+                : sql`0`;
+
             const rows = await ctx.db.execute<Row>(sql`
                 SELECT
                     v.id,
@@ -122,7 +135,7 @@ export const searchRouter = createTRPCRouter({
                     v.published_at     AS "publishedAt",
                     c.name             AS "channelName",
                     c.handle           AS "channelHandle",
-                    ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q})) AS rank
+                    ${rankExpr} AS rank
                 FROM videos v
                 JOIN channels c ON c.id = v.channel_id
                 WHERE
@@ -131,6 +144,7 @@ export const searchRouter = createTRPCRouter({
                     AND ${intervalClause}
                     AND ${durationClause}
                     AND ${captionsClause}
+                    AND ${tagClause}
                 ORDER BY rank DESC, v.published_at DESC
                 LIMIT ${limit + 1}
                 OFFSET ${cursor}

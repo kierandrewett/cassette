@@ -78,6 +78,15 @@ const StudioChannelPage = async ({ params, searchParams }: Props) => {
                             Update your avatar, banner image, name, and description.
                         </span>
                     </Link>
+                    <Link
+                        href={`/studio/c/${handle}/webhooks`}
+                        className="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-card/80"
+                    >
+                        <span className="text-base font-semibold">Webhooks</span>
+                        <span className="text-sm text-muted-foreground">
+                            Receive signed HTTP notifications for transcode and comment events.
+                        </span>
+                    </Link>
                 </div>
             )}
 

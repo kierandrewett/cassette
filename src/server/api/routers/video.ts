@@ -467,7 +467,7 @@ export const videoRouter = createTRPCRouter({
         }),
 
     // ---------------------------------------------------------------------------
-    // updateMetadata — title/description edits. Caller must be a channel member.
+    // updateMetadata — title/description/tags edits. Caller must be a channel member.
     // ---------------------------------------------------------------------------
     updateMetadata: protectedProcedure
         .input(
@@ -475,6 +475,12 @@ export const videoRouter = createTRPCRouter({
                 videoId: z.string().uuid(),
                 title: z.string().trim().min(1).max(200).optional(),
                 description: z.string().trim().max(10_000).optional(),
+                tags: z
+                    .array(
+                        z.string().regex(/^[a-z0-9-]+$/).max(30),
+                    )
+                    .max(12)
+                    .optional(),
             }),
         )
         .mutation(async ({ ctx, input }) => {
@@ -501,6 +507,7 @@ export const videoRouter = createTRPCRouter({
             const patch: Partial<typeof videos.$inferInsert> = { updatedAt: new Date() };
             if (input.title !== undefined) patch.title = input.title;
             if (input.description !== undefined) patch.description = input.description;
+            if (input.tags !== undefined) patch.tags = input.tags;
 
             const [updated] = await ctx.db
                 .update(videos)
