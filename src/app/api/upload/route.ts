@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { type IncomingMessage } from "node:http";
 import { join, relative } from "node:path";
+import { Readable } from "node:stream";
 
 import { and, eq } from "drizzle-orm";
 import { type NextRequest } from "next/server";
@@ -92,7 +93,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     // Convert the Web ReadableStream to a Node stream so busboy can pipe it.
-    const { Readable } = await import("node:stream");
+    // Node:stream is imported statically at the top of the file because the
+    // production Webpack bundle was tree-shaking Readable.fromWeb out of a
+    // dynamic import expression and crashing at runtime.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nodeStream = Readable.fromWeb(rawBody as any);
 
