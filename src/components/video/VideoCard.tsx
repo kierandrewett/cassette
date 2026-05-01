@@ -1,9 +1,13 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 import { formatDuration, formatCount, formatRelativeTime } from "@/lib/utils";
 import { VideoCardActions } from "./VideoCardActions";
+import { HoverPreview } from "./HoverPreview";
 
 export interface VideoCardVideo {
     id: string;
@@ -25,8 +29,6 @@ interface VideoCardProps {
     className?: string;
 }
 
-// Server component — no client interactivity, all data is passed in.
-// Hover scale and shadow are CSS-only via Tailwind group utilities.
 export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
     const thumbnailSrc = video.thumbnailPath
         ? `/api/hls/${video.id}/thumb/sprite.jpg`
@@ -35,6 +37,10 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
     const hasDuration = video.durationSec != null && video.durationSec > 0;
     const hasProgress = typeof progress === "number" && progress > 0 && progress < 1;
 
+    // Ref passed to HoverPreview so it can listen for pointer events on the
+    // thumbnail wrapper without needing a separate event-wiring layer.
+    const thumbRef = useRef<HTMLDivElement>(null);
+
     return (
         <Link
             href={`/watch/${video.id}`}
@@ -42,7 +48,10 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
             aria-label={`Watch "${video.title}"`}
         >
             {/* Thumbnail */}
-            <div className="relative overflow-hidden rounded-xl bg-secondary aspect-video">
+            <div
+                ref={thumbRef}
+                className="relative overflow-hidden rounded-xl bg-secondary aspect-video"
+            >
                 {thumbnailSrc ? (
                     <Image
                         src={thumbnailSrc}
@@ -59,9 +68,18 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
                     </div>
                 )}
 
-                {/* Duration chip — shifted left when duration is shown so actions don't overlap */}
+                {/* Hover preview — sits above the static thumbnail but below the duration chip (z-10 vs z-20) */}
+                {thumbnailSrc && (
+                    <HoverPreview
+                        videoId={video.id}
+                        durationSec={video.durationSec}
+                        triggerRef={thumbRef}
+                    />
+                )}
+
+                {/* Duration chip — z-20 keeps it above the preview overlay */}
                 {hasDuration && (
-                    <span className="absolute bottom-2 right-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums group-hover:right-10 transition-[right] duration-150">
+                    <span className="absolute bottom-2 right-2 z-20 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums group-hover:right-10 transition-[right] duration-150">
                         {formatDuration(video.durationSec!)}
                     </span>
                 )}
@@ -71,7 +89,7 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
 
                 {/* Progress bar — 2 px red bar if partially watched */}
                 {hasProgress && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/20">
+                    <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-white/20">
                         <div
                             className="h-full bg-red-500"
                             style={{ width: `${Math.round(progress! * 100)}%` }}

@@ -56,7 +56,7 @@ const SubscriptionsPage = async () => {
 
     return (
         <AppShell>
-            <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+            <div className="px-4 py-8 md:px-6 lg:px-8">
                 <h1 className="mb-6 text-2xl font-semibold text-foreground">Subscriptions</h1>
                 <VideoGrid
                     videos={videoList}

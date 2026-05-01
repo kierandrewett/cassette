@@ -12,6 +12,19 @@ const config: Config = {
                 "2xl": "1440px",
             },
         },
+        // Ultra-wide breakpoints. Tailwind's defaults stop at `2xl` (1536px);
+        // on a 21:9 / 32:9 monitor that leaves a vast unused gutter. Pull
+        // the column ladder out to 8-up at 5xl.
+        screens: {
+            sm: "640px",
+            md: "768px",
+            lg: "1024px",
+            xl: "1280px",
+            "2xl": "1536px",
+            "3xl": "1920px",
+            "4xl": "2560px",
+            "5xl": "3440px",
+        },
         extend: {
             fontFamily: {
                 // system-ui resolves to SF on Apple, Segoe on Windows, Roboto on Android.

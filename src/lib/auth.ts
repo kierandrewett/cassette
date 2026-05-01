@@ -2,12 +2,14 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { twoFactor } from "better-auth/plugins";
+import { passkey } from "@better-auth/passkey";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { env } from "@/env";
 import { sendMail } from "@/lib/mail";
 import { db } from "@/server/db/client";
-import { account, session, user, verification } from "@/server/db/schema/auth";
+import { account, passkey as passkeyTable, session, twoFactor as twoFactorTable, user, verification } from "@/server/db/schema/auth";
 import { apiKeys, channels, type Channel } from "@/server/db/schema/channels";
 
 // Better-Auth server instance. Uses the Drizzle adapter against the auth
@@ -17,6 +19,10 @@ import { apiKeys, channels, type Channel } from "@/server/db/schema/channels";
 // api-key plugin, and we want full control over channel scoping anyway.
 // Plaintext keys look like `vid_<22-char-nanoid>`; see
 // `mintApiKey()` and `verifyApiKey()` below.
+
+// Derive the hostname (rpID) from PUBLIC_URL, e.g. "cassette.example.com".
+const rpID = new URL(env.PUBLIC_URL).hostname;
+
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
         provider: "pg",
@@ -25,10 +31,21 @@ export const auth = betterAuth({
             session,
             account,
             verification,
+            passkey: passkeyTable,
+            twoFactor: twoFactorTable,
         },
     }),
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL ?? env.PUBLIC_URL,
+    plugins: [
+        passkey({
+            rpName: "cassette",
+            rpID,
+        }),
+        twoFactor({
+            skipVerificationOnEnable: false,
+        }),
+    ],
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: false,

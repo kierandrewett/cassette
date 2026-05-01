@@ -188,7 +188,9 @@ const LibraryPage = async () => {
 
     return (
         <AppShell>
-            <div className="mx-auto max-w-7xl space-y-10 py-8">
+            {/* Full-width on ultra-wide; max-w-7xl was capping the layout
+                at 1280 px so half the screen sat empty. */}
+            <div className="space-y-10 py-8">
                 <h1 className="px-4 text-2xl font-semibold text-foreground md:px-6">Library</h1>
 
                 {/* Up Next (queue). Renders as a horizontal drag-reorderable

@@ -5,7 +5,10 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import AppShell from "@/components/shell/AppShell";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
+import { PasskeysPanel } from "@/components/settings/PasskeysPanel";
+import { PreferencesPanel } from "@/components/settings/PreferencesPanel";
 import { SessionsPanel } from "@/components/settings/SessionsPanel";
+import { TwoFactorPanel } from "@/components/settings/TwoFactorPanel";
 import { SignOutButton } from "./SettingsClient";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -55,6 +58,16 @@ export default async function SettingsPage() {
                     </p>
                 </section>
 
+                {/* Preferences section */}
+                <section className="space-y-4">
+                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
+                        Preferences
+                    </h2>
+                    <div className="rounded-xl border border-border bg-card divide-y divide-border">
+                        <PreferencesPanel />
+                    </div>
+                </section>
+
                 {/* Password section */}
                 <section className="space-y-4">
                     <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
@@ -62,6 +75,24 @@ export default async function SettingsPage() {
                     </h2>
                     <div className="rounded-xl border border-border bg-card px-4 py-4">
                         <ChangePasswordForm />
+                    </div>
+                </section>
+
+                {/* Passkeys section */}
+                <section className="space-y-4">
+                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
+                        Passkeys
+                    </h2>
+                    <PasskeysPanel />
+                </section>
+
+                {/* Two-factor authentication section */}
+                <section className="space-y-4">
+                    <h2 className="text-base font-semibold text-foreground/80 uppercase tracking-wider">
+                        Two-factor authentication
+                    </h2>
+                    <div className="rounded-xl border border-border bg-card px-4 py-4">
+                        <TwoFactorPanel twoFactorEnabled={(user as unknown as { twoFactorEnabled?: boolean }).twoFactorEnabled ?? false} />
                     </div>
                 </section>
 

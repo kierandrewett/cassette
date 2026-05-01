@@ -14,6 +14,7 @@ export interface PlayerPreferences {
     playbackRate: number;
     captionsLang: string | null;
     theatre: boolean;
+    hoverPreviewsEnabled: boolean;
 }
 
 const DEFAULTS: PlayerPreferences = {
@@ -21,6 +22,7 @@ const DEFAULTS: PlayerPreferences = {
     playbackRate: 1,
     captionsLang: null,
     theatre: false,
+    hoverPreviewsEnabled: true,
 };
 
 // ---------------------------------------------------------------------------
@@ -52,6 +54,7 @@ export const readPreferences = (): PlayerPreferences => {
     const rateRaw = safeGet("playbackRate");
     const captionsRaw = safeGet("captionsLang");
     const theatreRaw = safeGet("theatre");
+    const hoverPreviewsRaw = safeGet("hoverPreviewsEnabled");
 
     const volume = volumeRaw !== null ? Math.max(0, Math.min(1, Number(volumeRaw))) : DEFAULTS.volume;
     const playbackRate = rateRaw !== null
@@ -59,12 +62,15 @@ export const readPreferences = (): PlayerPreferences => {
         : DEFAULTS.playbackRate;
     const captionsLang = captionsRaw === "" || captionsRaw === null ? null : captionsRaw;
     const theatre = theatreRaw === "true";
+    // Default true unless explicitly stored as "false".
+    const hoverPreviewsEnabled = hoverPreviewsRaw === "false" ? false : DEFAULTS.hoverPreviewsEnabled;
 
     return {
         volume: isNaN(volume) ? DEFAULTS.volume : volume,
         playbackRate: isNaN(playbackRate) ? DEFAULTS.playbackRate : playbackRate,
         captionsLang,
         theatre,
+        hoverPreviewsEnabled,
     };
 };
 
@@ -98,4 +104,8 @@ export const writeCaptionsLang = (lang: string | null): void => {
 
 export const writeTheatre = (value: boolean): void => {
     safeSet("theatre", String(value));
+};
+
+export const writeHoverPreviewsEnabled = (value: boolean): void => {
+    safeSet("hoverPreviewsEnabled", String(value));
 };

@@ -194,7 +194,7 @@ const ChannelPage = async ({ params, searchParams }: ChannelPageProps) => {
 
                 <ChannelTabs tabs={tabs} />
 
-                <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">{tabContent}</div>
+                <div className="px-4 py-6 md:px-6 lg:px-8">{tabContent}</div>
             </div>
         </AppShell>
     );

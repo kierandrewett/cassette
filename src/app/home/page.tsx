@@ -72,7 +72,11 @@ const HomePage = async () => {
 
     return (
         <AppShell>
-            <div className="container mx-auto space-y-12 px-4 py-8">
+            {/* Full-width grid: drops the centred container so an ultra-wide
+                monitor uses every column the breakpoint ladder allows. The
+                rail offset is handled by AppShell; we only add a small px
+                gutter so cards do not touch the right edge. */}
+            <div className="space-y-12 px-4 py-8 md:px-6 lg:px-8">
                 {subFeed.length > 0 ? (
                     <section className="space-y-4">
                         <div className="flex items-baseline justify-between">

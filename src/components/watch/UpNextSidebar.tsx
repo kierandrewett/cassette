@@ -1,7 +1,11 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { formatDuration, formatCount, formatRelativeTime } from "@/lib/utils";
+import { HoverPreview } from "@/components/video/HoverPreview";
 
 interface SidebarVideo {
     id: string;
@@ -18,7 +22,7 @@ interface UpNextSidebarProps {
 }
 
 /**
- * Server component. Renders a vertical list of compact video cards for the
+ * Client component. Renders a vertical list of compact video cards for the
  * Up Next / autoplay sidebar. The queue integration (M7) will prepend queue
  * items before this fallback list.
  *
@@ -46,6 +50,7 @@ export const UpNextSidebar = ({ videos }: UpNextSidebarProps) => {
 
 const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }) => {
     const hasDuration = video.durationSec != null && video.durationSec > 0;
+    const thumbRef = useRef<HTMLDivElement>(null);
 
     return (
         <Link
@@ -54,7 +59,10 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
             aria-label={`Watch "${video.title}"`}
         >
             {/* Thumbnail */}
-            <div className="relative w-40 flex-shrink-0 overflow-hidden rounded-lg aspect-video bg-secondary">
+            <div
+                ref={thumbRef}
+                className="relative w-40 flex-shrink-0 overflow-hidden rounded-lg aspect-video bg-secondary"
+            >
                 {video.thumbnailPath ? (
                     <Image
                         src={`/api/hls/${video.id}/thumb/sprite.jpg`}
@@ -68,8 +76,18 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
                         <span className="text-[10px] text-muted-foreground">No thumbnail</span>
                     </div>
                 )}
+
+                {/* Hover preview — sits above the static thumbnail but below the duration chip */}
+                {video.thumbnailPath && (
+                    <HoverPreview
+                        videoId={video.id}
+                        durationSec={video.durationSec}
+                        triggerRef={thumbRef}
+                    />
+                )}
+
                 {hasDuration && (
-                    <span className="absolute bottom-1.5 right-1.5 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white tabular-nums">
+                    <span className="absolute bottom-1.5 right-1.5 z-20 rounded bg-black/80 px-1 py-0.5 text-[10px] font-medium text-white tabular-nums">
                         {formatDuration(video.durationSec!)}
                     </span>
                 )}

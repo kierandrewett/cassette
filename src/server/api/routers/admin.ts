@@ -7,13 +7,15 @@ import { z } from "zod";
 
 import { cleanupVideoFiles } from "@/lib/cleanup";
 import { paths } from "@/lib/paths";
+import { invalidateSiteConfigCache } from "@/lib/site-config";
 import { adminGrants } from "@/server/db/schema/admin";
 import { session, user } from "@/server/db/schema/auth";
+import { siteConfig, privacyModeEnum } from "@/server/db/schema/site";
 import { channelMembers, channels } from "@/server/db/schema/channels";
 import { transcodeJobs } from "@/server/db/schema/jobs";
 import { comments } from "@/server/db/schema/social";
 import { videos } from "@/server/db/schema/videos";
-import { adminProcedure, createTRPCRouter } from "../trpc";
+import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 
 // ---------------------------------------------------------------------------
 // Filesystem helpers
@@ -684,6 +686,35 @@ const statsRouter = createTRPCRouter({
 });
 
 // ---------------------------------------------------------------------------
+// Site config sub-router
+// ---------------------------------------------------------------------------
+
+const siteConfigRouter = createTRPCRouter({
+    get: publicProcedure.query(async ({ ctx }) => {
+        const rows = await ctx.db
+            .select({ privacyMode: siteConfig.privacyMode, updatedAt: siteConfig.updatedAt })
+            .from(siteConfig)
+            .where(eq(siteConfig.id, 1))
+            .limit(1);
+        return rows[0] ?? { privacyMode: "public" as const, updatedAt: new Date() };
+    }),
+
+    set: adminProcedure
+        .input(z.object({ privacyMode: z.enum(privacyModeEnum.enumValues) }))
+        .mutation(async ({ ctx, input }) => {
+            await ctx.db
+                .insert(siteConfig)
+                .values({ id: 1, privacyMode: input.privacyMode, updatedById: ctx.user.id, updatedAt: new Date() })
+                .onConflictDoUpdate({
+                    target: siteConfig.id,
+                    set: { privacyMode: input.privacyMode, updatedById: ctx.user.id, updatedAt: new Date() },
+                });
+            invalidateSiteConfigCache();
+            return { ok: true };
+        }),
+});
+
+// ---------------------------------------------------------------------------
 // Root admin router
 // ---------------------------------------------------------------------------
 
@@ -693,4 +724,5 @@ export const adminRouter = createTRPCRouter({
     videos: videosRouter,
     jobs: jobsRouter,
     storage: storageRouter,
+    siteConfig: siteConfigRouter,
 });
