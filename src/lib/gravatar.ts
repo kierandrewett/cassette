@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { md5 } from "js-md5";
 
 // Libravatar / Gravatar avatar URLs derived from the user's email.
 //
@@ -8,12 +8,14 @@ import { createHash } from "node:crypto";
 // with no registered avatar gets a generic placeholder instead of a 404.
 //
 // The hash is md5 of the lowercased + trimmed email per the Gravatar spec.
+// Pure-JS md5 (rather than node:crypto) so this module is isomorphic — it
+// imports cleanly into client bundles via UserAvatar.
 
-const md5 = (input: string): string => createHash("md5").update(input.trim().toLowerCase()).digest("hex");
+const hash = (input: string): string => md5(input.trim().toLowerCase());
 
 // Public so server-side code can compute a hash once and ship it to the client
 // without leaking the raw email address — see comment list payload.
-export const gravatarHash = (email: string): string => md5(email);
+export const gravatarHash = (email: string): string => hash(email);
 
 export const gravatarUrl = (email: string, size = 80): string => gravatarUrlFromHash(gravatarHash(email), size);
 

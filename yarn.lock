@@ -1006,6 +1006,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hugeicons/core-free-icons@npm:^3.1.1":
+  version: 3.3.0
+  resolution: "@hugeicons/core-free-icons@npm:3.3.0"
+  checksum: 10c0/6dc6b5a98b116e43f8b81089559add45794a7bc75c468f68202682465fe6e094a251386c4e7eee980f1bf7410f539f388855f92eb4a63db7f2a6d0f9efdd4d6b
+  languageName: node
+  linkType: hard
+
+"@hugeicons/react@npm:^1.1.4":
+  version: 1.1.6
+  resolution: "@hugeicons/react@npm:1.1.6"
+  peerDependencies:
+    react: ">=16.0.0"
+  checksum: 10c0/76a1c9a628ae1b535d2695e5d7e9eb5a7134e0f24f3d9bb5edaf3e0e11db918a2c389f8a52b414026d41db329795a5d17196629baebfc3b8f1fd93cc541932e2
+  languageName: node
+  linkType: hard
+
 "@humanfs/core@npm:^0.19.2":
   version: 0.19.2
   resolution: "@humanfs/core@npm:0.19.2"
@@ -2842,6 +2858,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/nprogress@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@types/nprogress@npm:0.2.3"
+  checksum: 10c0/cac0fe73aca79bc1472a1556f56303df72026f2fcd8dbe311fe84b1f46e454b9040c1e69223d94e3bf156a5986382170c52ebda19aa70f555f1b6855d8f744a6
+  languageName: node
+  linkType: hard
+
 "@types/pg@npm:^8.11.10":
   version: 8.20.0
   resolution: "@types/pg@npm:8.20.0"
@@ -3815,6 +3838,7 @@ __metadata:
     "@types/busboy": "npm:^1.5.4"
     "@types/node": "npm:^22.10.5"
     "@types/nodemailer": "npm:^8"
+    "@types/nprogress": "npm:^0.2.3"
     "@types/pg": "npm:^8.11.10"
     "@types/qrcode": "npm:^1.5.6"
     "@types/react": "npm:^19.0.3"
@@ -3831,11 +3855,14 @@ __metadata:
     eslint: "npm:^9.18.0"
     eslint-config-next: "npm:^15.1.4"
     hls.js: "npm:^1.5.20"
+    hugeicons-react: "npm:^0.4.0"
+    js-md5: "npm:^0.8.3"
     lucide-react: "npm:^0.469.0"
     nanoid: "npm:^5.0.9"
     next: "npm:^15.1.4"
     next-themes: "npm:^0.4.4"
     nodemailer: "npm:^8.0.7"
+    nprogress: "npm:^0.2.0"
     pg: "npm:^8.13.1"
     pg-boss: "npm:^10.1.6"
     postcss: "npm:^8.4.49"
@@ -5549,6 +5576,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hugeicons-react@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "hugeicons-react@npm:0.4.0"
+  dependencies:
+    "@hugeicons/core-free-icons": "npm:^3.1.1"
+    "@hugeicons/react": "npm:^1.1.4"
+  peerDependencies:
+    react: ">=16.0.0"
+  checksum: 10c0/4e19687dd674641cf76288d3e02f3d343bff0525b2068fa0c49f585f9de5abfca3e26790f0f94fd6695d845a1dbfb434fa1fc656e9487104641dde4e91880555
+  languageName: node
+  linkType: hard
+
 "ignore@npm:^5.2.0":
   version: 5.3.2
   resolution: "ignore@npm:5.3.2"
@@ -5911,6 +5950,13 @@ __metadata:
   version: 6.2.3
   resolution: "jose@npm:6.2.3"
   checksum: 10c0/aa91bccba22cc84d86308f833749bcb0b00441e35c24e0ac79abeac5f76dc62d47bdef9c1da6a0c609f5da6478595f52b252085888b89dbdb163861e40ea4188
+  languageName: node
+  linkType: hard
+
+"js-md5@npm:^0.8.3":
+  version: 0.8.3
+  resolution: "js-md5@npm:0.8.3"
+  checksum: 10c0/f7e41e95f8e5eb5eeb43085bec3832ae3dfe0020c42fcca5a4efe571213391a9e9594db31bd34624b7280af4f1f12c751b6a50074a15346ecf40a0d54115d77f
   languageName: node
   linkType: hard
 
@@ -6361,6 +6407,13 @@ __metadata:
   version: 3.0.0
   resolution: "normalize-path@npm:3.0.0"
   checksum: 10c0/e008c8142bcc335b5e38cf0d63cfd39d6cf2d97480af9abdbe9a439221fd4d749763bab492a8ee708ce7a194bb00c9da6d0a115018672310850489137b3da046
+  languageName: node
+  linkType: hard
+
+"nprogress@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "nprogress@npm:0.2.0"
+  checksum: 10c0/eab9a923a1ad1eed71a455ecfbc358442dd9bcd71b9fa3fa1c67eddf5159360b182c218f76fca320c97541a1b45e19ced04e6dcb044a662244c5419f8ae9e821
   languageName: node
   linkType: hard
 
