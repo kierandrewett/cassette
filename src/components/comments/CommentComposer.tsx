@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,13 @@ interface CommentComposerProps {
     isPending?: boolean;
     /** Label for the submit button. */
     submitLabel?: string;
+    /**
+     * Currently signed-in user, used to render the avatar to the left of the
+     * composer. Omit (or pass null) to render the textarea full-width without
+     * an avatar — useful for inline reply editors where the row is already
+     * indented under the parent's avatar.
+     */
+    me?: { name?: string | null; image?: string | null; email?: string | null } | null;
     className?: string;
 }
 
@@ -34,6 +42,7 @@ export const CommentComposer = ({
     initialValue = "",
     isPending = false,
     submitLabel = "Comment",
+    me = null,
     className,
 }: CommentComposerProps) => {
     const [body, setBody] = useState(initialValue);
@@ -66,33 +75,50 @@ export const CommentComposer = ({
 
     const busy = submitting || isPending;
 
+    const textareaBlock = (
+        <div className="relative flex-1">
+            <Textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                onFocus={() => setFocused(true)}
+                placeholder={placeholder}
+                rows={focused ? 4 : 1}
+                disabled={busy}
+                className={cn(
+                    "resize-none text-sm transition-all",
+                    overLimit && "border-destructive focus-visible:ring-destructive",
+                )}
+                aria-label="Comment text"
+            />
+            {focused && (
+                <span
+                    className={cn(
+                        "absolute bottom-2 right-3 select-none text-xs text-muted-foreground",
+                        overLimit && "text-destructive",
+                    )}
+                >
+                    {charCount}/{MAX_BODY}
+                </span>
+            )}
+        </div>
+    );
+
     return (
         <form onSubmit={handleSubmit} className={cn("flex flex-col gap-2", className)}>
-            <div className="relative">
-                <Textarea
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    onFocus={() => setFocused(true)}
-                    placeholder={placeholder}
-                    rows={focused ? 4 : 1}
-                    disabled={busy}
-                    className={cn(
-                        "resize-none text-sm transition-all",
-                        overLimit && "border-destructive focus-visible:ring-destructive",
-                    )}
-                    aria-label="Comment text"
-                />
-                {focused && (
-                    <span
-                        className={cn(
-                            "absolute bottom-2 right-3 text-xs text-muted-foreground select-none",
-                            overLimit && "text-destructive",
-                        )}
-                    >
-                        {charCount}/{MAX_BODY}
-                    </span>
-                )}
-            </div>
+            {/* Avatar + textarea row. The avatar aligns with the first line of
+                text via the parent's items-start; padding-top on the avatar
+                wrapper visually centres a 36 px circle against the textarea's
+                first row of text. */}
+            {me ? (
+                <div className="flex items-start gap-3">
+                    <div className="shrink-0 pt-1">
+                        <UserAvatar user={me} size={36} />
+                    </div>
+                    {textareaBlock}
+                </div>
+            ) : (
+                textareaBlock
+            )}
 
             {focused && (
                 <div className="flex items-center justify-end gap-2">

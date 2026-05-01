@@ -1,11 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import type { Database } from "@/server/db/client";
+import { gravatarHash } from "@/lib/gravatar";
 import { limit } from "@/lib/ratelimit";
-import { channelMembers } from "@/server/db/schema/channels";
+import { channels, channelMembers } from "@/server/db/schema/channels";
 import { commentLikes, comments } from "@/server/db/schema/social";
 import type { ReactionKind } from "@/server/db/schema/social";
 import { videos } from "@/server/db/schema/videos";
@@ -24,14 +25,41 @@ async function loadComment(db: Database, id: string) {
 }
 
 /**
+ * Resolve a `userId -> primary channel handle` map for the given set of users.
+ * "Primary" = most recently created channel they own. Users without an owned
+ * channel are absent from the returned map. Used to render comment author
+ * names as links to their channel page.
+ */
+async function loadAuthorChannelHandles(db: Database, userIds: ReadonlyArray<string>): Promise<Map<string, string>> {
+    if (userIds.length === 0) return new Map();
+    // Filter out null/undefined deduped — leftJoin can produce nulls upstream.
+    const ids = Array.from(new Set(userIds.filter((id): id is string => !!id)));
+    if (ids.length === 0) return new Map();
+
+    const rows = await db
+        .select({
+            ownerId: channels.ownerId,
+            handle: channels.handle,
+            createdAt: channels.createdAt,
+        })
+        .from(channels)
+        .where(inArray(channels.ownerId, ids))
+        .orderBy(desc(channels.createdAt));
+
+    // Drizzle results are ordered by createdAt desc — keep the first handle we
+    // see per owner (which is the most recent).
+    const out = new Map<string, string>();
+    for (const r of rows) {
+        if (!out.has(r.ownerId)) out.set(r.ownerId, r.handle);
+    }
+    return out;
+}
+
+/**
  * Resolve the channel that owns a video, then check whether the given userId
  * is a member with owner or manager role.
  */
-async function isChannelManagerForVideo(
-    db: Database,
-    videoId: string,
-    userId: string,
-): Promise<boolean> {
+async function isChannelManagerForVideo(db: Database, videoId: string, userId: string): Promise<boolean> {
     const videoRows = await db
         .select({ channelId: videos.channelId })
         .from(videos)
@@ -131,6 +159,7 @@ export const commentRouter = createTRPCRouter({
                 authorId: comments.authorId,
                 authorName: user.name,
                 authorImage: user.image,
+                authorEmail: user.email,
             })
             .from(comments)
             .leftJoin(user, eq(comments.authorId, user.id))
@@ -176,6 +205,13 @@ export const commentRouter = createTRPCRouter({
             replyCountMap = new Map(replyCounts.map((r) => [r.rootId!, r.count]));
         }
 
+        // Resolve each author's primary channel handle so the client can
+        // render names as links to /c/<handle> without a second round trip.
+        const handleMap = await loadAuthorChannelHandles(
+            ctx.db,
+            rows.map((r) => r.authorId).filter((id): id is string => !!id),
+        );
+
         const hasMore = rows.length > limit;
         const items = rows.slice(0, limit).map((r) => ({
             id: r.id,
@@ -195,6 +231,10 @@ export const commentRouter = createTRPCRouter({
                 id: r.authorId,
                 name: r.authorName,
                 image: r.authorImage,
+                // Never ship the raw email to the client. We only forward the
+                // md5 hash that Libravatar/Gravatar needs.
+                gravatarHash: r.authorEmail ? gravatarHash(r.authorEmail) : null,
+                channelHandle: r.authorId ? (handleMap.get(r.authorId) ?? null) : null,
             },
         }));
 
@@ -209,7 +249,11 @@ export const commentRouter = createTRPCRouter({
         const { rootId, cursor, limit } = input;
         const userId = ctx.user?.id ?? null;
 
-        const conditions = [eq(comments.rootId, rootId), sql`${comments.parentId} IS NOT NULL`, isNull(comments.deletedAt)];
+        const conditions = [
+            eq(comments.rootId, rootId),
+            sql`${comments.parentId} IS NOT NULL`,
+            isNull(comments.deletedAt),
+        ];
 
         if (cursor) {
             const cursorRows = await ctx.db
@@ -239,6 +283,7 @@ export const commentRouter = createTRPCRouter({
                 authorId: comments.authorId,
                 authorName: user.name,
                 authorImage: user.image,
+                authorEmail: user.email,
             })
             .from(comments)
             .leftJoin(user, eq(comments.authorId, user.id))
@@ -261,6 +306,11 @@ export const commentRouter = createTRPCRouter({
             reactionMap = new Map(reactions.map((r) => [r.commentId, r.kind]));
         }
 
+        const handleMap = await loadAuthorChannelHandles(
+            ctx.db,
+            rows.map((r) => r.authorId).filter((id): id is string => !!id),
+        );
+
         const hasMore = rows.length > limit;
         const items = rows.slice(0, limit).map((r) => ({
             id: r.id,
@@ -280,6 +330,8 @@ export const commentRouter = createTRPCRouter({
                 id: r.authorId,
                 name: r.authorName,
                 image: r.authorImage,
+                gravatarHash: r.authorEmail ? gravatarHash(r.authorEmail) : null,
+                channelHandle: r.authorId ? (handleMap.get(r.authorId) ?? null) : null,
             },
         }));
 
@@ -294,12 +346,16 @@ export const commentRouter = createTRPCRouter({
         // Rate limit: 30 comments/minute per user.
         const rl = limit({ key: "comment.create", identifier: ctx.user.id, windowMs: 60_000, max: 30 });
         if (!rl.allowed) {
-            throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "You are posting comments too quickly. Please wait a moment." });
+            throw new TRPCError({
+                code: "TOO_MANY_REQUESTS",
+                message: "You are posting comments too quickly. Please wait a moment.",
+            });
         }
 
         const body = input.body.trim();
         if (body.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body cannot be empty." });
-        if (body.length > 5000) throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body must be 5000 characters or fewer." });
+        if (body.length > 5000)
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body must be 5000 characters or fewer." });
 
         if (input.parentId) {
             // Reply path: enforce depth cap.
@@ -369,7 +425,8 @@ export const commentRouter = createTRPCRouter({
     update: protectedProcedure.input(updateInput).mutation(async ({ ctx, input }) => {
         const body = input.body.trim();
         if (body.length === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body cannot be empty." });
-        if (body.length > 5000) throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body must be 5000 characters or fewer." });
+        if (body.length > 5000)
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Comment body must be 5000 characters or fewer." });
 
         const comment = await loadComment(ctx.db, input.id);
 
@@ -379,7 +436,10 @@ export const commentRouter = createTRPCRouter({
 
         const ageMs = Date.now() - comment.createdAt.getTime();
         if (ageMs > 15 * 60 * 1000) {
-            throw new TRPCError({ code: "FORBIDDEN", message: "Comments can only be edited within 15 minutes of posting." });
+            throw new TRPCError({
+                code: "FORBIDDEN",
+                message: "Comments can only be edited within 15 minutes of posting.",
+            });
         }
 
         const updated = await ctx.db
@@ -462,12 +522,7 @@ export const commentRouter = createTRPCRouter({
 // Reaction toggle (shared between like + dislike)
 // ---------------------------------------------------------------------------
 
-async function toggleCommentReaction(
-    db: Database,
-    commentId: string,
-    userId: string,
-    kind: ReactionKind,
-) {
+async function toggleCommentReaction(db: Database, commentId: string, userId: string, kind: ReactionKind) {
     // Load existing reaction in the same transaction.
     return db.transaction(async (tx) => {
         const existing = await tx
@@ -480,7 +535,9 @@ async function toggleCommentReaction(
 
         if (prev?.kind === kind) {
             // Same kind — remove the reaction.
-            await tx.delete(commentLikes).where(and(eq(commentLikes.userId, userId), eq(commentLikes.commentId, commentId)));
+            await tx
+                .delete(commentLikes)
+                .where(and(eq(commentLikes.userId, userId), eq(commentLikes.commentId, commentId)));
 
             await tx
                 .update(comments)

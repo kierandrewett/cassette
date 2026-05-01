@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { Heart, MoreVertical, Pencil, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
@@ -8,7 +9,7 @@ import { useSession } from "@/lib/auth-client";
 import { api } from "@/lib/trpc/client";
 import { cn, formatCount, formatRelativeTime } from "@/lib/utils";
 import { linkifyTimestamps } from "@/lib/timestamps";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -37,6 +38,10 @@ export interface CommentData {
         id: string | null;
         name: string | null;
         image: string | null;
+        // md5(email) — server-computed so the client never sees the raw address.
+        gravatarHash?: string | null;
+        // Most-recent owned channel handle, if any. Used to link the author name.
+        channelHandle?: string | null;
     };
 }
 
@@ -145,39 +150,52 @@ export const CommentItem = ({
         dislikeMutation.mutate({ id: comment.id });
     };
 
-    const initials = (comment.author.name ?? "?")
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-
     const displayLikes = comment.likeCount + likeDelta;
     const displayDislikes = comment.dislikeCount + dislikeDelta;
 
+    const authorName = comment.author.name ?? "[deleted]";
+    const authorHref = comment.author.channelHandle ? `/c/${comment.author.channelHandle}` : null;
+
     return (
         <div className="flex gap-3 py-3">
-            {/* Avatar */}
+            {/* Avatar — Libravatar/Gravatar with initials fallback. */}
             <div className="shrink-0">
-                <Avatar className="h-9 w-9">
-                    {comment.author.image && <AvatarImage src={comment.author.image} alt={comment.author.name ?? ""} />}
-                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                </Avatar>
+                {authorHref ? (
+                    <Link href={authorHref} aria-label={`${authorName}'s channel`}>
+                        <UserAvatar
+                            user={{
+                                name: comment.author.name,
+                                image: comment.author.image,
+                                gravatarHash: comment.author.gravatarHash,
+                            }}
+                            size={36}
+                        />
+                    </Link>
+                ) : (
+                    <UserAvatar
+                        user={{
+                            name: comment.author.name,
+                            image: comment.author.image,
+                            gravatarHash: comment.author.gravatarHash,
+                        }}
+                        size={36}
+                    />
+                )}
             </div>
 
             {/* Body */}
             <div className="min-w-0 flex-1">
                 {/* Header row */}
                 <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-foreground">
-                        {comment.author.name ?? "[deleted]"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                        {formatRelativeTime(comment.createdAt)}
-                    </span>
-                    {comment.editedAt && (
-                        <span className="text-xs text-muted-foreground">(edited)</span>
+                    {authorHref ? (
+                        <Link href={authorHref} className="font-medium text-foreground hover:underline">
+                            {authorName}
+                        </Link>
+                    ) : (
+                        <span className="font-medium text-foreground">{authorName}</span>
                     )}
+                    <span className="text-xs text-muted-foreground">{formatRelativeTime(comment.createdAt)}</span>
+                    {comment.editedAt && <span className="text-xs text-muted-foreground">(edited)</span>}
                     {comment.isPinned && (
                         <span className="rounded bg-accent px-1.5 py-0.5 text-xs font-medium text-accent-foreground">
                             Pinned
@@ -198,9 +216,7 @@ export const CommentItem = ({
                         className="mt-1"
                     />
                 ) : (
-                    <p className="mt-0.5 whitespace-pre-wrap text-sm leading-snug">
-                        {linkifyTimestamps(localBody)}
-                    </p>
+                    <p className="mt-0.5 whitespace-pre-wrap text-sm leading-snug">{linkifyTimestamps(localBody)}</p>
                 )}
 
                 {/* Hearted indicator */}

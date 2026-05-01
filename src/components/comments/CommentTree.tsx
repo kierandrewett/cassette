@@ -19,6 +19,7 @@ interface CommentTreeProps {
 export const CommentTree = ({ videoId, isChannelManager = false }: CommentTreeProps) => {
     const { data: session } = useSession();
     const userId = session?.user?.id ?? null;
+    const me = session?.user ? { name: session.user.name, image: session.user.image, email: session.user.email } : null;
 
     const utils = api.useUtils();
 
@@ -75,6 +76,7 @@ export const CommentTree = ({ videoId, isChannelManager = false }: CommentTreePr
                     }}
                     cancelable
                     isPending={createMutation.isPending}
+                    me={me}
                 />
             ) : (
                 <p className="text-sm text-muted-foreground">
@@ -106,9 +108,7 @@ export const CommentTree = ({ videoId, isChannelManager = false }: CommentTreePr
                             <CommentItem
                                 comment={{ ...comment, videoId }}
                                 isChannelManager={isChannelManager}
-                                onToggleReplies={
-                                    comment.replyCount > 0 ? () => toggleReplies(comment.id) : undefined
-                                }
+                                onToggleReplies={comment.replyCount > 0 ? () => toggleReplies(comment.id) : undefined}
                                 repliesOpen={expandedReplies.has(comment.id)}
                                 onReplySubmitted={() => {
                                     // Auto-expand replies when the user posts one.
