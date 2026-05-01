@@ -15,8 +15,9 @@ import {
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
+import { getAvatarColor, getInitials } from "@/lib/initials";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 export interface UserChannel {
     id: string;
@@ -114,15 +115,18 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
 const Divider = () => <div className="mx-3 my-2 h-px bg-border/50" aria-hidden="true" />;
 
 // Channel avatar inside a rail row. Used for both Your channels and
-// Subscriptions sections.
+// Subscriptions sections. Initials + gradient come from the centralised
+// helper so the same channel always renders the same letters and colour
+// across the app.
 const ChannelAvatar = ({ channel }: { channel: UserChannel }) => {
-    const initials = channel.name.slice(0, 2).toUpperCase();
+    const initials = getInitials(channel.name);
+    const palette = getAvatarColor(channel.name);
     return (
-        <Avatar className="h-6 w-6">
+        <Avatar className="h-6 w-6" style={{ background: palette.background, color: palette.foreground }}>
             {channel.avatarPath && (
                 <AvatarImage src={`/api/channel/${channel.id}/asset/avatar`} alt={channel.name} />
             )}
-            <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+            <span className="text-[10px] font-semibold tracking-tight">{initials}</span>
         </Avatar>
     );
 };
@@ -147,7 +151,7 @@ export const LeftRail = ({
             )}
             aria-label="Primary navigation"
         >
-            <ScrollArea className="flex-1 px-2 py-3">
+            <ScrollArea className="flex-1 px-2 pb-3">
                 <nav>
                     <ul className="space-y-0.5">
                         {PRIMARY_ITEMS.map((item) => (

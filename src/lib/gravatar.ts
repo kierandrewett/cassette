@@ -26,16 +26,7 @@ export const gravatarUrl = (email: string, size = 80): string => gravatarUrlFrom
 export const gravatarUrlFromHash = (hash: string, size = 80): string =>
     `https://www.libravatar.org/avatar/${hash}?s=${size}&d=404`;
 
-// Initials fallback used when we want to render entirely on-server with no
-// network round trip — e.g. a tiny avatar in a comment row that we'd rather
-// not block on a third-party CDN.
-export const userInitials = (name: string | null | undefined): string => {
-    if (!name) return "?";
-    return name
-        .split(" ")
-        .map((part) => part[0])
-        .filter(Boolean)
-        .slice(0, 2)
-        .join("")
-        .toUpperCase();
-};
+// Re-export from the centralised initials helper so callers that already
+// imported `userInitials` from this module keep working. New code should
+// reach for `@/lib/initials` directly.
+export { getInitials as userInitials } from "@/lib/initials";

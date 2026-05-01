@@ -3,12 +3,14 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { CameraAdd02Icon, ImageAdd02Icon, PencilEdit02Icon, RssIcon } from "hugeicons-react";
+import { CameraAdd02Icon, ImageAdd02Icon, PencilEdit02Icon } from "hugeicons-react";
+import { Rss } from "lucide-react";
 import { toast } from "sonner";
 
 import { SubscribeButton } from "@/components/social/SubscribeButton";
 import { AssetUploader } from "@/components/studio/AssetUploader";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getAvatarColor, getInitials } from "@/lib/initials";
 import { api } from "@/lib/trpc/client";
 import { cn, formatCount } from "@/lib/utils";
 
@@ -71,6 +73,8 @@ export const ChannelHeader = ({
 
     const avatarSrc = avatarPath ? `/api/channel/${id}/asset/avatar` : null;
     const bannerSrc = bannerPath ? `/api/channel/${id}/asset/banner` : null;
+    const avatarInitials = getInitials(name);
+    const avatarPalette = getAvatarColor(name);
 
     const updateChannel = api.channel.update.useMutation({
         onSuccess: () => {
@@ -115,38 +119,56 @@ export const ChannelHeader = ({
     return (
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
             {/* Banner — rounded card sitting in a side-padded container.
-                Owner edit mode adds a click-to-replace overlay. */}
-            <div className="group/banner relative h-40 w-full overflow-hidden rounded-2xl bg-gradient-to-br from-secondary to-secondary/40 sm:h-56 md:h-64 lg:h-72">
-                {bannerSrc && <Image src={bannerSrc} alt="" fill className="object-cover" sizes="100vw" priority />}
-                {editing && (
-                    <button
-                        type="button"
-                        onClick={() => setBannerOpen(true)}
-                        className={cn(
-                            "absolute inset-0 z-10 flex items-center justify-center bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity",
-                            "hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none",
-                        )}
-                        aria-label="Change banner"
-                    >
-                        <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/60 px-4 py-2 text-sm font-medium">
-                            <ImageAdd02Icon size={18} strokeWidth={1.6} />
-                            Change banner
-                        </span>
-                    </button>
-                )}
-            </div>
+                Hidden entirely when no banner has been uploaded UNLESS the
+                owner is in customise mode, where we render a placeholder
+                tile that opens the upload dialog so they have somewhere to
+                click. */}
+            {bannerSrc ? (
+                <div className="group/banner relative h-40 w-full overflow-hidden rounded-2xl bg-gradient-to-br from-secondary to-secondary/40 sm:h-56 md:h-64 lg:h-72">
+                    <Image src={bannerSrc} alt="" fill className="object-cover" sizes="100vw" priority />
+                    {editing && (
+                        <button
+                            type="button"
+                            onClick={() => setBannerOpen(true)}
+                            className={cn(
+                                "absolute inset-0 z-10 flex items-center justify-center bg-black/40 text-white opacity-0 transition-opacity",
+                                "hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none",
+                            )}
+                            aria-label="Change banner"
+                        >
+                            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/60 px-4 py-2 text-sm font-medium">
+                                <ImageAdd02Icon size={18} strokeWidth={1.6} />
+                                Change banner
+                            </span>
+                        </button>
+                    )}
+                </div>
+            ) : editing ? (
+                <button
+                    type="button"
+                    onClick={() => setBannerOpen(true)}
+                    className="group/banner flex h-40 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground sm:h-56 md:h-64 lg:h-72"
+                    aria-label="Upload channel banner"
+                >
+                    <ImageAdd02Icon size={20} strokeWidth={1.6} />
+                    Upload channel banner
+                </button>
+            ) : null}
 
             {/* Header content row. Avatar and info live side-by-side from md+
                 and stack on mobile. Avatar does not overlap the banner. */}
             <div className="mt-6 flex flex-col gap-6 md:flex-row md:gap-8">
                 {/* Avatar */}
                 <div className="relative flex-shrink-0 self-start">
-                    <div className="relative h-28 w-28 overflow-hidden rounded-full bg-secondary md:h-40 md:w-40">
+                    <div
+                        className="relative h-28 w-28 overflow-hidden rounded-full md:h-40 md:w-40"
+                        style={{ background: avatarPalette.background, color: avatarPalette.foreground }}
+                    >
                         {avatarSrc ? (
                             <Image src={avatarSrc} alt={name} fill className="object-cover" sizes="160px" />
                         ) : (
-                            <div className="flex h-full w-full items-center justify-center text-4xl font-semibold text-muted-foreground md:text-5xl">
-                                {name.charAt(0).toUpperCase()}
+                            <div className="flex h-full w-full items-center justify-center text-4xl font-semibold tracking-tight md:text-5xl">
+                                {avatarInitials}
                             </div>
                         )}
                     </div>
@@ -270,7 +292,7 @@ export const ChannelHeader = ({
                                     aria-label="Subscribe via RSS"
                                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
                                 >
-                                    <RssIcon size={16} strokeWidth={1.8} />
+                                    <Rss size={16} strokeWidth={2} />
                                 </button>
                             </>
                         )}
