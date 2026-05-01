@@ -393,6 +393,164 @@ export const videoRouter = createTRPCRouter({
     }),
 
     // ---------------------------------------------------------------------------
+    // recommendations — mixed-source watch-page sidebar list.
+    //
+    // Three sources, weighted by intent:
+    //   1. tag overlap — videos sharing one or more tags with the current video,
+    //      ranked by overlap count
+    //   2. same channel — next 4 most-recent videos from the same channel
+    //   3. recent global — latest public+ready videos overall to fill the rail
+    //
+    // Excludes the current video, drafts, private videos, and non-ready videos
+    // at every step.  Dedupes by id; tag matches win over same-channel which
+    // wins over recent.
+    // ---------------------------------------------------------------------------
+    recommendations: publicProcedure
+        .input(
+            z.object({
+                videoId: z.string().uuid(),
+                limit: z.number().int().min(1).max(30).default(12),
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            // Load the seed video so we know its tags and channel.
+            const seedRows = await ctx.db
+                .select({
+                    id: videos.id,
+                    channelId: videos.channelId,
+                    tags: videos.tags,
+                })
+                .from(videos)
+                .where(eq(videos.id, input.videoId))
+                .limit(1);
+            const seed = seedRows[0];
+            if (!seed) return [];
+
+            type Row = {
+                id: string;
+                title: string;
+                thumbnailPath: string | null;
+                durationSec: number | null;
+                viewCount: number;
+                publishedAt: Date | null;
+                channelHandle: string;
+                channelName: string;
+                channelAvatarPath: string | null;
+            };
+
+            // Common visibility filter: public + ready + not draft + not the seed.
+            // Keep all three queries gated on this so we never leak unwanted videos.
+            const baseFilter = (alias: string) => sql`
+                ${sql.raw(alias)}.privacy = 'public'
+                AND ${sql.raw(alias)}.status = 'ready'
+                AND ${sql.raw(alias)}.is_draft = false
+                AND ${sql.raw(alias)}.id <> ${input.videoId}
+            `;
+
+            // 1) Tag overlap.  Skip when the seed has no tags.
+            const tagRows: Row[] =
+                seed.tags && seed.tags.length > 0
+                    ? await ctx.db
+                          .execute<Row>(
+                              sql`
+                          SELECT
+                              v.id,
+                              v.title,
+                              v.thumbnail_path AS "thumbnailPath",
+                              v.duration_sec   AS "durationSec",
+                              v.view_count     AS "viewCount",
+                              v.published_at   AS "publishedAt",
+                              c.handle         AS "channelHandle",
+                              c.name           AS "channelName",
+                              c.avatar_path    AS "channelAvatarPath"
+                          FROM videos v
+                          JOIN channels c ON c.id = v.channel_id
+                          WHERE ${baseFilter("v")}
+                            AND v.tags && ${seed.tags}::text[]
+                          ORDER BY cardinality(ARRAY(SELECT unnest(v.tags) INTERSECT SELECT unnest(${seed.tags}::text[]))) DESC,
+                                   v.published_at DESC NULLS LAST
+                          LIMIT ${input.limit}
+                      `,
+                          )
+                          .then((r) => r as unknown as Row[])
+                    : [];
+
+            // 2) Same channel — next 4 most recent in the channel.
+            const channelRows: Row[] = await ctx.db
+                .execute<Row>(
+                    sql`
+                    SELECT
+                        v.id,
+                        v.title,
+                        v.thumbnail_path AS "thumbnailPath",
+                        v.duration_sec   AS "durationSec",
+                        v.view_count     AS "viewCount",
+                        v.published_at   AS "publishedAt",
+                        c.handle         AS "channelHandle",
+                        c.name           AS "channelName",
+                        c.avatar_path    AS "channelAvatarPath"
+                    FROM videos v
+                    JOIN channels c ON c.id = v.channel_id
+                    WHERE ${baseFilter("v")}
+                      AND v.channel_id = ${seed.channelId}
+                    ORDER BY v.published_at DESC NULLS LAST
+                    LIMIT 4
+                `,
+                )
+                .then((r) => r as unknown as Row[]);
+
+            // 3) Recent global — latest videos overall to fill out the rail.
+            const recentRows: Row[] = await ctx.db
+                .execute<Row>(
+                    sql`
+                    SELECT
+                        v.id,
+                        v.title,
+                        v.thumbnail_path AS "thumbnailPath",
+                        v.duration_sec   AS "durationSec",
+                        v.view_count     AS "viewCount",
+                        v.published_at   AS "publishedAt",
+                        c.handle         AS "channelHandle",
+                        c.name           AS "channelName",
+                        c.avatar_path    AS "channelAvatarPath"
+                    FROM videos v
+                    JOIN channels c ON c.id = v.channel_id
+                    WHERE ${baseFilter("v")}
+                    ORDER BY v.published_at DESC NULLS LAST
+                    LIMIT ${input.limit + 4}
+                `,
+                )
+                .then((r) => r as unknown as Row[]);
+
+            // Merge with tag > channel > recent priority, deduping by id.
+            const seen = new Set<string>();
+            const out: Row[] = [];
+            for (const list of [tagRows, channelRows, recentRows]) {
+                for (const row of list) {
+                    if (seen.has(row.id)) continue;
+                    seen.add(row.id);
+                    out.push(row);
+                    if (out.length >= input.limit) break;
+                }
+                if (out.length >= input.limit) break;
+            }
+
+            return out.map((r) => ({
+                id: r.id,
+                title: r.title,
+                thumbnailPath: r.thumbnailPath,
+                durationSec: r.durationSec,
+                viewCount: Number(r.viewCount),
+                publishedAt: r.publishedAt,
+                channel: {
+                    handle: r.channelHandle,
+                    name: r.channelName,
+                    avatarPath: r.channelAvatarPath,
+                },
+            }));
+        }),
+
+    // ---------------------------------------------------------------------------
     // listForChannel — channel-scoped video list for the studio video table.
     // Returns ALL the channel's videos including unlisted/private/queued/failed.
     // Caller must be a member of the channel (any role).

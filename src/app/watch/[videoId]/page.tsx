@@ -66,29 +66,25 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
 
     const startSec = parseTimestamp(t) ?? undefined;
 
-    // Fetch the autoplay-next video (queue integration lands in M7; this is the channel fallback).
-    let nextVideo: Awaited<ReturnType<typeof trpc.video.nextInChannel>> = null;
-    try {
-        nextVideo = await trpc.video.nextInChannel({ videoId: video.id });
-    } catch {
-        // Non-critical — autoplay fallback missing is acceptable.
-    }
+    // Fetch the autoplay-next video (queue integration lands in M7; this is the
+    // channel fallback used by the in-player UpNextOverlay) and the
+    // mixed-source recommendations list for the sidebar in parallel.
+    const [nextVideo, recommendations] = await Promise.all([
+        trpc.video.nextInChannel({ videoId: video.id }).catch(() => null),
+        trpc.video.recommendations({ videoId: video.id, limit: 14 }).catch(() => []),
+    ]);
 
-    // Build the sidebar list: next video + a few more from the channel.
-    // For now, just use the single nextInChannel result as the sidebar head.
-    const sidebarVideos = nextVideo
-        ? [
-              {
-                  id: nextVideo.id,
-                  title: nextVideo.title,
-                  thumbnailPath: nextVideo.thumbnailPath,
-                  durationSec: nextVideo.durationSec,
-                  viewCount: nextVideo.viewCount,
-                  publishedAt: nextVideo.publishedAt,
-                  channel: nextVideo.channel,
-              },
-          ]
-        : [];
+    // Sidebar list — recommendations already exclude the current video, drafts,
+    // private and non-ready videos.  Map straight into the SidebarVideo shape.
+    const sidebarVideos = recommendations.map((v) => ({
+        id: v.id,
+        title: v.title,
+        thumbnailPath: v.thumbnailPath,
+        durationSec: v.durationSec,
+        viewCount: v.viewCount,
+        publishedAt: v.publishedAt,
+        channel: v.channel,
+    }));
 
     const publishedAtStr = video.publishedAt ? formatRelativeTime(video.publishedAt) : null;
 
