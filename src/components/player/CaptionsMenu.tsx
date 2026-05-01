@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaRemote, useMediaState, useCaptionOptions, useMediaPlayer } from "@vidstack/react";
-import { Subtitles } from "lucide-react";
+import { SubtitleIcon } from "hugeicons-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -40,14 +40,14 @@ export const CaptionsMenu = () => {
                     open && "bg-white/10",
                 )}
             >
-                <Subtitles className="h-5 w-5" />
+                <SubtitleIcon size={20} />
             </button>
 
             {open && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
                     <div
-                        className="absolute bottom-full right-0 mb-2 z-50 w-44 overflow-hidden rounded-xl surface-glass shadow-2xl py-2"
+                        className="player-popover absolute bottom-full right-0 mb-2 z-50 w-44 overflow-hidden rounded-xl py-2"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Off option */}

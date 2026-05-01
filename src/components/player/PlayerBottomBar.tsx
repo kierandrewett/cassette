@@ -1,7 +1,18 @@
 "use client";
 
-import { TimeSlider, useMediaRemote, useMediaState } from "@vidstack/react";
-import { Maximize, Minimize, PictureInPicture2, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from "@vidstack/react";
+import {
+    Backward01Icon,
+    Forward01Icon,
+    LayoutBottomIcon,
+    MaximizeScreenIcon,
+    MinimizeScreenIcon,
+    PauseIcon,
+    PictureInPictureOnIcon,
+    PlayIcon,
+    VolumeHighIcon,
+    VolumeMute01Icon,
+} from "hugeicons-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -35,6 +46,13 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
     const theatre = usePlayerStore((s) => s.theatre);
     const toggleTheatre = usePlayerStore((s) => s.toggleTheatre);
 
+    // Hover state for the seek-bar preview tile.  We render the preview
+    // unconditionally (Vidstack positions it via TimeSlider.Preview), then
+    // gate visibility on this flag so the tile vanishes the instant the
+    // pointer leaves the rail.  Without this, Vidstack leaves the preview
+    // mounted at its last position and it lingers on screen.
+    const [previewVisible, setPreviewVisible] = useState(false);
+
     // Sleep timer state for the chip overlay.
     const [sleepState, setSleepState] = useState<SleepTimerState>({
         option: typeof window !== "undefined" ? readPreferences().lastSleepTimer : "off",
@@ -60,6 +78,8 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
         if (remote) void remote.enterPictureInPicture();
     };
 
+    const isMuted = muted || volume === 0;
+
     return (
         <>
             {/* Sleep timer chip — bottom-right of the player canvas. */}
@@ -74,16 +94,25 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
             <TimeSlider.Root
                 className="group/slider relative flex h-4 w-full cursor-pointer items-center"
                 aria-label="Seek"
+                onPointerEnter={() => setPreviewVisible(true)}
+                onPointerLeave={() => setPreviewVisible(false)}
             >
                 <TimeSlider.Track className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-all duration-150 group-hover/slider:h-[5px]">
                     <TimeSlider.TrackFill className="absolute inset-y-0 left-0 rounded-full bg-white/95 will-change-[width]" />
                     <TimeSlider.Progress className="absolute inset-y-0 left-0 rounded-full bg-white/45 will-change-[width]" />
                 </TimeSlider.Track>
 
-                <TimeSlider.Thumb className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full bg-white opacity-0 shadow group-hover/slider:opacity-100 transition-opacity ring-2 ring-white/20 will-change-[left]" />
+                {/* Visible playhead — small white dot that grows on hover/drag.
+                    Vidstack writes the current value as a CSS var on the root,
+                    so we position via inline style.  TimeSlider.Thumb already
+                    sets data-active during scrubs. */}
+                <TimeSlider.Thumb className="player-thumb" />
 
-                <TimeSlider.Preview className="absolute bottom-full mb-3 flex flex-col items-center" noClamp>
-                    <TimeSlider.Value className="hidden" />
+                <TimeSlider.Preview
+                    className="pointer-events-none absolute bottom-full mb-3 flex flex-col items-center transition-opacity duration-150"
+                    style={{ opacity: previewVisible ? 1 : 0 }}
+                    noClamp
+                >
                     {/* Custom preview content */}
                     <PreviewContent videoId={videoId} chapters={chapters} />
                 </TimeSlider.Preview>
@@ -95,31 +124,34 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
                 <div className="flex items-center gap-1">
                     {/* Play / Pause */}
                     <IconButton aria-label={paused ? "Play" : "Pause"} onClick={handlePlayPause}>
-                        {paused ? <PlayIcon /> : <PauseIcon />}
+                        {paused ? <PlayIcon size={20} /> : <PauseIcon size={20} />}
+                    </IconButton>
+
+                    {/* Skip -10s */}
+                    <IconButton aria-label="Rewind 10 seconds" onClick={() => remote.seek(currentTime - 10)}>
+                        <Backward01Icon size={20} />
                     </IconButton>
 
                     {/* Skip +10s */}
                     <IconButton aria-label="Skip 10 seconds" onClick={() => remote.seek(currentTime + 10)}>
-                        <SkipForward className="h-5 w-5" />
+                        <Forward01Icon size={20} />
                     </IconButton>
 
-                    {/* Volume */}
-                    <div className="flex items-center gap-1">
-                        <IconButton aria-label={muted ? "Unmute" : "Mute"} onClick={handleVolumeClick}>
-                            {muted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                    {/* Volume — button with horizontal slider that reveals on hover/focus */}
+                    <div className="volume-stack">
+                        <IconButton aria-label={isMuted ? "Unmute" : "Mute"} onClick={handleVolumeClick}>
+                            {isMuted ? <VolumeMute01Icon size={20} /> : <VolumeHighIcon size={20} />}
                         </IconButton>
-                        {/* Compact volume slider, visible on hover */}
-                        <div className="w-0 overflow-hidden transition-all duration-200 group-hover:w-20">
-                            <input
-                                type="range"
-                                min={0}
-                                max={1}
-                                step={0.02}
-                                value={muted ? 0 : volume}
-                                onChange={(e) => remote.changeVolume(Number(e.target.value))}
-                                className="h-1 w-20 cursor-pointer accent-white"
+                        <div className="volume-rail">
+                            <VolumeSlider.Root
                                 aria-label="Volume"
-                            />
+                                className="group/vol relative flex h-4 w-[88px] cursor-pointer items-center px-1"
+                            >
+                                <VolumeSlider.Track className="relative h-1 w-full overflow-hidden rounded-full bg-white/20">
+                                    <VolumeSlider.TrackFill className="absolute inset-y-0 left-0 rounded-full bg-white/95 will-change-[width]" />
+                                </VolumeSlider.Track>
+                                <VolumeSlider.Thumb className="player-thumb" />
+                            </VolumeSlider.Root>
                         </div>
                     </div>
 
@@ -139,19 +171,19 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
 
                     {/* Theatre mode */}
                     <IconButton aria-label={theatre ? "Exit theatre mode" : "Theatre mode"} onClick={toggleTheatre}>
-                        {theatre ? <TheatreExitIcon /> : <TheatreIcon />}
+                        <LayoutBottomIcon size={20} />
                     </IconButton>
 
                     {/* PiP */}
                     {canPiP && (
                         <IconButton aria-label="Picture in picture" onClick={handlePiP}>
-                            <PictureInPicture2 className="h-5 w-5" />
+                            <PictureInPictureOnIcon size={20} />
                         </IconButton>
                     )}
 
                     {/* Fullscreen */}
                     <IconButton aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"} onClick={handleFullscreen}>
-                        {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        {fullscreen ? <MinimizeScreenIcon size={20} /> : <MaximizeScreenIcon size={20} />}
                     </IconButton>
                 </div>
             </div>
@@ -181,59 +213,27 @@ const IconButton = ({
     </button>
 );
 
-// Preview content rendered inside TimeSlider.Preview
-const PreviewContent = ({ videoId, chapters: _chapters }: { videoId: string; chapters: VideoChapter[] }) => {
-    // We use the data-slider-value attribute that TimeSlider.Value sets on the parent.
-    // Instead of reading this value here (which would require a ref), we let TimeSlider.Preview
-    // position us and use a Value element to extract the current preview time.
-    return (
-        <div className="flex flex-col items-center gap-1">
-            {/* The Value is hidden; we render thumbnail + chapter via JS reading data attributes */}
-            <TimeSlider.Value
-                className="rounded bg-black/60 px-2 py-0.5 text-xs font-medium text-white"
-                type="pointer"
-                format="time"
+// Preview content rendered inside TimeSlider.Preview.
+// The thumbnail itself is sourced from the sprite; chapter title (if any)
+// is supplied via TimeSlider.ChapterTitle.  We let Vidstack drive position.
+const PreviewContent = ({ videoId, chapters: _chapters }: { videoId: string; chapters: VideoChapter[] }) => (
+    <div className="flex flex-col items-center gap-1">
+        <TimeSlider.Value
+            className="rounded bg-black/60 px-2 py-0.5 text-xs font-medium text-white"
+            type="pointer"
+            format="time"
+        />
+        <div
+            className="player-popover relative overflow-hidden rounded-lg"
+            style={{ width: 160, height: 90 }}
+        >
+            <Image
+                src={`/api/hls/${videoId}/thumb/sprite.jpg`}
+                alt=""
+                fill
+                unoptimized
+                className="object-cover"
             />
-            <div
-                className="surface-glass relative overflow-hidden rounded-lg border border-white/10 shadow-xl"
-                style={{ width: 160, height: 90 }}
-            >
-                <Image
-                    src={`/api/hls/${videoId}/thumb/sprite.jpg`}
-                    alt=""
-                    fill
-                    unoptimized
-                    className="object-cover"
-                />
-            </div>
         </div>
-    );
-};
-
-const PlayIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-        <polygon points="5,3 19,12 5,21" />
-    </svg>
-);
-
-const PauseIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-        <rect x="6" y="4" width="4" height="16" />
-        <rect x="14" y="4" width="4" height="16" />
-    </svg>
-);
-
-const TheatreIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5" aria-hidden="true">
-        <rect x="2" y="6" width="20" height="12" rx="2" />
-        <line x1="8" y1="6" x2="8" y2="18" />
-        <line x1="16" y1="6" x2="16" y2="18" />
-    </svg>
-);
-
-const TheatreExitIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-        <rect x="2" y="6" width="20" height="12" rx="2" opacity={0.2} />
-        <rect x="8" y="6" width="8" height="12" rx="1" />
-    </svg>
+    </div>
 );

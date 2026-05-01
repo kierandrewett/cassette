@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaRemote, useMediaState, useVideoQualityOptions } from "@vidstack/react";
-import { Settings } from "lucide-react";
+import { Settings01Icon } from "hugeicons-react";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -76,7 +76,7 @@ export const SettingsMenu = () => {
                         open && "bg-white/10 text-white",
                     )}
                 >
-                    <Settings className="h-5 w-5" />
+                    <Settings01Icon size={20} />
                 </button>
 
                 {open && (
@@ -86,7 +86,7 @@ export const SettingsMenu = () => {
 
                         {/* Panel */}
                         <div
-                            className="absolute bottom-full right-0 mb-2 z-50 w-56 overflow-hidden rounded-xl surface-glass shadow-2xl"
+                            className="player-popover absolute bottom-full right-0 mb-2 z-50 w-56 overflow-hidden rounded-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {panel === "root" && (

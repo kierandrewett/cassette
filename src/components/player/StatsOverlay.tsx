@@ -137,24 +137,29 @@ export const StatsOverlay = ({ visible }: StatsOverlayProps) => {
 
     return (
         <div
-            className="absolute left-3 top-16 z-50 rounded-lg bg-black/75 px-3 py-2.5 font-mono text-[10px] leading-5 text-green-400 shadow-xl backdrop-blur-sm select-none pointer-events-none"
+            className="player-popover absolute left-3 top-16 z-50 rounded-xl px-3 py-2.5 select-none pointer-events-none"
             aria-label="Stats for nerds"
             aria-live="polite"
         >
-            <Row label="Resolution" value={stats.resolution} />
-            <Row label="Bandwidth" value={stats.bandwidth} />
-            <Row label="Buffered" value={stats.bufferedAhead} />
-            <Row label="Dropped frames" value={stats.droppedFrames} />
-            <Row label="Downlink" value={stats.downlink} />
-            <Row label="Codec" value={stats.codec} />
-            <Row label="Position" value={`${stats.currentTime} / ${stats.duration}`} />
+            <p className="mb-1 text-xs font-medium text-white/50 uppercase tracking-wider">
+                Stats for nerds
+            </p>
+            <div className="space-y-0.5 text-xs text-white/80">
+                <Row label="Resolution" value={stats.resolution} />
+                <Row label="Bandwidth" value={stats.bandwidth} />
+                <Row label="Buffered" value={stats.bufferedAhead} />
+                <Row label="Dropped frames" value={stats.droppedFrames} />
+                <Row label="Downlink" value={stats.downlink} />
+                <Row label="Codec" value={stats.codec} />
+                <Row label="Position" value={`${stats.currentTime} / ${stats.duration}`} />
+            </div>
         </div>
     );
 };
 
 const Row = ({ label, value }: { label: string; value: string }) => (
-    <div className="flex gap-2 whitespace-nowrap">
-        <span className="min-w-[7rem] text-green-600">{label}</span>
-        <span className="text-green-300">{value}</span>
+    <div className="flex justify-between gap-4 whitespace-nowrap tabular-nums">
+        <span className="text-white/55">{label}</span>
+        <span className="text-white/95">{value}</span>
     </div>
 );

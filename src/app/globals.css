@@ -108,6 +108,65 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    /* Stronger glass surface for player popovers (Settings / Captions / Sleep
+       timer / right-click context menu / Stats overlay).  Sits over moving
+       video frames so we lean on a darker tint and more aggressive blur.
+       Drop shadow makes the float convincing on bright frames. */
+    .player-popover {
+        background: rgba(10, 10, 12, 0.78);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow:
+            0 16px 32px -8px rgba(0, 0, 0, 0.6),
+            0 4px 8px -2px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Time slider thumb — visible white dot riding on the played fill.
+       Vidstack writes --slider-fill (a percentage string like "37.4%") on
+       the slider Root element; we anchor the thumb to that.  Grows on
+       hover/drag.  The black ring keeps it readable on light frames. */
+    .player-thumb {
+        position: absolute;
+        top: 50%;
+        left: var(--slider-fill);
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: #fff;
+        transform: translate(-50%, -50%);
+        box-shadow:
+            0 0 0 2px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.5);
+        transition: width 120ms ease, height 120ms ease;
+        pointer-events: none;
+        will-change: left, width, height;
+    }
+    .group\/slider:hover .player-thumb,
+    .group\/vol:hover .player-thumb,
+    [data-dragging] .player-thumb {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* Volume control: button + horizontal slider that expands on hover or
+       focus.  Apple-TV pattern — the rail collapses to width 0 by default. */
+    .volume-stack {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .volume-stack .volume-rail {
+        width: 0;
+        overflow: hidden;
+        transition: width 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .volume-stack:hover .volume-rail,
+    .volume-stack:focus-within .volume-rail,
+    .volume-stack[data-active="true"] .volume-rail {
+        width: 88px;
+    }
+
     /* Standard scrollbar styling so dark surfaces look intentional. */
     ::-webkit-scrollbar {
         width: 10px;

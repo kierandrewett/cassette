@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Cancel01Icon } from "hugeicons-react";
 import Image from "next/image";
 
 import { usePlayerStore } from "@/lib/player/store";
@@ -68,7 +68,7 @@ export const PlayerTopBar = ({
                 onClick={() => setTheatre(false)}
                 className="ml-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors"
             >
-                <X className="h-4 w-4" />
+                <Cancel01Icon size={16} />
             </button>
         </div>
     );
