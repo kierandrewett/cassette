@@ -189,7 +189,11 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                 >
                     <Menu01Icon size={20} strokeWidth={1.6} />
                 </Button>
-                <Link href="/" className="ml-1 flex items-center gap-1 rounded-lg px-1 h-full hover:bg-secondary/40 focus-visible:bg-secondary/40 focus-visible:ring-2 focus-visible:ring-ring">
+                <Link
+                    href="/"
+                    aria-label="cassette home"
+                    className="ml-1 inline-flex h-9 items-center rounded-lg px-2 transition-colors hover:bg-secondary/60 focus-visible:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
                     <CassetteWordmark />
                 </Link>
             </div>
