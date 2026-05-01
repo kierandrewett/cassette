@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+import { TRPCProvider } from "@/lib/trpc/client";
+import { Providers } from "./providers";
+
 export const metadata: Metadata = {
     title: {
         default: "cassette",
@@ -20,7 +23,12 @@ export const viewport: Viewport = {
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
     return (
         <html lang="en" className="dark" suppressHydrationWarning>
-            <body className="min-h-full bg-background text-foreground antialiased">{children}</body>
+            <body className="min-h-full bg-background text-foreground antialiased">
+                {/* Providers is the outermost client boundary; TRPCProvider sits inside it. */}
+                <Providers>
+                    <TRPCProvider>{children}</TRPCProvider>
+                </Providers>
+            </body>
         </html>
     );
 };

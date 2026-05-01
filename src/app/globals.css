@@ -4,6 +4,10 @@
 
 @layer base {
     :root {
+        /* Rail layout widths — consumed by AppShell and LeftRail */
+        --rail-width: 220px;
+        --rail-collapsed-width: 60px;
+
         --background: 0 0% 100%;
         --foreground: 0 0% 3.9%;
         --card: 0 0% 100%;
