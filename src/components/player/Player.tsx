@@ -18,6 +18,7 @@ import { Volume2 } from "lucide-react";
 
 import { SEEK_EVENT, usePlayerStore } from "@/lib/player/store";
 import { readPreferences, writeVolume, writePlaybackRate, writeStatsOverlayEnabled } from "@/lib/player/preferences";
+import { api } from "@/lib/trpc/client";
 import type { Video, VideoCaption, VideoChapter, VideoVariant } from "@/server/db/schema/videos";
 import { PlayerCanvas } from "./PlayerCanvas";
 import { PlayerContextMenu } from "./PlayerContextMenu";
@@ -37,6 +38,12 @@ interface NextVideo {
     thumbnailPath: string | null;
     channel: { name: string; handle: string };
     durationSec: number | null;
+    /**
+     * Where this candidate came from. "queue" means the player should pop the
+     * caller's queue head when it advances; "channel" is the legacy
+     * nextInChannel fallback that requires no side-effect.
+     */
+    source?: "queue" | "channel";
 }
 
 interface PlayerProps {
@@ -363,6 +370,21 @@ const PlayerInner = ({
         sendPauseBeacon(video.id, getPositionSec());
     };
 
+    // When the auto-advance fires and the candidate came from the caller's
+    // queue, pop the head atomically so the next page-load doesn't see the
+    // already-played item again. We invalidate the queue list so the header
+    // chip count drops as soon as the navigation lands.
+    const utils = api.useUtils();
+    const popQueue = api.playlist.queue.next.useMutation({
+        onSettled: async () => {
+            await utils.playlist.queue.list.invalidate();
+        },
+    });
+    const handleAdvance = () => {
+        if (queueNext?.source !== "queue") return;
+        popQueue.mutate();
+    };
+
     return (
         <>
             {/* Pause beacon handler */}
@@ -391,7 +413,7 @@ const PlayerInner = ({
                     <PlayerBottomBar videoId={video.id} chapters={chapters} variants={variants} active={active} />
                 )}
 
-                <UpNextOverlay next={queueNext} />
+                <UpNextOverlay next={queueNext} onAdvance={handleAdvance} />
 
                 {/* Tap-to-unmute affordance.  Visible only while the player is
                     still muted *and* the user has not yet interacted; one click

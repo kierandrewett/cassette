@@ -14,10 +14,17 @@ interface NextVideo {
     thumbnailPath: string | null;
     channel: { name: string; handle: string };
     durationSec: number | null;
+    source?: "queue" | "channel";
 }
 
 interface UpNextOverlayProps {
     next: NextVideo | null;
+    /**
+     * Fires once when this overlay triggers a navigation (auto-advance OR
+     * click-through). The Player uses this to pop the queue head when the
+     * candidate came from the queue.
+     */
+    onAdvance?: () => void;
 }
 
 const COUNTDOWN_SEC = 10;
@@ -27,7 +34,7 @@ const COUNTDOWN_SEC = 10;
  * Shows the next video's thumbnail, title, and a countdown ring.
  * Auto-advances on ended (if not dismissed). X to dismiss.
  */
-export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
+export const UpNextOverlay = ({ next, onAdvance }: UpNextOverlayProps) => {
     const duration = useMediaState("duration");
     const currentTime = useMediaState("currentTime");
     const ended = useMediaState("ended");
@@ -41,22 +48,27 @@ export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
     const countdown = Math.ceil(timeLeft);
     const progress = 1 - timeLeft / COUNTDOWN_SEC;
 
-    // Navigate on ended if not dismissed.
-    useEffect(() => {
-        if (ended && next && !dismissed && !hasNavigated.current) {
-            hasNavigated.current = true;
-            router.push(`/watch/${next.id}`);
-        }
-    }, [ended, next, dismissed, router]);
-
-    // Navigate immediately.
-    const handleAdvance = () => {
+    // Single navigation point — guards re-entry (the ended state can fire
+    // multiple times in a row depending on the engine), notifies the parent
+    // (which pops the queue head when the source is "queue"), then routes.
+    const advance = () => {
         if (!next || hasNavigated.current) return;
         hasNavigated.current = true;
+        onAdvance?.();
         router.push(`/watch/${next.id}`);
     };
 
+    // Navigate on ended if not dismissed.
+    useEffect(() => {
+        if (ended && next && !dismissed && !hasNavigated.current) {
+            advance();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ended, next, dismissed]);
+
     if (!showOverlay) return null;
+
+    const isQueued = next.source === "queue";
 
     return (
         <div
@@ -64,7 +76,9 @@ export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
         >
             {/* Header */}
             <div className="flex items-center justify-between px-3 pb-1 pt-3">
-                <span className="text-xs font-medium uppercase tracking-wider text-white/60">Up Next</span>
+                <span className="text-xs font-medium uppercase tracking-wider text-white/60">
+                    {isQueued ? "Up Next · Queue" : "Up Next"}
+                </span>
                 <button
                     aria-label="Dismiss"
                     onClick={() => setDismissed(true)}
@@ -75,7 +89,7 @@ export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
             </div>
 
             {/* Thumbnail + countdown */}
-            <div className="relative cursor-pointer" onClick={handleAdvance}>
+            <div className="relative cursor-pointer" onClick={advance}>
                 <div className="relative aspect-video bg-black/50">
                     {next.thumbnailPath ? (
                         <Image

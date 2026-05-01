@@ -15,6 +15,8 @@ interface SidebarVideo {
     viewCount: number;
     publishedAt: Date | string | null;
     channel: { name: string; handle: string };
+    /** When true, render the "Up next" queue pill instead of the channel-next label. */
+    isQueued?: boolean;
 }
 
 interface UpNextSidebarProps {
@@ -23,11 +25,9 @@ interface UpNextSidebarProps {
 
 /**
  * Client component. Renders a vertical list of compact video cards for the
- * Up Next / autoplay sidebar. The queue integration (M7) will prepend queue
- * items before this fallback list.
- *
- * TODO (M7): Prepend queue items from playlist.queue.list() once the queue
- * system lands.
+ * Up Next / autoplay sidebar. The watch page prepends the caller's queue head
+ * (if any) tagged with `isQueued`, which surfaces an "Up next" pill so the
+ * viewer knows it's coming from their queue rather than the channel.
  */
 export const UpNextSidebar = ({ videos }: UpNextSidebarProps) => {
     if (videos.length === 0) {
@@ -42,7 +42,7 @@ export const UpNextSidebar = ({ videos }: UpNextSidebarProps) => {
         <div className="flex flex-col gap-2">
             <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-foreground/80">Up Next</h2>
             {videos.map((v, i) => (
-                <SidebarCard key={v.id} video={v} isNext={i === 0} />
+                <SidebarCard key={v.id} video={v} isNext={i === 0 && !v.isQueued} />
             ))}
         </div>
     );
@@ -91,10 +91,16 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
 
             {/* Meta */}
             <div className="flex min-w-0 flex-col justify-center gap-0.5">
-                {isNext && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Up Next
+                {video.isQueued ? (
+                    <span className="inline-flex w-fit items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                        Up next
                     </span>
+                ) : (
+                    isNext && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Up Next
+                        </span>
+                    )
                 )}
                 <p className="line-clamp-2 text-xs font-medium leading-snug text-foreground group-hover:text-foreground/90">
                     {video.title}

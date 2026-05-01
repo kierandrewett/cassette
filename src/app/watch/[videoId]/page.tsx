@@ -66,25 +66,79 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
 
     const startSec = parseTimestamp(t) ?? undefined;
 
-    // Fetch the autoplay-next video (queue integration lands in M7; this is the
-    // channel fallback used by the in-player UpNextOverlay) and the
-    // mixed-source recommendations list for the sidebar in parallel.
-    const [nextVideo, recommendations] = await Promise.all([
+    // Fetch the autoplay-next video and the mixed-source recommendations list
+    // for the sidebar in parallel. Three sources for "what plays next?":
+    //   1. The caller's queue head, if any (peek; auto-advance pops it).
+    //   2. The next public+ready video in the same channel.
+    //   3. The recommendations rail.
+    // Anonymous viewers get null from queue.peek (the procedure is protected;
+    // we swallow the error so the watch page renders for them).
+    const [queueHead, nextVideo, recommendations] = await Promise.all([
+        trpc.playlist.queue.peek().catch(() => null),
         trpc.video.nextInChannel({ videoId: video.id }).catch(() => null),
         trpc.video.recommendations({ videoId: video.id, limit: 14 }).catch(() => []),
     ]);
 
+    // The queue head wins over the channel-next fallback. We also tag the
+    // "source" so the player knows whether to pop the queue when it advances.
+    const playerNext: {
+        id: string;
+        title: string;
+        thumbnailPath: string | null;
+        channel: { name: string; handle: string };
+        durationSec: number | null;
+        source: "queue" | "channel";
+    } | null = queueHead
+        ? {
+              id: queueHead.video.id,
+              title: queueHead.video.title,
+              thumbnailPath: queueHead.video.thumbnailPath,
+              channel: queueHead.channel,
+              durationSec: queueHead.video.durationSec,
+              source: "queue",
+          }
+        : nextVideo
+          ? {
+                id: nextVideo.id,
+                title: nextVideo.title,
+                thumbnailPath: nextVideo.thumbnailPath,
+                channel: nextVideo.channel,
+                durationSec: nextVideo.durationSec,
+                source: "channel",
+            }
+          : null;
+
     // Sidebar list — recommendations already exclude the current video, drafts,
-    // private and non-ready videos.  Map straight into the SidebarVideo shape.
-    const sidebarVideos = recommendations.map((v) => ({
-        id: v.id,
-        title: v.title,
-        thumbnailPath: v.thumbnailPath,
-        durationSec: v.durationSec,
-        viewCount: v.viewCount,
-        publishedAt: v.publishedAt,
-        channel: v.channel,
-    }));
+    // private and non-ready videos. We additionally drop any video that's the
+    // queue head so it doesn't appear twice (once with the "Up next" pill, once
+    // as a regular recommendation).
+    const sidebarVideos = recommendations
+        .filter((v) => !queueHead || v.id !== queueHead.video.id)
+        .map((v) => ({
+            id: v.id,
+            title: v.title,
+            thumbnailPath: v.thumbnailPath,
+            durationSec: v.durationSec,
+            viewCount: v.viewCount,
+            publishedAt: v.publishedAt,
+            channel: v.channel,
+        }));
+
+    // Prepend the queue head so the sidebar leads with it. We mark it explicitly
+    // as queued so the sidebar can render an "Up next" pill (vs the default
+    // "Up Next" header treatment which is also applied to the first card).
+    const queueHeadCard = queueHead
+        ? {
+              id: queueHead.video.id,
+              title: queueHead.video.title,
+              thumbnailPath: queueHead.video.thumbnailPath,
+              durationSec: queueHead.video.durationSec,
+              viewCount: queueHead.video.viewCount,
+              publishedAt: queueHead.video.publishedAt,
+              channel: queueHead.channel,
+              isQueued: true as const,
+          }
+        : null;
 
     const publishedAtStr = video.publishedAt ? formatRelativeTime(video.publishedAt) : null;
 
@@ -118,17 +172,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                                 chapters={chapters}
                                 variants={variants}
                                 signedToken={signedToken}
-                                queueNext={
-                                    nextVideo
-                                        ? {
-                                              id: nextVideo.id,
-                                              title: nextVideo.title,
-                                              thumbnailPath: nextVideo.thumbnailPath,
-                                              channel: nextVideo.channel,
-                                              durationSec: nextVideo.durationSec,
-                                          }
-                                        : null
-                                }
+                                queueNext={playerNext}
                                 channel={channel}
                                 autoplay
                                 muted
@@ -232,7 +276,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
 
                     {/* ---- Right column (Up Next sidebar) ---- */}
                     <aside className="w-full lg:w-[var(--watch-sidebar-w,360px)] lg:flex-shrink-0" aria-label="Up Next">
-                        <UpNextSidebar videos={sidebarVideos} />
+                        <UpNextSidebar videos={queueHeadCard ? [queueHeadCard, ...sidebarVideos] : sidebarVideos} />
                     </aside>
                 </div>
             </div>
