@@ -59,14 +59,11 @@ const AppShell = async ({ children }: AppShellProps) => {
 
             {/* Left rail: hidden below md, expanded by default above */}
             <div className="hidden md:block">
-                <LeftRail channels={userChannels} />
+                <LeftRail channels={userChannels} isAdmin={isAdmin} isAuthenticated={!!user} />
             </div>
 
             {/* Main content: offset by rail width on md+, full-width on mobile */}
-            <main
-                className="pt-14 md:pl-[var(--rail-width)] transition-[padding] duration-200"
-                id="main-content"
-            >
+            <main className="pt-14 transition-[padding] duration-200 md:pl-[var(--rail-width)]" id="main-content">
                 {children}
             </main>
 

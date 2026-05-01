@@ -138,7 +138,9 @@
         box-shadow:
             0 0 0 2px rgba(0, 0, 0, 0.4),
             0 1px 2px rgba(0, 0, 0, 0.5);
-        transition: width 120ms ease, height 120ms ease;
+        transition:
+            width 120ms ease,
+            height 120ms ease;
         pointer-events: none;
         will-change: left, width, height;
     }
@@ -165,6 +167,39 @@
     .volume-stack:focus-within .volume-rail,
     .volume-stack[data-active="true"] .volume-rail {
         width: 88px;
+    }
+
+    /* NProgress top-loading bar — slim 2 px accent stripe pinned to the top.
+       The default nprogress.css ships a blue stripe and an offscreen spinner;
+       we override colour and hide the spinner. The component lives in
+       src/components/shell/TopLoader.tsx. */
+    #nprogress {
+        pointer-events: none;
+    }
+    #nprogress .bar {
+        position: fixed;
+        z-index: 60;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: hsl(var(--destructive));
+        box-shadow: 0 0 8px hsl(var(--destructive) / 0.6);
+    }
+    #nprogress .peg {
+        display: block;
+        position: absolute;
+        right: 0;
+        width: 100px;
+        height: 100%;
+        opacity: 1;
+        transform: rotate(3deg) translate(0, -4px);
+        box-shadow:
+            0 0 10px hsl(var(--destructive)),
+            0 0 5px hsl(var(--destructive));
+    }
+    #nprogress .spinner {
+        display: none;
     }
 
     /* Standard scrollbar styling so dark surfaces look intentional. */

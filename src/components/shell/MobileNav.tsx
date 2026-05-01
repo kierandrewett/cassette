@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookMarked, Library, History } from "lucide-react";
+import { Home01Icon, Notification03Icon, LibraryIcon, Time04Icon } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/subscriptions", label: "Subscriptions", icon: BookMarked },
-    { href: "/library", label: "Library", icon: Library },
-    { href: "/history", label: "History", icon: History },
+    { href: "/", label: "Home", Icon: Home01Icon },
+    { href: "/subscriptions", label: "Subs", Icon: Notification03Icon },
+    { href: "/library", label: "Library", Icon: LibraryIcon },
+    { href: "/history", label: "History", Icon: Time04Icon },
 ] as const;
 
 // Bottom-tab navigation shown only on narrow (< md) viewports.
@@ -23,8 +23,8 @@ export const MobileNav = () => {
             className="fixed inset-x-0 bottom-0 z-40 flex items-stretch border-t border-border bg-background/90 backdrop-blur-sm md:hidden"
             aria-label="Mobile navigation"
         >
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-                const active = pathname === href;
+            {NAV_ITEMS.map(({ href, label, Icon }) => {
+                const active = pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
                 return (
                     <Link
                         key={href}
@@ -35,10 +35,7 @@ export const MobileNav = () => {
                         )}
                         aria-current={active ? "page" : undefined}
                     >
-                        <Icon
-                            className={cn("h-5 w-5", active && "stroke-[2.5px]")}
-                            aria-hidden="true"
-                        />
+                        <Icon size={20} strokeWidth={active ? 2 : 1.6} aria-hidden="true" />
                         <span>{label}</span>
                     </Link>
                 );
