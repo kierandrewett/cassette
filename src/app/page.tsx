@@ -3,7 +3,6 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 
 import { CassetteWordmark } from "@/components/branding/CassetteWordmark";
-import { RandomVideoButton } from "@/components/home/RandomVideoButton";
 import { TrendingTagsRow } from "@/components/home/TrendingTagsRow";
 import AppShell from "@/components/shell/AppShell";
 import { VideoGrid } from "@/components/video/VideoGrid";
@@ -134,14 +133,7 @@ const HomePage = async () => {
     return (
         <AppShell>
             <div className="space-y-12 px-4 py-8 md:px-6 lg:px-8">
-                <div className="flex items-center justify-between gap-3">
-                    {trendingTags.length > 0 ? (
-                        <TrendingTagsRow tags={trendingTags} className="flex-1" />
-                    ) : (
-                        <div className="flex-1" />
-                    )}
-                    <RandomVideoButton />
-                </div>
+                {trendingTags.length > 0 && <TrendingTagsRow tags={trendingTags} className="w-full" />}
 
                 {subFeed.length > 0 ? (
                     <section className="space-y-4">
