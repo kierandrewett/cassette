@@ -78,7 +78,7 @@ export const ChannelTabs = ({ handle, showHome = false }: ChannelTabsProps) => {
                                 role="tab"
                                 aria-selected={active}
                                 className={cn(
-                                    "inline-flex items-center rounded-sm border-b-2 pb-3 pt-3 text-base font-bold tracking-tight transition-colors",
+                                    "inline-flex items-center border-b pb-3 pt-3 text-sm font-medium tracking-tight transition-colors",
                                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                     active
                                         ? "border-foreground text-foreground"
