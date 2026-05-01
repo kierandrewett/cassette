@@ -28,7 +28,10 @@ export const VideoGrid = ({
     className,
     emptySlot,
 }: VideoGridProps) => {
-    const gridClass = cn("grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-x-4 gap-y-6", className);
+    // auto-fit (not auto-fill) so empty trailing tracks collapse and the
+    // remaining cards stretch to fill the row. 220px floor lets one more
+    // column kick in on ~2000px monitors where 240 was just over budget.
+    const gridClass = cn("grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-x-4 gap-y-6", className);
 
     if (loading) {
         return (
