@@ -50,18 +50,27 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
         <Link
             href={watchHref}
             className={cn(
-                // Whole-card hover treatment matches the history row: subtle
-                // bg lifts on hover, padding lets it breathe, rounded corners
-                // are inherited by the inner thumbnail. Card hover applies to
-                // the thumbnail + metadata together so the boundary reads as
-                // intentional.
-                "group block rounded-xl p-2 transition-colors hover:bg-secondary/40",
+                // Card itself is layout-only — no padding, no hover bg.
+                // The hover treatment lives in an absolute pseudo-card
+                // BEHIND the content (see <span aria-hidden> below) so it
+                // doesn't push siblings around in the grid. group-hover
+                // drives the scale-from-80 fade-in.
+                "group relative block",
                 className,
             )}
             aria-label={`Watch "${video.title}"`}
         >
+            {/* Hover halo — extends slightly past the card bounds so the
+                subtle bg "swallows" the card on hover without affecting
+                the grid track size. Scales from 80% -> 100% and fades in
+                in the same 200ms tween. Sits behind the actual content
+                via -z-10. */}
+            <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-2 -z-10 origin-center scale-90 rounded-xl bg-secondary/50 opacity-0 transition-[transform,opacity] duration-200 ease-out group-hover:scale-100 group-hover:opacity-100"
+            />
             {/* Thumbnail */}
-            <div ref={thumbRef} className="relative aspect-video overflow-hidden rounded-lg bg-secondary">
+            <div ref={thumbRef} className="relative aspect-video overflow-hidden rounded-xl bg-secondary">
                 {thumbnailSrc ? (
                     <Image
                         src={thumbnailSrc}
