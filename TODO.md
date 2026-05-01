@@ -145,6 +145,34 @@ item means shippable; the smoke runner (`scripts/smoke.sh`) is the contract.
 - [x] `yarn build` clean (22 routes)
 - [x] `yarn test` 5 files, 74 tests green
 
+## Post-M9 polish (shipped)
+
+- [x] Studio video table at `/studio/c/[handle]/videos` (edit metadata / set privacy / delete / copy link)
+- [x] Studio upload form at `/studio/c/[handle]/upload` with two-stage progress (XHR upload + transcode poll)
+- [x] `video.delete` cleans up source + HLS + sidecar files via `lib/cleanup.ts`
+- [x] Captions-upload-after-the-fact at `POST /api/upload/[videoId]/captions`
+- [x] Channel customisation at `/studio/c/[handle]/customise` (avatar + banner + name + description)
+- [x] Avatar / banner endpoint `POST /api/channel/[id]/asset` (magic-byte validated, atomic rename)
+- [x] Asset GET at `/api/channel/[id]/asset/[kind]` (extension-agnostic)
+- [x] Search by **channels** and **playlists** tabs (`?tab=channels|playlists`)
+- [x] Add-to-playlist menu on every `VideoCard` (queue / watch later / user playlists / new)
+- [x] Share button on `/watch` with link copy AND iframe embed snippet
+- [x] `/embed/[videoId]` server-rendered page for `<iframe>` embedding
+- [x] `/settings` stub with sign-out
+- [x] Continue Watching uses `incompleteOnly` filter joined with `watchProgress`
+- [x] All `<img>` swapped to `next/image` in player and up-next surfaces
+- [x] Notification bell with 60 s polling, unread badge, mark-all-read, item links
+- [x] `notifyNewUpload` wired into worker finalise; `notifyCommentReply` wired into comment.create
+- [x] Real `/home` feed: subscriptions + trending (HN-style gravity decay) + recently uploaded
+- [x] `video.trending` procedure with `view_count / pow(age_hours + 2, 1.5)` score
+- [x] CommentTree wired into the watch page (no longer a placeholder)
+- [x] Migrate retry-with-backoff for docker cold-start DNS race
+- [x] `scripts/janitor.ts` for orphan media cleanup (`just janitor`, `just janitor-apply`)
+- [x] `docs/operator-api.md` documenting upload + caption + asset endpoints + tRPC summary
+- [x] `/api/health` REST endpoint
+- [x] `error.tsx`, `global-error.tsx`, `not-found.tsx` cassette-styled
+- [x] `404 -> /` link uses `<Link>` instead of `<a>` (lint clean)
+
 ## Codex review
 
 - [ ] Codex sign-off on the implementation
