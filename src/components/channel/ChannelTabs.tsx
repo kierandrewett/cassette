@@ -78,11 +78,12 @@ export const ChannelTabs = ({ handle, showHome = false }: ChannelTabsProps) => {
                                 role="tab"
                                 aria-selected={active}
                                 className={cn(
-                                    "inline-flex items-center border-b pb-3 pt-3 text-sm font-medium tracking-tight transition-colors",
+                                    "relative inline-flex items-center px-1 pb-2 pt-2 text-[13px] font-normal tracking-tight transition-colors",
                                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                    "after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-foreground after:opacity-0 after:transition-opacity",
                                     active
-                                        ? "border-foreground text-foreground"
-                                        : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
+                                        ? "text-foreground after:opacity-100"
+                                        : "text-muted-foreground hover:text-foreground",
                                 )}
                             >
                                 {tab.label}
