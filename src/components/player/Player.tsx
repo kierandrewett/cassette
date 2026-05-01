@@ -2,13 +2,17 @@
 
 import {
     Captions,
+    isHLSProvider,
     MediaPlayer,
     MediaProvider,
+    type MediaProviderAdapter,
+    type MediaProviderChangeEvent,
     Track,
     useMediaPlayer,
     useMediaRemote,
     useMediaState,
 } from "@vidstack/react";
+import Hls from "hls.js";
 import { useEffect, useRef, useState } from "react";
 import { Volume2 } from "lucide-react";
 
@@ -122,6 +126,15 @@ export const Player = ({
                 toggleCaptions: "c",
                 volumeUp: "ArrowUp",
                 volumeDown: "ArrowDown",
+            }}
+            onProviderChange={(provider: MediaProviderAdapter | null, _event: MediaProviderChangeEvent) => {
+                // Vidstack defaults to a CDN-hosted hls.js
+                // (cdn.jsdelivr.net) which our CSP blocks. Inject the
+                // bundled hls.js npm package directly so the player
+                // works under a tight script-src + offline operators.
+                if (isHLSProvider(provider)) {
+                    provider.library = Hls;
+                }
             }}
         >
             <MediaProvider>
