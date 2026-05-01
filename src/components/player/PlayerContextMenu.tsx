@@ -1,15 +1,7 @@
 "use client";
 
 import { useMediaPlayer, useMediaRemote, useMediaState } from "@vidstack/react";
-import {
-    Copy01Icon,
-    Download01Icon,
-    InformationCircleIcon,
-    Link01Icon,
-    PauseIcon,
-    PlayIcon,
-    RepeatIcon,
-} from "hugeicons-react";
+import { Copy, Download, Info, Link as LinkIcon, Pause, Play, Repeat } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -219,25 +211,34 @@ export const PlayerContextMenu = ({ videoId }: PlayerContextMenuProps) => {
             style={{ left: Math.max(8, left), top: Math.max(8, top) }}
             onContextMenu={(e) => e.preventDefault()}
         >
-            <Item icon={paused ? <PlayIcon size={16} /> : <PauseIcon size={16} />} onClick={handlePlayPause}>
+            <Item
+                icon={
+                    paused ? (
+                        <Play size={16} fill="currentColor" strokeWidth={0} />
+                    ) : (
+                        <Pause size={16} fill="currentColor" strokeWidth={0} />
+                    )
+                }
+                onClick={handlePlayPause}
+            >
                 {paused ? "Play" : "Pause"}
             </Item>
-            <Item icon={<RepeatIcon size={16} />} onClick={handleToggleLoop} active={loop}>
+            <Item icon={<Repeat size={16} strokeWidth={2.25} />} onClick={handleToggleLoop} active={loop}>
                 Toggle loop
                 {loop && <span className="ml-auto text-xs text-white/50">on</span>}
             </Item>
             <Divider />
-            <Item icon={<Link01Icon size={16} />} onClick={handleCopyLinkAtTime}>
+            <Item icon={<LinkIcon size={16} strokeWidth={2.25} />} onClick={handleCopyLinkAtTime}>
                 Copy link to current time
             </Item>
-            <Item icon={<Copy01Icon size={16} />} onClick={handleCopyLink}>
+            <Item icon={<Copy size={16} strokeWidth={2.25} />} onClick={handleCopyLink}>
                 Copy link
             </Item>
-            <Item icon={<Download01Icon size={16} />} onClick={handleSaveThumbnail}>
+            <Item icon={<Download size={16} strokeWidth={2.25} />} onClick={handleSaveThumbnail}>
                 Save thumbnail&hellip;
             </Item>
             <Divider />
-            <Item icon={<InformationCircleIcon size={16} />} onClick={handleToggleStats}>
+            <Item icon={<Info size={16} strokeWidth={2.25} />} onClick={handleToggleStats}>
                 Stats for nerds
             </Item>
             <Divider />

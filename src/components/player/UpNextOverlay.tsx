@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaState } from "@vidstack/react";
-import { Cancel01Icon } from "hugeicons-react";
+import { X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -70,7 +70,7 @@ export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
                     onClick={() => setDismissed(true)}
                     className="flex h-6 w-6 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white"
                 >
-                    <Cancel01Icon size={16} />
+                    <X size={16} strokeWidth={2.5} />
                 </button>
             </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMediaRemote, useMediaState } from "@vidstack/react";
 import { toast } from "sonner";
-import { Moon02Icon } from "hugeicons-react";
+import { Moon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { readPreferences, writeLastSleepTimer, type SleepTimerOption } from "@/lib/player/preferences";
@@ -156,7 +156,12 @@ export const SleepTimer = ({ onSelect, onStateChange }: SleepTimerProps) => {
                     option !== "off" && "bg-white/10 text-white",
                 )}
             >
-                <Moon02Icon size={20} />
+                <Moon
+                    size={20}
+                    strokeWidth={2.25}
+                    fill={option !== "off" ? "currentColor" : "none"}
+                    fillOpacity={option !== "off" ? 0.2 : 0}
+                />
             </button>
 
             {open && (
@@ -222,7 +227,7 @@ export const SleepTimerChip = ({ remainingSec, option }: SleepTimerChipProps) =>
 
     return (
         <div className="pointer-events-none absolute bottom-20 right-4 z-40 flex select-none items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
-            <Moon02Icon size={12} className="shrink-0" />
+            <Moon size={12} strokeWidth={2.25} className="shrink-0" />
             <span className="tabular-nums">{label}</span>
         </div>
     );

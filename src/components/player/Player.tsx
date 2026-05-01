@@ -9,7 +9,8 @@ import {
     useMediaRemote,
     useMediaState,
 } from "@vidstack/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Volume2 } from "lucide-react";
 
 import { SEEK_EVENT, usePlayerStore } from "@/lib/player/store";
 import { readPreferences, writeVolume, writePlaybackRate, writeStatsOverlayEnabled } from "@/lib/player/preferences";
@@ -150,6 +151,8 @@ export const Player = ({
                 channel={channel}
                 tokenQS={tokenQS}
                 controls={controls}
+                autoplay={autoplay}
+                muted={muted}
             />
         </MediaPlayer>
     );
@@ -163,16 +166,24 @@ const PlayerInner = ({
     queueNext,
     channel,
     controls = "auto",
+    autoplay = false,
+    muted = false,
     // tokenQS reserved for future use (e.g. authenticating beacon requests)
     tokenQS: _tokenQS,
-}: Omit<PlayerProps, "captions" | "signedToken" | "autoplay" | "muted" | "loop" | "startSec"> & {
+}: Omit<PlayerProps, "captions" | "signedToken" | "loop" | "startSec"> & {
     tokenQS: string;
     controls?: "auto" | "hidden";
 }) => {
     const remote = useMediaRemote();
     const player = useMediaPlayer();
     const paused = useMediaState("paused");
+    const playerMuted = useMediaState("muted");
     const { active } = useIdleControls(paused);
+
+    // Tap-to-unmute affordance — visible when the player started muted due to
+    // autoplay policy and the user has not yet unmuted. Hides on any
+    // interaction.
+    const [showUnmuteHint, setShowUnmuteHint] = useState(autoplay && muted);
     const toggleTheatre = usePlayerStore((s) => s.toggleTheatre);
     const targetSeekSec = usePlayerStore((s) => s.targetSeekSec);
     const clearSeek = usePlayerStore((s) => s.clearSeek);
@@ -192,6 +203,49 @@ const PlayerInner = ({
 
         return unsubscribe;
     }, [player, remote]);
+
+    // Autoplay race fix.  Vidstack's `autoPlay` prop attempts play() before
+    // hls.js has attached the MediaSource on some browser+codec combos; the
+    // attempt silently no-ops and the video sits at frame zero.  Wait for
+    // canPlay, then call play() ourselves.  Idempotent: if Vidstack already
+    // started playback, this is a no-op (play() on a playing element resolves).
+    useEffect(() => {
+        if (!player || !autoplay) return;
+        let attempted = false;
+        const unsubscribe = player.subscribe(({ canPlay, paused: isPaused }) => {
+            if (!canPlay || attempted) return;
+            if (!isPaused) {
+                // Already playing — nothing to do.
+                attempted = true;
+                unsubscribe();
+                return;
+            }
+            attempted = true;
+            // Browsers reject unmuted autoplay; fall back to muted on rejection
+            // so playback always starts.  The tap-to-unmute affordance covers the rest.
+            const tryPlay = async () => {
+                try {
+                    await player.play();
+                } catch {
+                    try {
+                        player.muted = true;
+                        await player.play();
+                    } catch {
+                        /* user-gesture-required — leave paused, user clicks centre stage */
+                    }
+                }
+            };
+            void tryPlay();
+            unsubscribe();
+        });
+        return unsubscribe;
+    }, [player, autoplay]);
+
+    // Hide the unmute hint as soon as the player is unmuted (any path: keyboard
+    // shortcut, volume slider, context-menu unmute).
+    useEffect(() => {
+        if (!playerMuted && showUnmuteHint) setShowUnmuteHint(false);
+    }, [playerMuted, showUnmuteHint]);
 
     // Persist volume changes (debounced inside writeVolume).
     useEffect(() => {
@@ -325,6 +379,24 @@ const PlayerInner = ({
                 )}
 
                 <UpNextOverlay next={queueNext} />
+
+                {/* Tap-to-unmute affordance.  Visible only while the player is
+                    still muted *and* the user has not yet interacted; one click
+                    anywhere unmutes and dismisses. */}
+                {showUnmuteHint && playerMuted && (
+                    <button
+                        type="button"
+                        aria-label="Tap to unmute"
+                        onClick={() => {
+                            remote.unmute();
+                            setShowUnmuteHint(false);
+                        }}
+                        className="surface-glass pointer-events-auto absolute left-4 top-4 z-40 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-white shadow-lg ring-1 ring-white/15 transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                    >
+                        <Volume2 size={14} strokeWidth={2.25} />
+                        <span>Tap to unmute</span>
+                    </button>
+                )}
             </PlayerCanvas>
 
             {/* Custom right-click context menu — rendered outside the canvas

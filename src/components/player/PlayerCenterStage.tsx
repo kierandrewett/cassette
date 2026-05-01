@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaRemote, useMediaState } from "@vidstack/react";
-import { PauseIcon, PlayIcon } from "hugeicons-react";
+import { Pause, Play } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -56,9 +56,9 @@ export const PlayerCenterStage = () => {
                     )}
                 >
                     {paused ? (
-                        <PlayIcon size={28} color="#fff" className="ml-1" />
+                        <Play size={28} color="#fff" fill="#fff" strokeWidth={0} className="ml-1" />
                     ) : (
-                        <PauseIcon size={28} color="#fff" />
+                        <Pause size={28} color="#fff" fill="#fff" strokeWidth={0} />
                     )}
                 </button>
             )}

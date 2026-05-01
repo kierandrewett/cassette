@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaRemote, useMediaState, useVideoQualityOptions } from "@vidstack/react";
-import { Settings01Icon } from "hugeicons-react";
+import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -76,7 +76,7 @@ export const SettingsMenu = () => {
                         open && "bg-white/10 text-white",
                     )}
                 >
-                    <Settings01Icon size={20} />
+                    <Settings size={20} strokeWidth={2.25} />
                 </button>
 
                 {open && (

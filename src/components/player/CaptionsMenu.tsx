@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaRemote, useMediaState, useCaptionOptions, useMediaPlayer } from "@vidstack/react";
-import { SubtitleIcon } from "hugeicons-react";
+import { Subtitles } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -40,7 +40,12 @@ export const CaptionsMenu = () => {
                     open && "bg-white/10",
                 )}
             >
-                <SubtitleIcon size={20} />
+                <Subtitles
+                    size={20}
+                    strokeWidth={2.25}
+                    fill={isOn ? "currentColor" : "none"}
+                    fillOpacity={isOn ? 0.15 : 0}
+                />
             </button>
 
             {open && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { Cancel01Icon } from "hugeicons-react";
+import { X } from "lucide-react";
 import Image from "next/image";
 
 import { usePlayerStore } from "@/lib/player/store";
@@ -18,7 +18,14 @@ interface PlayerTopBarProps {
  * Top glass-blur bar — shows title + channel info (only in theatre/fullscreen).
  * Fades in/out with the .player-bar class driven by the active data attribute.
  */
-export const PlayerTopBar = ({ title, channelId, channelName, channelHandle, avatarPath, active }: PlayerTopBarProps) => {
+export const PlayerTopBar = ({
+    title,
+    channelId,
+    channelName,
+    channelHandle,
+    avatarPath,
+    active,
+}: PlayerTopBarProps) => {
     const theatre = usePlayerStore((s) => s.theatre);
     const setTheatre = usePlayerStore((s) => s.setTheatre);
 
@@ -62,7 +69,7 @@ export const PlayerTopBar = ({ title, channelId, channelName, channelHandle, ava
                 onClick={() => setTheatre(false)}
                 className="ml-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
-                <Cancel01Icon size={16} />
+                <X size={16} strokeWidth={2.5} />
             </button>
         </div>
     );

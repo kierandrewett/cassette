@@ -2,17 +2,17 @@
 
 import { TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from "@vidstack/react";
 import {
-    Backward01Icon,
-    Forward01Icon,
-    LayoutBottomIcon,
-    MaximizeScreenIcon,
-    MinimizeScreenIcon,
-    PauseIcon,
-    PictureInPictureOnIcon,
-    PlayIcon,
-    VolumeHighIcon,
-    VolumeMute01Icon,
-} from "hugeicons-react";
+    Maximize,
+    Minimize,
+    Pause,
+    PictureInPicture2,
+    Play,
+    Rewind,
+    FastForward,
+    RectangleHorizontal,
+    Volume2,
+    VolumeX,
+} from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -122,25 +122,33 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
                 <div className="flex items-center justify-between gap-2">
                     {/* Left group */}
                     <div className="flex items-center gap-1">
-                        {/* Play / Pause */}
+                        {/* Play / Pause — filled glyphs read more confidently at small sizes */}
                         <IconButton aria-label={paused ? "Play" : "Pause"} onClick={handlePlayPause}>
-                            {paused ? <PlayIcon size={20} /> : <PauseIcon size={20} />}
+                            {paused ? (
+                                <Play size={20} fill="currentColor" strokeWidth={0} />
+                            ) : (
+                                <Pause size={20} fill="currentColor" strokeWidth={0} />
+                            )}
                         </IconButton>
 
-                        {/* Skip -10s */}
+                        {/* Skip -10s — heavy stroke + filled chevrons */}
                         <IconButton aria-label="Rewind 10 seconds" onClick={() => remote.seek(currentTime - 10)}>
-                            <Backward01Icon size={20} />
+                            <Rewind size={20} fill="currentColor" strokeWidth={0} />
                         </IconButton>
 
                         {/* Skip +10s */}
                         <IconButton aria-label="Skip 10 seconds" onClick={() => remote.seek(currentTime + 10)}>
-                            <Forward01Icon size={20} />
+                            <FastForward size={20} fill="currentColor" strokeWidth={0} />
                         </IconButton>
 
                         {/* Volume — button with horizontal slider that reveals on hover/focus */}
                         <div className="volume-stack">
                             <IconButton aria-label={isMuted ? "Unmute" : "Mute"} onClick={handleVolumeClick}>
-                                {isMuted ? <VolumeMute01Icon size={20} /> : <VolumeHighIcon size={20} />}
+                                {isMuted ? (
+                                    <VolumeX size={20} strokeWidth={2.25} />
+                                ) : (
+                                    <Volume2 size={20} strokeWidth={2.25} />
+                                )}
                             </IconButton>
                             <div className="volume-rail">
                                 <VolumeSlider.Root
@@ -169,15 +177,19 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
                         <SleepTimer onStateChange={setSleepState} />
                         <SettingsMenu />
 
-                        {/* Theatre mode */}
+                        {/* Theatre mode — solid rectangle reads as a panel */}
                         <IconButton aria-label={theatre ? "Exit theatre mode" : "Theatre mode"} onClick={toggleTheatre}>
-                            <LayoutBottomIcon size={20} />
+                            <RectangleHorizontal
+                                size={20}
+                                fill={theatre ? "currentColor" : "none"}
+                                strokeWidth={2.25}
+                            />
                         </IconButton>
 
                         {/* PiP */}
                         {canPiP && (
                             <IconButton aria-label="Picture in picture" onClick={handlePiP}>
-                                <PictureInPictureOnIcon size={20} />
+                                <PictureInPicture2 size={20} strokeWidth={2.25} />
                             </IconButton>
                         )}
 
@@ -186,7 +198,11 @@ export const PlayerBottomBar = ({ videoId, chapters, variants: _variants, active
                             aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
                             onClick={handleFullscreen}
                         >
-                            {fullscreen ? <MinimizeScreenIcon size={20} /> : <MaximizeScreenIcon size={20} />}
+                            {fullscreen ? (
+                                <Minimize size={20} strokeWidth={2.5} />
+                            ) : (
+                                <Maximize size={20} strokeWidth={2.5} />
+                            )}
                         </IconButton>
                     </div>
                 </div>
