@@ -89,6 +89,7 @@ const RailLink = ({ href, label, Icon, active, badge, avatar, trailing }: RailLi
             href={href}
             className={cn(
                 "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 active
                     ? "bg-secondary font-medium text-foreground"
                     : "font-normal text-foreground/85 hover:bg-secondary/60 hover:text-foreground",
@@ -143,6 +144,24 @@ export const LeftRail = ({
     const pathname = usePathname();
     const t = useTranslations("nav");
 
+    // ArrowUp / ArrowDown move focus between rail items — TV remote / D-pad
+    // friendly. Skips disabled items and stays within the rail. Other keys
+    // pass through so Tab still escapes to the page content.
+    const onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+        if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+        const root = e.currentTarget;
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement) || !root.contains(active)) return;
+        const items = Array.from(root.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"));
+        if (items.length === 0) return;
+        const idx = items.indexOf(active);
+        if (idx === -1) return;
+        const nextIdx = e.key === "ArrowDown" ? Math.min(items.length - 1, idx + 1) : Math.max(0, idx - 1);
+        if (nextIdx === idx) return;
+        e.preventDefault();
+        items[nextIdx]!.focus();
+    };
+
     return (
         <aside
             className={cn(
@@ -153,6 +172,7 @@ export const LeftRail = ({
                 "w-[var(--rail-width)]",
             )}
             aria-label="Primary navigation"
+            onKeyDown={onKeyDown}
         >
             <ScrollArea className="flex-1 px-2 pb-3">
                 <nav>
@@ -215,6 +235,7 @@ export const LeftRail = ({
                                                 aria-current={active ? "page" : undefined}
                                                 className={cn(
                                                     "flex items-center gap-3 rounded-lg px-3 py-2 pr-10 text-sm transition-colors",
+                                                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                                     active
                                                         ? "bg-secondary font-medium text-foreground"
                                                         : "font-normal text-foreground/85 hover:bg-secondary/60 hover:text-foreground",
@@ -298,6 +319,7 @@ export const LeftRail = ({
                                     href="/account/channels"
                                     className={cn(
                                         "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm",
+                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                         "text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground",
                                     )}
                                 >

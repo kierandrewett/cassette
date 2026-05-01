@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "Главная",
+        "subscriptions": "Подписки",
+        "library": "Библиотека",
+        "history": "История",
+        "playlists": "Плейлисты",
+        "studio": "Студия",
+        "admin": "Админ",
+        "newChannel": "Новый канал",
+        "createChannel": "Создать канал",
+        "yourChannels": "Ваши каналы",
+        "manage": "Управление",
+        "you": "Вы"
+    },
+    "actions": {
+        "like": "Нравится",
+        "unlike": "Убрать «Нравится»",
+        "dislike": "Не нравится",
+        "removeDislike": "Убрать «Не нравится»",
+        "share": "Поделиться",
+        "watchLater": "Посмотреть позже",
+        "addToPlaylist": "Добавить в плейлист…",
+        "transcript": "Расшифровка",
+        "moreActions": "Ещё",
+        "subscribe": "Подписаться",
+        "subscribed": "Подписан",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "remove": "Удалить",
+        "edit": "Изменить",
+        "delete": "Удалить",
+        "loadMore": "Показать ещё",
+        "loading": "Загрузка…"
+    },
+    "comments": {
+        "addComment": "Добавить комментарий…",
+        "comment": "Комментировать",
+        "reply": "Ответить",
+        "replies": "ответов",
+        "posting": "Публикация…",
+        "loadMore": "Показать больше комментариев",
+        "empty": "Комментариев пока нет. Будьте первым!",
+        "signInPrompt": "Войдите",
+        "signInToComment": ", чтобы оставить комментарий.",
+        "newBadge": "Новое"
+    },
+    "library": {
+        "upNext": "Далее",
+        "continueWatching": "Продолжить просмотр",
+        "watchLater": "Посмотреть позже",
+        "yourPlaylists": "Ваши плейлисты",
+        "recent": "Недавно",
+        "subscriptions": "Подписки",
+        "history": "История",
+        "liked": "Понравившиеся видео"
+    },
+    "channel": {
+        "videos": "Видео",
+        "playlists": "Плейлисты",
+        "about": "О канале",
+        "subscribers": "подписчиков",
+        "joined": "Дата регистрации"
+    },
+    "search": {
+        "placeholder": "Поиск",
+        "ariaLabel": "Поиск по cassette",
+        "recent": "Недавнее",
+        "clear": "Очистить"
+    },
+    "empty": {
+        "noVideos": "Видео пока нет",
+        "noComments": "Комментариев пока нет",
+        "noResults": "Ничего не найдено",
+        "noPlaylists": "Плейлистов пока нет",
+        "noSubscriptions": "Вы ещё ни на что не подписаны",
+        "noHistory": "История пока пуста"
+    },
+    "settings": {
+        "title": "Настройки",
+        "language": "Язык",
+        "theme": "Тема",
+        "themeLight": "Светлая",
+        "themeDark": "Тёмная",
+        "themeSystem": "Системная",
+        "account": "Ваш аккаунт",
+        "signOut": "Выйти",
+        "signIn": "Войти",
+        "comingSoon": "(другие языки появятся позже)"
+    },
+    "errors": {
+        "generic": "Что-то пошло не так.",
+        "networkError": "Ошибка сети.",
+        "tryAgain": "Повторить",
+        "notFound": "Не найдено",
+        "unauthorized": "Требуется вход"
+    },
+    "studio": {
+        "upload": "Загрузить",
+        "uploading": "Загрузка…",
+        "videoTitle": "Название",
+        "videoDescription": "Описание",
+        "tags": "Теги",
+        "visibility": "Видимость",
+        "visibilityPublic": "Публичное",
+        "visibilityUnlisted": "По ссылке",
+        "visibilityPrivate": "Личное",
+        "saveAsDraft": "Сохранить как черновик"
+    }
+}

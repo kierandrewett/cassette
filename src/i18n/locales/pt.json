@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "Início",
+        "subscriptions": "Inscrições",
+        "library": "Biblioteca",
+        "history": "Histórico",
+        "playlists": "Playlists",
+        "studio": "Estúdio",
+        "admin": "Admin",
+        "newChannel": "Novo canal",
+        "createChannel": "Criar canal",
+        "yourChannels": "Seus canais",
+        "manage": "Gerenciar",
+        "you": "Você"
+    },
+    "actions": {
+        "like": "Gostei",
+        "unlike": "Remover gostei",
+        "dislike": "Não gostei",
+        "removeDislike": "Remover não gostei",
+        "share": "Compartilhar",
+        "watchLater": "Assistir mais tarde",
+        "addToPlaylist": "Adicionar à playlist…",
+        "transcript": "Transcrição",
+        "moreActions": "Mais ações",
+        "subscribe": "Inscrever-se",
+        "subscribed": "Inscrito",
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "remove": "Remover",
+        "edit": "Editar",
+        "delete": "Excluir",
+        "loadMore": "Carregar mais",
+        "loading": "Carregando…"
+    },
+    "comments": {
+        "addComment": "Adicionar um comentário…",
+        "comment": "Comentar",
+        "reply": "Responder",
+        "replies": "respostas",
+        "posting": "Publicando…",
+        "loadMore": "Carregar mais comentários",
+        "empty": "Ainda não há comentários. Seja o primeiro!",
+        "signInPrompt": "Entrar",
+        "signInToComment": "para deixar um comentário.",
+        "newBadge": "Novo"
+    },
+    "library": {
+        "upNext": "A seguir",
+        "continueWatching": "Continuar assistindo",
+        "watchLater": "Assistir mais tarde",
+        "yourPlaylists": "Suas playlists",
+        "recent": "Recente",
+        "subscriptions": "Inscrições",
+        "history": "Histórico",
+        "liked": "Vídeos curtidos"
+    },
+    "channel": {
+        "videos": "Vídeos",
+        "playlists": "Playlists",
+        "about": "Sobre",
+        "subscribers": "inscritos",
+        "joined": "Entrou em"
+    },
+    "search": {
+        "placeholder": "Buscar",
+        "ariaLabel": "Buscar no cassette",
+        "recent": "Recente",
+        "clear": "Limpar"
+    },
+    "empty": {
+        "noVideos": "Ainda não há vídeos",
+        "noComments": "Ainda não há comentários",
+        "noResults": "Sem resultados",
+        "noPlaylists": "Ainda não há playlists",
+        "noSubscriptions": "Você ainda não se inscreveu em nada",
+        "noHistory": "Ainda não há histórico"
+    },
+    "settings": {
+        "title": "Configurações",
+        "language": "Idioma",
+        "theme": "Tema",
+        "themeLight": "Claro",
+        "themeDark": "Escuro",
+        "themeSystem": "Sistema",
+        "account": "Sua conta",
+        "signOut": "Sair",
+        "signIn": "Entrar",
+        "comingSoon": "(mais idiomas em breve)"
+    },
+    "errors": {
+        "generic": "Algo deu errado.",
+        "networkError": "Erro de rede.",
+        "tryAgain": "Tentar novamente",
+        "notFound": "Não encontrado",
+        "unauthorized": "Login necessário"
+    },
+    "studio": {
+        "upload": "Enviar",
+        "uploading": "Enviando…",
+        "videoTitle": "Título",
+        "videoDescription": "Descrição",
+        "tags": "Tags",
+        "visibility": "Visibilidade",
+        "visibilityPublic": "Público",
+        "visibilityUnlisted": "Não listado",
+        "visibilityPrivate": "Privado",
+        "saveAsDraft": "Salvar rascunho"
+    }
+}

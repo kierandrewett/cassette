@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { Check, ChevronRight, Circle } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -17,10 +17,15 @@ const DropdownMenuSubTrigger = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & { inset?: boolean }
 >(({ className, inset, children, ...props }, ref) => (
+    // Children render inside a flex-1 lane so `ml-auto` on a trailing
+    // label (e.g. "Dark", "EN") right-aligns *within* that lane and ends
+    // up flush against the chevron. Without this, both the trailing
+    // label and the chevron held `ml-auto` and split the spare space —
+    // the trailing label looked center-aligned instead of right-aligned.
     <DropdownMenuPrimitive.SubTrigger
         ref={ref}
         className={cn(
-            "flex cursor-default select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-none",
+            "flex cursor-default select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none",
             "focus:bg-accent data-[state=open]:bg-accent",
             "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
             inset && "pl-8",
@@ -28,8 +33,8 @@ const DropdownMenuSubTrigger = React.forwardRef<
         )}
         {...props}
     >
-        {children}
-        <ChevronRight className="ml-auto" />
+        <span className="flex flex-1 items-center gap-2">{children}</span>
+        <ChevronRight className="ml-1 text-muted-foreground" />
     </DropdownMenuPrimitive.SubTrigger>
 ));
 DropdownMenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName;
@@ -145,22 +150,27 @@ const DropdownMenuRadioItem = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => (
+    // Selected indicator now sits on the right as a Check, not a left
+    // bullet — leaves the row's left edge free for the item's own icon
+    // (Theme submenu has Sun/Moon/Computer glyphs, etc) so children can
+    // be `<><Icon /> Label</>` without ml-6 hacks.
     <DropdownMenuPrimitive.RadioItem
         ref={ref}
         className={cn(
-            "relative flex cursor-default select-none items-center rounded-lg py-1.5 pl-8 pr-2 text-sm outline-none transition-colors",
+            "relative flex cursor-default select-none items-center gap-2 rounded-lg px-2 py-1.5 pr-8 text-sm outline-none transition-colors",
             "focus:bg-accent focus:text-accent-foreground",
             "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+            "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
             className,
         )}
         {...props}
     >
-        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        {children}
+        <span className="absolute right-2 flex h-4 w-4 items-center justify-center">
             <DropdownMenuPrimitive.ItemIndicator>
-                <Circle className="h-2 w-2 fill-current" />
+                <Check className="h-4 w-4 text-primary" />
             </DropdownMenuPrimitive.ItemIndicator>
         </span>
-        {children}
     </DropdownMenuPrimitive.RadioItem>
 ));
 DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName;

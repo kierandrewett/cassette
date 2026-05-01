@@ -62,15 +62,17 @@ interface SuggestionResponse {
     playlists: PlaylistSuggestion[];
 }
 
-// Tiny inline highlighter — wraps every case-insensitive match of `query`
-// in the input string with a <mark> using the brand accent. Escapes regex
-// metacharacters so a query of "c++" doesn't blow up.
+// Tiny inline highlighter — splits `query` on whitespace and wraps every
+// case-insensitive match of any token with a <mark>. Splitting matters so a
+// query like "smoke s" highlights "smoke" and "s" independently rather than
+// only the literal "smoke s" substring. Escapes regex metacharacters so a
+// query of "c++" doesn't blow up.
 const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const Highlight = ({ text, query }: { text: string; query: string }) => {
-    const trimmed = query.trim();
-    if (!trimmed || !text) return <>{text}</>;
-    const re = new RegExp(`(${escapeRegex(trimmed)})`, "gi");
+    const tokens = query.trim().split(/\s+/).filter(Boolean);
+    if (!tokens.length || !text) return <>{text}</>;
+    const re = new RegExp(`(${tokens.map(escapeRegex).join("|")})`, "gi");
     const parts = text.split(re);
     return (
         <>
@@ -105,7 +107,10 @@ interface PendingRow {
 export const SearchAutocomplete = ({ query, onClose, onSelectRecent }: SearchAutocompleteProps) => {
     const router = useRouter();
     const trimmedQuery = query.trim();
-    const debouncedQuery = useDebounce(trimmedQuery, 200);
+    // Short debounce keeps the autocomplete feeling live while still
+    // collapsing rapid keystrokes into a single network round-trip.
+    // Previous results stay visible across queries via placeholderData below.
+    const debouncedQuery = useDebounce(trimmedQuery, 120);
     const [activeIndex, setActiveIndex] = useState(-1);
     const [recents, setRecents] = useState<string[]>([]);
     const listRef = useRef<HTMLDivElement>(null);

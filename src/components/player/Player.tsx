@@ -26,6 +26,7 @@ import { PlayerVignette } from "./PlayerVignette";
 import { PlayerTopBar } from "./PlayerTopBar";
 import { PlayerCenterStage } from "./PlayerCenterStage";
 import { PlayerBottomBar } from "./PlayerBottomBar";
+import { PlayerGestures } from "./PlayerGestures";
 import { UpNextOverlay } from "./UpNextOverlay";
 import { KeyboardShortcutsOverlay, useShortcutsOverlay } from "./KeyboardShortcutsOverlay";
 import { useWatchBeacon, sendPauseBeacon } from "./useWatchBeacon";
@@ -420,6 +421,12 @@ const PlayerInner = ({
             <KeyboardShortcutsOverlay open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
             <PlayerCanvas>
+                {/* Click / double-click gesture island — must be rendered
+                    inside PlayerCanvas so it can attach its listeners on the
+                    canvas element. Skipped in `controls="hidden"` embeds so
+                    they don't accidentally pause on a stray click. */}
+                {controls !== "hidden" && <PlayerGestures />}
+
                 {controls !== "hidden" && <PlayerVignette />}
 
                 {controls !== "hidden" && (

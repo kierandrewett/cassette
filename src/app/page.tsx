@@ -153,7 +153,12 @@ const HomePage = async () => {
                                 durationSec: video.durationSec,
                                 viewCount: video.viewCount,
                                 publishedAt: video.publishedAt,
-                                channel: { name: channel.name, handle: channel.handle },
+                                channel: {
+                                    id: channel.id,
+                                    name: channel.name,
+                                    handle: channel.handle,
+                                    avatarPath: channel.avatarPath,
+                                },
                             }))}
                         />
                     </section>
@@ -174,7 +179,12 @@ const HomePage = async () => {
                                 durationSec: video.durationSec,
                                 viewCount: video.viewCount,
                                 publishedAt: video.publishedAt,
-                                channel: { name: channel.name, handle: channel.handle },
+                                channel: {
+                                    id: channel.id,
+                                    name: channel.name,
+                                    handle: channel.handle,
+                                    avatarPath: channel.avatarPath,
+                                },
                             }))}
                         />
                     </section>
@@ -194,7 +204,12 @@ const HomePage = async () => {
                             durationSec: video.durationSec,
                             viewCount: video.viewCount,
                             publishedAt: video.publishedAt,
-                            channel: { name: channel.name, handle: channel.handle },
+                            channel: {
+                                id: channel.id,
+                                name: channel.name,
+                                handle: channel.handle,
+                                avatarPath: channel.avatarPath,
+                            },
                         }))}
                         emptySlot={
                             <div className="rounded-2xl border border-border bg-card/40 p-10 text-center">

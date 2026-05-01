@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "الرئيسية",
+        "subscriptions": "الاشتراكات",
+        "library": "المكتبة",
+        "history": "السجل",
+        "playlists": "قوائم التشغيل",
+        "studio": "الاستوديو",
+        "admin": "الإدارة",
+        "newChannel": "قناة جديدة",
+        "createChannel": "إنشاء قناة",
+        "yourChannels": "قنواتك",
+        "manage": "إدارة",
+        "you": "أنت"
+    },
+    "actions": {
+        "like": "إعجاب",
+        "unlike": "إزالة الإعجاب",
+        "dislike": "عدم إعجاب",
+        "removeDislike": "إزالة عدم الإعجاب",
+        "share": "مشاركة",
+        "watchLater": "المشاهدة لاحقًا",
+        "addToPlaylist": "إضافة إلى قائمة تشغيل…",
+        "transcript": "النص المكتوب",
+        "moreActions": "المزيد",
+        "subscribe": "اشتراك",
+        "subscribed": "مشترك",
+        "save": "حفظ",
+        "cancel": "إلغاء",
+        "remove": "إزالة",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "loadMore": "تحميل المزيد",
+        "loading": "جارٍ التحميل…"
+    },
+    "comments": {
+        "addComment": "أضف تعليقًا…",
+        "comment": "تعليق",
+        "reply": "رد",
+        "replies": "ردود",
+        "posting": "جارٍ النشر…",
+        "loadMore": "تحميل المزيد من التعليقات",
+        "empty": "لا توجد تعليقات بعد. كن الأول!",
+        "signInPrompt": "سجّل الدخول",
+        "signInToComment": " لكتابة تعليق.",
+        "newBadge": "جديد"
+    },
+    "library": {
+        "upNext": "التالي",
+        "continueWatching": "تابع المشاهدة",
+        "watchLater": "المشاهدة لاحقًا",
+        "yourPlaylists": "قوائم تشغيلك",
+        "recent": "الأخيرة",
+        "subscriptions": "الاشتراكات",
+        "history": "السجل",
+        "liked": "الفيديوهات التي أعجبتك"
+    },
+    "channel": {
+        "videos": "الفيديوهات",
+        "playlists": "قوائم التشغيل",
+        "about": "حول",
+        "subscribers": "مشتركين",
+        "joined": "تاريخ الانضمام"
+    },
+    "search": {
+        "placeholder": "بحث",
+        "ariaLabel": "البحث في cassette",
+        "recent": "الأخيرة",
+        "clear": "مسح"
+    },
+    "empty": {
+        "noVideos": "لا توجد فيديوهات بعد",
+        "noComments": "لا توجد تعليقات بعد",
+        "noResults": "لا توجد نتائج",
+        "noPlaylists": "لا توجد قوائم تشغيل بعد",
+        "noSubscriptions": "لم تشترك في أي شيء بعد",
+        "noHistory": "لا يوجد سجل بعد"
+    },
+    "settings": {
+        "title": "الإعدادات",
+        "language": "اللغة",
+        "theme": "المظهر",
+        "themeLight": "فاتح",
+        "themeDark": "داكن",
+        "themeSystem": "النظام",
+        "account": "حسابك",
+        "signOut": "تسجيل الخروج",
+        "signIn": "تسجيل الدخول",
+        "comingSoon": "(لغات أخرى قادمة)"
+    },
+    "errors": {
+        "generic": "حدث خطأ ما.",
+        "networkError": "خطأ في الشبكة.",
+        "tryAgain": "إعادة المحاولة",
+        "notFound": "غير موجود",
+        "unauthorized": "يلزم تسجيل الدخول"
+    },
+    "studio": {
+        "upload": "تحميل",
+        "uploading": "جارٍ التحميل…",
+        "videoTitle": "العنوان",
+        "videoDescription": "الوصف",
+        "tags": "العلامات",
+        "visibility": "الظهور",
+        "visibilityPublic": "عام",
+        "visibilityUnlisted": "غير مدرج",
+        "visibilityPrivate": "خاص",
+        "saveAsDraft": "حفظ كمسودة"
+    }
+}

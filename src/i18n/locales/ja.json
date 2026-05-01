@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "ホーム",
+        "subscriptions": "登録チャンネル",
+        "library": "ライブラリ",
+        "history": "履歴",
+        "playlists": "再生リスト",
+        "studio": "スタジオ",
+        "admin": "管理",
+        "newChannel": "新しいチャンネル",
+        "createChannel": "チャンネルを作成",
+        "yourChannels": "あなたのチャンネル",
+        "manage": "管理",
+        "you": "あなた"
+    },
+    "actions": {
+        "like": "高評価",
+        "unlike": "高評価を取り消す",
+        "dislike": "低評価",
+        "removeDislike": "低評価を取り消す",
+        "share": "共有",
+        "watchLater": "後で見る",
+        "addToPlaylist": "再生リストに追加…",
+        "transcript": "文字起こし",
+        "moreActions": "その他",
+        "subscribe": "登録",
+        "subscribed": "登録済み",
+        "save": "保存",
+        "cancel": "キャンセル",
+        "remove": "削除",
+        "edit": "編集",
+        "delete": "削除",
+        "loadMore": "もっと読み込む",
+        "loading": "読み込み中…"
+    },
+    "comments": {
+        "addComment": "コメントを追加…",
+        "comment": "コメント",
+        "reply": "返信",
+        "replies": "件の返信",
+        "posting": "投稿中…",
+        "loadMore": "コメントをもっと読み込む",
+        "empty": "コメントはまだありません。最初の一人になりましょう!",
+        "signInPrompt": "ログイン",
+        "signInToComment": "してコメントしましょう。",
+        "newBadge": "新着"
+    },
+    "library": {
+        "upNext": "次の動画",
+        "continueWatching": "続きから視聴",
+        "watchLater": "後で見る",
+        "yourPlaylists": "あなたの再生リスト",
+        "recent": "最近",
+        "subscriptions": "登録チャンネル",
+        "history": "履歴",
+        "liked": "高評価した動画"
+    },
+    "channel": {
+        "videos": "動画",
+        "playlists": "再生リスト",
+        "about": "概要",
+        "subscribers": "人のチャンネル登録者",
+        "joined": "登録日"
+    },
+    "search": {
+        "placeholder": "検索",
+        "ariaLabel": "cassette を検索",
+        "recent": "最近の検索",
+        "clear": "クリア"
+    },
+    "empty": {
+        "noVideos": "動画はまだありません",
+        "noComments": "コメントはまだありません",
+        "noResults": "結果がありません",
+        "noPlaylists": "再生リストはまだありません",
+        "noSubscriptions": "まだ何も登録していません",
+        "noHistory": "視聴履歴はまだありません"
+    },
+    "settings": {
+        "title": "設定",
+        "language": "言語",
+        "theme": "テーマ",
+        "themeLight": "ライト",
+        "themeDark": "ダーク",
+        "themeSystem": "システム",
+        "account": "アカウント",
+        "signOut": "ログアウト",
+        "signIn": "ログイン",
+        "comingSoon": "(他の言語は近日公開)"
+    },
+    "errors": {
+        "generic": "問題が発生しました。",
+        "networkError": "ネットワークエラー。",
+        "tryAgain": "再試行",
+        "notFound": "見つかりません",
+        "unauthorized": "ログインが必要です"
+    },
+    "studio": {
+        "upload": "アップロード",
+        "uploading": "アップロード中…",
+        "videoTitle": "タイトル",
+        "videoDescription": "説明",
+        "tags": "タグ",
+        "visibility": "公開設定",
+        "visibilityPublic": "公開",
+        "visibilityUnlisted": "限定公開",
+        "visibilityPrivate": "非公開",
+        "saveAsDraft": "下書きを保存"
+    }
+}

@@ -75,6 +75,19 @@ export const SleepTimer = ({ onSelect, onStateChange }: SleepTimerProps) => {
         return () => window.removeEventListener("cassette:player-leave", onLeave);
     }, []);
 
+    // Escape closes — TV remote "Back" maps to Escape.
+    useEffect(() => {
+        if (!open) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                setOpen(false);
+            }
+        };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [open]);
+
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const remainingRef = useRef<number | null>(null);

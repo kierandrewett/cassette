@@ -11,12 +11,15 @@ export const VideoCardSkeleton = ({ className }: VideoCardSkeletonProps) => {
         <div className={cn("block", className)}>
             {/* Thumbnail placeholder */}
             <Skeleton className="aspect-video w-full rounded-xl" />
-            {/* Title lines */}
-            <div className="mt-2 space-y-1.5">
-                <Skeleton className="h-3.5 w-full rounded" />
-                <Skeleton className="h-3.5 w-3/4 rounded" />
-                <Skeleton className="h-3 w-1/2 rounded" />
-                <Skeleton className="h-3 w-2/5 rounded" />
+            {/* Avatar + meta column */}
+            <div className="mt-3 flex gap-3">
+                <Skeleton className="mt-0.5 h-9 w-9 shrink-0 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-full rounded" />
+                    <Skeleton className="h-3.5 w-3/4 rounded" />
+                    <Skeleton className="h-3 w-1/2 rounded" />
+                    <Skeleton className="h-3 w-2/5 rounded" />
+                </div>
             </div>
         </div>
     );

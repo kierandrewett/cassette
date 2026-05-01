@@ -66,6 +66,15 @@ const uploadedWithinInterval = (v: "hour" | "today" | "week" | "month" | "year")
     }
 };
 
+// pg_trgm SET LOCAL fragments — defaults are 0.3 / 0.6 which are too strict
+// for real typos: e.g. word_similarity('smke', 'Smoke Sample') = 0.4 doesn't
+// fire `<%`. We lower them inside a transaction so the `%` / `<%` operators
+// stay index-backed (GIN trgm) while accepting more permissive matches.
+// SET LOCAL is transaction-scoped, which keeps the change off other queries
+// sharing the pooled connection.
+const TRGM_SIM_LIMIT = sql`SET LOCAL pg_trgm.similarity_threshold = 0.15`;
+const TRGM_WORD_SIM_LIMIT = sql`SET LOCAL pg_trgm.word_similarity_threshold = 0.3`;
+
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -80,10 +89,19 @@ export const searchRouter = createTRPCRouter({
         const { q, uploadedWithin, duration, hasCaptions, tag, cursor = 0, limit } = input;
 
         // Build WHERE fragments that get ANDed together in the final query.
-        // We use raw sql template literals because websearch_to_tsquery and
-        // ts_rank are not exposed through Drizzle's typed API.
-        // When q is empty (tag-only search), skip FTS filtering entirely.
-        const ftsClause = q.trim() ? sql`v.search_vector @@ websearch_to_tsquery('simple', ${q})` : sql`TRUE`;
+        // We use raw sql template literals because websearch_to_tsquery, ts_rank
+        // and the pg_trgm operators are not exposed through Drizzle's typed API.
+        //
+        // Match clause is a hybrid: FTS catches keyword/lexeme hits (fast, ranked
+        // well, picks up multi-word queries), and pg_trgm `%` / `<%` against the
+        // GIN-indexed title backs that up with typo tolerance. A typo like
+        // "smke" becomes a tsquery lexeme 'smke' which never matches 'smoke',
+        // but the trigram side still finds it. Both sides hit GIN indexes
+        // (videos_search_gin and videos_title_trgm) so postgres bitmap-ORs them.
+        // When q is empty (tag-only search), skip the match filter entirely.
+        const ftsClause = q.trim()
+            ? sql`(v.search_vector @@ websearch_to_tsquery('simple', ${q}) OR v.title % ${q} OR ${q} <% v.title)`
+            : sql`TRUE`;
         const privacyClause = sql`v.privacy = 'public' AND v.status = 'ready'`;
 
         const intervalClause = uploadedWithin
@@ -121,9 +139,22 @@ export const searchRouter = createTRPCRouter({
             rank: number;
         };
 
-        const rankExpr = q.trim() ? sql`ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q}))` : sql`0`;
+        // Combined relevance: FTS rank for keyword hits, plus trigram word
+        // similarity scaled to a comparable 0..1-ish range so a fuzzy hit on the
+        // title still ranks above a stale exact-FTS hit. GREATEST picks whichever
+        // signal is stronger per row.
+        const rankExpr = q.trim()
+            ? sql`GREATEST(
+                    ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q})),
+                    word_similarity(${q}, v.title) * 0.6,
+                    similarity(v.title, ${q}) * 0.5
+                )`
+            : sql`0`;
 
-        const rows = await ctx.db.execute<Row>(sql`
+        const rows = await ctx.db.transaction(async (tx) => {
+            await tx.execute(TRGM_SIM_LIMIT);
+            await tx.execute(TRGM_WORD_SIM_LIMIT);
+            return tx.execute<Row>(sql`
                 SELECT
                     v.id,
                     v.title,
@@ -148,6 +179,7 @@ export const searchRouter = createTRPCRouter({
                 LIMIT ${limit + 1}
                 OFFSET ${cursor}
             `);
+        });
 
         const items = rows.slice(0, limit);
         const nextCursor = rows.length > limit ? cursor + limit : null;
@@ -212,23 +244,38 @@ export const searchRouter = createTRPCRouter({
             sim: number;
         };
 
-        const [videoRows, channelRows, playlistRows] = await Promise.all([
-            ctx.db.execute<VideoRow>(sql`
+        // Trigram match: `%` is whole-string similarity (good for full-title
+        // typos), `<%` is word_similarity — finds the best matching window
+        // inside the title, which is what makes "smk" → "smoke sample" work.
+        // Both ops use the videos_title_trgm GIN index; postgres bitmap-ORs
+        // them. Thresholds are lowered via SET LOCAL inside the transaction
+        // (see TRGM_SIM_LIMIT) so common typos actually clear the operator
+        // bar. Ranking takes the stronger of the two signals.
+        //
+        // Three queries run sequentially inside the transaction rather than
+        // in parallel: SET LOCAL only binds to the connection that ran it,
+        // and Promise.all over tx would interleave statements unpredictably.
+        // Autocomplete totals are small (5/3/2 rows) so the sequential cost
+        // is well under the round-trip we'd save.
+        const { videoRows, channelRows, playlistRows } = await ctx.db.transaction(async (tx) => {
+            await tx.execute(TRGM_SIM_LIMIT);
+            await tx.execute(TRGM_WORD_SIM_LIMIT);
+            const videoRows = await tx.execute<VideoRow>(sql`
                 SELECT
                     v.id, v.public_id, v.title, v.description, v.thumbnail_path,
                     v.duration_sec, v.view_count, v.published_at,
                     c.id AS channel_id, c.name AS channel_name, c.handle AS channel_handle,
-                    similarity(v.title, ${q}) AS sim
+                    GREATEST(similarity(v.title, ${q}), word_similarity(${q}, v.title)) AS sim
                 FROM videos v
                 INNER JOIN channels c ON c.id = v.channel_id
-                WHERE v.title % ${q}
+                WHERE (v.title % ${q} OR ${q} <% v.title)
                     AND v.privacy = 'public'
                     AND v.status = 'ready'
                     AND v.is_draft = false
-                ORDER BY sim DESC
+                ORDER BY sim DESC, v.view_count DESC
                 LIMIT 5
-            `),
-            ctx.db.execute<ChannelRow>(sql`
+            `);
+            const channelRows = await tx.execute<ChannelRow>(sql`
                 SELECT
                     c.id, c.name, c.handle, c.avatar_path,
                     (SELECT COUNT(*)::int FROM subscriptions s WHERE s.channel_id = c.id) AS subscriber_count,
@@ -237,27 +284,34 @@ export const searchRouter = createTRPCRouter({
                             AND v.privacy = 'public'
                             AND v.status = 'ready'
                             AND v.is_draft = false) AS video_count,
-                    similarity(c.name, ${q}) AS sim
+                    GREATEST(
+                        similarity(c.name, ${q}),
+                        word_similarity(${q}, c.name),
+                        similarity(c.handle, ${q})
+                    ) AS sim
                 FROM channels c
                 WHERE c.name % ${q}
+                    OR ${q} <% c.name
+                    OR c.handle % ${q}
                 ORDER BY sim DESC
                 LIMIT 3
-            `),
-            ctx.db.execute<PlaylistRow>(sql`
+            `);
+            const playlistRows = await tx.execute<PlaylistRow>(sql`
                 SELECT
                     p.id, p.title,
                     u.name AS owner_name,
                     (SELECT COUNT(*)::int FROM playlist_items pi WHERE pi.playlist_id = p.id) AS item_count,
-                    similarity(p.title, ${q}) AS sim
+                    GREATEST(similarity(p.title, ${q}), word_similarity(${q}, p.title)) AS sim
                 FROM playlists p
                 LEFT JOIN "user" u ON u.id = p.owner_id
-                WHERE p.title % ${q}
+                WHERE (p.title % ${q} OR ${q} <% p.title)
                     AND p.privacy = 'public'
                     AND p.kind = 'user'
                 ORDER BY sim DESC
                 LIMIT 2
-            `),
-        ]);
+            `);
+            return { videoRows, channelRows, playlistRows };
+        });
 
         const videos = videoRows.map((r) => ({
             kind: "video" as const,
@@ -320,7 +374,10 @@ export const searchRouter = createTRPCRouter({
             sim: number;
         };
 
-        const rows = await ctx.db.execute<Row>(sql`
+        const rows = await ctx.db.transaction(async (tx) => {
+            await tx.execute(TRGM_SIM_LIMIT);
+            await tx.execute(TRGM_WORD_SIM_LIMIT);
+            return tx.execute<Row>(sql`
                 SELECT
                     c.id,
                     c.handle,
@@ -334,13 +391,20 @@ export const searchRouter = createTRPCRouter({
                         WHERE v.channel_id = c.id
                           AND v.privacy = 'public'
                           AND v.status = 'ready')::int            AS "videoCount",
-                    GREATEST(similarity(c.name, ${q}), similarity(c.handle, ${q})) AS sim
+                    GREATEST(
+                        similarity(c.name, ${q}),
+                        word_similarity(${q}, c.name),
+                        similarity(c.handle, ${q})
+                    ) AS sim
                 FROM channels c
-                WHERE c.name % ${q} OR c.handle % ${q}
+                WHERE c.name % ${q}
+                    OR ${q} <% c.name
+                    OR c.handle % ${q}
                 ORDER BY sim DESC, "subscriberCount" DESC
                 LIMIT ${limit + 1}
                 OFFSET ${cursor}
             `);
+        });
 
         const items = rows.slice(0, limit);
         const nextCursor = rows.length > limit ? cursor + limit : null;
@@ -377,23 +441,27 @@ export const searchRouter = createTRPCRouter({
             sim: number;
         };
 
-        const rows = await ctx.db.execute<Row>(sql`
+        const rows = await ctx.db.transaction(async (tx) => {
+            await tx.execute(TRGM_SIM_LIMIT);
+            await tx.execute(TRGM_WORD_SIM_LIMIT);
+            return tx.execute<Row>(sql`
                 SELECT
                     p.id,
                     p.title,
                     p.description,
                     u.name                                                                  AS "ownerName",
                     (SELECT count(*) FROM playlist_items pi WHERE pi.playlist_id = p.id)::int AS "itemCount",
-                    similarity(p.title, ${q})                                              AS sim
+                    GREATEST(similarity(p.title, ${q}), word_similarity(${q}, p.title)) AS sim
                 FROM playlists p
                 JOIN "user" u ON u.id = p.owner_id
-                WHERE p.title % ${q}
+                WHERE (p.title % ${q} OR ${q} <% p.title)
                   AND p.privacy = 'public'
                   AND p.kind = 'user'
                 ORDER BY sim DESC, "itemCount" DESC
                 LIMIT ${limit + 1}
                 OFFSET ${cursor}
             `);
+        });
 
         const items = rows.slice(0, limit);
         const nextCursor = rows.length > limit ? cursor + limit : null;
@@ -458,7 +526,13 @@ export const searchRouter = createTRPCRouter({
             rank: number;
         };
 
-        const rows = await ctx.db.execute<Row>(sql`
+        // Hybrid match + rank — see the `videos` procedure above for the full
+        // explanation. Short version: FTS for keyword hits, pg_trgm for typos
+        // and partial words, GREATEST picks the strongest signal per row.
+        const rows = await ctx.db.transaction(async (tx) => {
+            await tx.execute(TRGM_SIM_LIMIT);
+            await tx.execute(TRGM_WORD_SIM_LIMIT);
+            return tx.execute<Row>(sql`
                 SELECT
                     v.id,
                     v.title,
@@ -469,17 +543,24 @@ export const searchRouter = createTRPCRouter({
                     v.published_at     AS "publishedAt",
                     c.name             AS "channelName",
                     c.handle           AS "channelHandle",
-                    ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q})) AS rank
+                    GREATEST(
+                        ts_rank(v.search_vector, websearch_to_tsquery('simple', ${q})),
+                        word_similarity(${q}, v.title) * 0.6,
+                        similarity(v.title, ${q}) * 0.5
+                    ) AS rank
                 FROM videos v
                 JOIN channels c ON c.id = v.channel_id
                 WHERE
-                    v.search_vector @@ websearch_to_tsquery('simple', ${q})
+                    (v.search_vector @@ websearch_to_tsquery('simple', ${q})
+                        OR v.title % ${q}
+                        OR ${q} <% v.title)
                     AND v.privacy = 'public'
                     AND v.status = 'ready'
                 ORDER BY rank DESC, v.published_at DESC
                 LIMIT ${limit + 1}
                 OFFSET ${cursor}
             `);
+        });
 
         const items = rows.slice(0, limit);
         const nextCursor = rows.length > limit ? cursor + limit : null;

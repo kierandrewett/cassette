@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "Accueil",
+        "subscriptions": "Abonnements",
+        "library": "Bibliothèque",
+        "history": "Historique",
+        "playlists": "Playlists",
+        "studio": "Studio",
+        "admin": "Administration",
+        "newChannel": "Nouvelle chaîne",
+        "createChannel": "Créer une chaîne",
+        "yourChannels": "Vos chaînes",
+        "manage": "Gérer",
+        "you": "Vous"
+    },
+    "actions": {
+        "like": "J'aime",
+        "unlike": "Retirer le j'aime",
+        "dislike": "Je n'aime pas",
+        "removeDislike": "Retirer le je n'aime pas",
+        "share": "Partager",
+        "watchLater": "À regarder plus tard",
+        "addToPlaylist": "Ajouter à la playlist…",
+        "transcript": "Transcription",
+        "moreActions": "Plus d'actions",
+        "subscribe": "S'abonner",
+        "subscribed": "Abonné",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "remove": "Retirer",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "loadMore": "Charger plus",
+        "loading": "Chargement…"
+    },
+    "comments": {
+        "addComment": "Ajouter un commentaire…",
+        "comment": "Commenter",
+        "reply": "Répondre",
+        "replies": "réponses",
+        "posting": "Publication…",
+        "loadMore": "Charger plus de commentaires",
+        "empty": "Aucun commentaire pour l'instant. Soyez le premier !",
+        "signInPrompt": "Connectez-vous",
+        "signInToComment": "pour laisser un commentaire.",
+        "newBadge": "Nouveau"
+    },
+    "library": {
+        "upNext": "À suivre",
+        "continueWatching": "Reprendre",
+        "watchLater": "À regarder plus tard",
+        "yourPlaylists": "Vos playlists",
+        "recent": "Récent",
+        "subscriptions": "Abonnements",
+        "history": "Historique",
+        "liked": "Vidéos likées"
+    },
+    "channel": {
+        "videos": "Vidéos",
+        "playlists": "Playlists",
+        "about": "À propos",
+        "subscribers": "abonnés",
+        "joined": "Inscrit le"
+    },
+    "search": {
+        "placeholder": "Rechercher",
+        "ariaLabel": "Rechercher sur cassette",
+        "recent": "Récent",
+        "clear": "Effacer"
+    },
+    "empty": {
+        "noVideos": "Aucune vidéo pour l'instant",
+        "noComments": "Aucun commentaire pour l'instant",
+        "noResults": "Aucun résultat",
+        "noPlaylists": "Aucune playlist pour l'instant",
+        "noSubscriptions": "Vous n'êtes encore abonné à rien",
+        "noHistory": "Aucun historique pour l'instant"
+    },
+    "settings": {
+        "title": "Paramètres",
+        "language": "Langue",
+        "theme": "Thème",
+        "themeLight": "Clair",
+        "themeDark": "Sombre",
+        "themeSystem": "Système",
+        "account": "Votre compte",
+        "signOut": "Se déconnecter",
+        "signIn": "Se connecter",
+        "comingSoon": "(d'autres langues bientôt)"
+    },
+    "errors": {
+        "generic": "Quelque chose a mal tourné.",
+        "networkError": "Erreur réseau.",
+        "tryAgain": "Réessayer",
+        "notFound": "Introuvable",
+        "unauthorized": "Connexion requise"
+    },
+    "studio": {
+        "upload": "Mettre en ligne",
+        "uploading": "Mise en ligne…",
+        "videoTitle": "Titre",
+        "videoDescription": "Description",
+        "tags": "Tags",
+        "visibility": "Visibilité",
+        "visibilityPublic": "Public",
+        "visibilityUnlisted": "Non répertorié",
+        "visibilityPrivate": "Privé",
+        "saveAsDraft": "Enregistrer comme brouillon"
+    }
+}

@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "首页",
+        "subscriptions": "订阅",
+        "library": "媒体库",
+        "history": "观看记录",
+        "playlists": "播放列表",
+        "studio": "工作室",
+        "admin": "管理",
+        "newChannel": "新建频道",
+        "createChannel": "创建频道",
+        "yourChannels": "你的频道",
+        "manage": "管理",
+        "you": "你"
+    },
+    "actions": {
+        "like": "赞",
+        "unlike": "取消赞",
+        "dislike": "踩",
+        "removeDislike": "取消踩",
+        "share": "分享",
+        "watchLater": "稍后观看",
+        "addToPlaylist": "添加到播放列表…",
+        "transcript": "字幕文本",
+        "moreActions": "更多操作",
+        "subscribe": "订阅",
+        "subscribed": "已订阅",
+        "save": "保存",
+        "cancel": "取消",
+        "remove": "移除",
+        "edit": "编辑",
+        "delete": "删除",
+        "loadMore": "加载更多",
+        "loading": "加载中…"
+    },
+    "comments": {
+        "addComment": "添加评论…",
+        "comment": "评论",
+        "reply": "回复",
+        "replies": "条回复",
+        "posting": "发布中…",
+        "loadMore": "加载更多评论",
+        "empty": "还没有评论,快来抢沙发!",
+        "signInPrompt": "登录",
+        "signInToComment": "以发表评论。",
+        "newBadge": "新"
+    },
+    "library": {
+        "upNext": "接下来",
+        "continueWatching": "继续观看",
+        "watchLater": "稍后观看",
+        "yourPlaylists": "你的播放列表",
+        "recent": "最近",
+        "subscriptions": "订阅",
+        "history": "观看记录",
+        "liked": "已点赞视频"
+    },
+    "channel": {
+        "videos": "视频",
+        "playlists": "播放列表",
+        "about": "简介",
+        "subscribers": "订阅者",
+        "joined": "加入时间"
+    },
+    "search": {
+        "placeholder": "搜索",
+        "ariaLabel": "搜索 cassette",
+        "recent": "最近",
+        "clear": "清除"
+    },
+    "empty": {
+        "noVideos": "暂无视频",
+        "noComments": "暂无评论",
+        "noResults": "无结果",
+        "noPlaylists": "暂无播放列表",
+        "noSubscriptions": "你还没有订阅任何频道",
+        "noHistory": "暂无观看记录"
+    },
+    "settings": {
+        "title": "设置",
+        "language": "语言",
+        "theme": "主题",
+        "themeLight": "浅色",
+        "themeDark": "深色",
+        "themeSystem": "跟随系统",
+        "account": "你的账号",
+        "signOut": "退出登录",
+        "signIn": "登录",
+        "comingSoon": "(更多语言即将推出)"
+    },
+    "errors": {
+        "generic": "发生错误。",
+        "networkError": "网络错误。",
+        "tryAgain": "重试",
+        "notFound": "未找到",
+        "unauthorized": "需要登录"
+    },
+    "studio": {
+        "upload": "上传",
+        "uploading": "上传中…",
+        "videoTitle": "标题",
+        "videoDescription": "描述",
+        "tags": "标签",
+        "visibility": "可见性",
+        "visibilityPublic": "公开",
+        "visibilityUnlisted": "不公开列出",
+        "visibilityPrivate": "私享",
+        "saveAsDraft": "存为草稿"
+    }
+}

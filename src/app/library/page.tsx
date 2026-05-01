@@ -66,7 +66,12 @@ const LibraryPage = async () => {
                           viewCount: videos.viewCount,
                           publishedAt: videos.publishedAt,
                       },
-                      channel: { name: channels.name, handle: channels.handle },
+                      channel: {
+                          id: channels.id,
+                          name: channels.name,
+                          handle: channels.handle,
+                          avatarPath: channels.avatarPath,
+                      },
                   })
                   .from(playlistItems)
                   .innerJoin(videos, eq(videos.id, playlistItems.videoId))
@@ -91,7 +96,12 @@ const LibraryPage = async () => {
                     viewCount: videos.viewCount,
                     publishedAt: videos.publishedAt,
                 },
-                channel: { name: channels.name, handle: channels.handle },
+                channel: {
+                    id: channels.id,
+                    name: channels.name,
+                    handle: channels.handle,
+                    avatarPath: channels.avatarPath,
+                },
             })
             .from(watchHistory)
             .innerJoin(videos, eq(videos.id, watchHistory.videoId))
@@ -121,7 +131,12 @@ const LibraryPage = async () => {
                     viewCount: videos.viewCount,
                     publishedAt: videos.publishedAt,
                 },
-                channel: { name: channels.name, handle: channels.handle },
+                channel: {
+                    id: channels.id,
+                    name: channels.name,
+                    handle: channels.handle,
+                    avatarPath: channels.avatarPath,
+                },
             })
             .from(watchHistory)
             .innerJoin(videos, eq(videos.id, watchHistory.videoId))
@@ -143,7 +158,12 @@ const LibraryPage = async () => {
                           viewCount: videos.viewCount,
                           publishedAt: videos.publishedAt,
                       },
-                      channel: { name: channels.name, handle: channels.handle },
+                      channel: {
+                          id: channels.id,
+                          name: channels.name,
+                          handle: channels.handle,
+                          avatarPath: channels.avatarPath,
+                      },
                   })
                   .from(playlistItems)
                   .innerJoin(videos, eq(videos.id, playlistItems.videoId))
@@ -175,7 +195,12 @@ const LibraryPage = async () => {
                       durationSec: videos.durationSec,
                       viewCount: videos.viewCount,
                       publishedAt: videos.publishedAt,
-                      channel: { name: channels.name, handle: channels.handle },
+                      channel: {
+                          id: channels.id,
+                          name: channels.name,
+                          handle: channels.handle,
+                          avatarPath: channels.avatarPath,
+                      },
                   })
                   .from(videos)
                   .innerJoin(channels, eq(channels.id, videos.channelId))

@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "Inicio",
+        "subscriptions": "Suscripciones",
+        "library": "Biblioteca",
+        "history": "Historial",
+        "playlists": "Listas de reproducción",
+        "studio": "Estudio",
+        "admin": "Administración",
+        "newChannel": "Nuevo canal",
+        "createChannel": "Crear canal",
+        "yourChannels": "Tus canales",
+        "manage": "Gestionar",
+        "you": "Tú"
+    },
+    "actions": {
+        "like": "Me gusta",
+        "unlike": "Quitar me gusta",
+        "dislike": "No me gusta",
+        "removeDislike": "Quitar no me gusta",
+        "share": "Compartir",
+        "watchLater": "Ver más tarde",
+        "addToPlaylist": "Añadir a lista…",
+        "transcript": "Transcripción",
+        "moreActions": "Más acciones",
+        "subscribe": "Suscribirse",
+        "subscribed": "Suscrito",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "remove": "Quitar",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "loadMore": "Cargar más",
+        "loading": "Cargando…"
+    },
+    "comments": {
+        "addComment": "Añadir un comentario…",
+        "comment": "Comentar",
+        "reply": "Responder",
+        "replies": "respuestas",
+        "posting": "Publicando…",
+        "loadMore": "Cargar más comentarios",
+        "empty": "Aún no hay comentarios. ¡Sé el primero!",
+        "signInPrompt": "Inicia sesión",
+        "signInToComment": "para dejar un comentario.",
+        "newBadge": "Nuevo"
+    },
+    "library": {
+        "upNext": "A continuación",
+        "continueWatching": "Continuar viendo",
+        "watchLater": "Ver más tarde",
+        "yourPlaylists": "Tus listas",
+        "recent": "Reciente",
+        "subscriptions": "Suscripciones",
+        "history": "Historial",
+        "liked": "Vídeos que me gustan"
+    },
+    "channel": {
+        "videos": "Vídeos",
+        "playlists": "Listas",
+        "about": "Información",
+        "subscribers": "suscriptores",
+        "joined": "Se unió"
+    },
+    "search": {
+        "placeholder": "Buscar",
+        "ariaLabel": "Buscar en cassette",
+        "recent": "Reciente",
+        "clear": "Limpiar"
+    },
+    "empty": {
+        "noVideos": "Aún no hay vídeos",
+        "noComments": "Aún no hay comentarios",
+        "noResults": "Sin resultados",
+        "noPlaylists": "Aún no hay listas",
+        "noSubscriptions": "Aún no estás suscrito a nada",
+        "noHistory": "Aún no hay historial"
+    },
+    "settings": {
+        "title": "Ajustes",
+        "language": "Idioma",
+        "theme": "Tema",
+        "themeLight": "Claro",
+        "themeDark": "Oscuro",
+        "themeSystem": "Sistema",
+        "account": "Tu cuenta",
+        "signOut": "Cerrar sesión",
+        "signIn": "Iniciar sesión",
+        "comingSoon": "(más idiomas próximamente)"
+    },
+    "errors": {
+        "generic": "Algo salió mal.",
+        "networkError": "Error de red.",
+        "tryAgain": "Reintentar",
+        "notFound": "No encontrado",
+        "unauthorized": "Inicio de sesión requerido"
+    },
+    "studio": {
+        "upload": "Subir",
+        "uploading": "Subiendo…",
+        "videoTitle": "Título",
+        "videoDescription": "Descripción",
+        "tags": "Etiquetas",
+        "visibility": "Visibilidad",
+        "visibilityPublic": "Público",
+        "visibilityUnlisted": "No listado",
+        "visibilityPrivate": "Privado",
+        "saveAsDraft": "Guardar borrador"
+    }
+}

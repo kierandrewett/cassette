@@ -56,6 +56,35 @@ export const LibraryRow = ({ heading, seeAllHref, caption, children, className }
         el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: reduced ? "auto" : "smooth" });
     };
 
+    // Arrow-key navigation across cards in the shelf — TV remote / D-pad
+    // friendly. We collect every focusable card link, find the active one,
+    // then focus + smooth-scroll the prev/next sibling into view. ArrowUp /
+    // ArrowDown intentionally fall through to the browser default so the
+    // user can move between shelves vertically.
+    const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        const scroller = scrollerRef.current;
+        if (!scroller) return;
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement) || !scroller.contains(active)) return;
+        const items = Array.from(
+            scroller.querySelectorAll<HTMLElement>("a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])"),
+        );
+        if (items.length === 0) return;
+        // Resolve the focused card itself even if focus is on a nested element.
+        const current = items.find((el) => el === active || el.contains(active));
+        const idx = current ? items.indexOf(current) : -1;
+        if (idx === -1) return;
+        const nextIdx = e.key === "ArrowRight" ? Math.min(items.length - 1, idx + 1) : Math.max(0, idx - 1);
+        if (nextIdx === idx) return;
+        e.preventDefault();
+        const target = items[nextIdx]!;
+        target.focus({ preventScroll: true });
+        const reduced =
+            typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest", inline: "center" });
+    };
+
     return (
         <section className={cn("group/row space-y-3", className)}>
             <div className="flex items-end justify-between gap-3 px-4 md:px-6">
@@ -81,6 +110,7 @@ export const LibraryRow = ({ heading, seeAllHref, caption, children, className }
                     ref={scrollerRef}
                     className="scrollbar-hide flex gap-3 overflow-x-auto scroll-smooth px-4 py-3 md:px-6"
                     style={{ scrollbarWidth: "none" }}
+                    onKeyDown={onKeyDown}
                 >
                     {children}
                 </div>

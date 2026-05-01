@@ -21,8 +21,10 @@ export interface VideoCardVideo {
     viewCount: number;
     publishedAt: Date | string | null;
     channel: {
+        id: string;
         name: string;
         handle: string;
+        avatarPath: string | null;
     };
 }
 
@@ -58,7 +60,10 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
                 // BEHIND the content (see <span aria-hidden> below) so it
                 // doesn't push siblings around in the grid. group-hover
                 // drives the scale-from-80 fade-in.
-                "group relative block",
+                "group relative block rounded-xl outline-none",
+                // Focus ring — visible for keyboard / D-pad navigation,
+                // matches the rest of the app (focus-visible:ring-2).
+                "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 className,
             )}
             aria-label={`Watch "${video.title}"`}
@@ -113,23 +118,48 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
                 )}
             </div>
 
-            {/* Metadata */}
-            <div className="mt-2 space-y-0.5">
-                {/* Two-line clamp title */}
-                <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{video.title}</h3>
-                {/* Channel name only — the redundant "@handle" has been
-                    dropped because the channel name already identifies the
-                    uploader on the card. */}
-                <p className="truncate text-xs text-muted-foreground">{video.channel.name}</p>
-                <p className="text-xs text-muted-foreground">
-                    {formatCount(video.viewCount)} views
-                    {video.publishedAt && (
-                        <>
-                            {" "}
-                            <span aria-hidden="true">&middot;</span> {formatRelativeTime(video.publishedAt)}
-                        </>
+            {/* Metadata — avatar on the left, title + channel + meta stacked
+                on the right (YouTube-style). */}
+            <div className="mt-3 flex gap-3">
+                {/* Avatar — div (not span) so h-9/w-9 actually take effect.
+                    Falls back to a plain initial chip when the channel has
+                    no avatar upload, mirroring the watch-page header. */}
+                <div
+                    aria-hidden="true"
+                    className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary"
+                >
+                    {video.channel.avatarPath ? (
+                        <Image
+                            src={`/api/channel/${video.channel.id}/asset/avatar`}
+                            alt=""
+                            width={36}
+                            height={36}
+                            unoptimized
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <span className="text-xs font-semibold text-foreground/80">
+                            {video.channel.name[0]?.toUpperCase() ?? "C"}
+                        </span>
                     )}
-                </p>
+                </div>
+                <div className="min-w-0 flex-1 space-y-0.5">
+                    {/* Two-line clamp title */}
+                    <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{video.title}</h3>
+                    {/* Channel name only — the redundant "@handle" has been
+                        dropped because the channel name already identifies the
+                        uploader on the card. */}
+                    <p className="truncate text-xs text-muted-foreground">{video.channel.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                        {formatCount(video.viewCount)} views
+                        {video.publishedAt && (
+                            <>
+                                {" "}
+                                <span aria-hidden="true">&middot;</span> {formatRelativeTime(video.publishedAt)}
+                            </>
+                        )}
+                    </p>
+                </div>
             </div>
         </Link>
     );

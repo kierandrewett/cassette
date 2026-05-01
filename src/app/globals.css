@@ -221,7 +221,7 @@
            text doesn't.
        Fullscreen still wins because Vidstack swaps the document into
        :fullscreen state which has its own browser-level styling. */
-    #watch-page[data-theater="true"] {
+    #watch-page[data-theater="true"] .watch-shell {
         max-width: none;
         padding-left: 0;
         padding-right: 0;
@@ -230,13 +230,17 @@
         flex-direction: column;
         gap: 1.5rem;
     }
+    /* Player loses rounded corners + shadow because a full-bleed black
+       bar reads cleaner without that chrome. Targeting the watch-player
+       wrapper (which sits in the main column) and the floating player
+       container would both be redundant — the wrapper class is enough. */
     #watch-page[data-theater="true"] .watch-player {
         border-radius: 0;
         box-shadow: none;
     }
-    /* Constrain the post-player sections to a comfortable reading column.
-       Matches the non-theatre max-w-[1600px] but with a tighter pad-x
-       so it lines up with the rest of the app. */
+    /* Constrain the post-player sections (header, description, comments,
+       sidebar) to a comfortable reading column. Without this they'd span
+       the full viewport too, which is unreadable on wide screens. */
     #watch-page[data-theater="true"] .watch-main > :not(.watch-player),
     #watch-page[data-theater="true"] .watch-aside {
         margin-left: auto;
@@ -253,6 +257,9 @@
             padding-right: 1.5rem;
         }
     }
+    /* Override flex-shrink-0 + fixed width on the inline sidebar so it
+       fills its single-column slot under the player rather than sitting
+       at 360 px wide. */
     @media (min-width: 1024px) {
         #watch-page[data-theater="true"] .watch-aside {
             width: 100%;

@@ -40,10 +40,28 @@ export const ChannelTabs = ({ handle, showHome = false }: ChannelTabsProps) => {
               { label: "About", slug: "about" },
           ];
 
+    // ArrowLeft / ArrowRight cycle focus through the tabs (ARIA tablist
+    // pattern). Activation still requires Enter — these are real <a> tags
+    // pointing at separate URLs, so we don't auto-navigate on focus.
+    const onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        const root = e.currentTarget;
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement) || !root.contains(active)) return;
+        const items = Array.from(root.querySelectorAll<HTMLElement>("[role='tab']"));
+        const idx = items.indexOf(active);
+        if (idx === -1) return;
+        const len = items.length;
+        const nextIdx = e.key === "ArrowRight" ? (idx + 1) % len : (idx - 1 + len) % len;
+        if (nextIdx === idx) return;
+        e.preventDefault();
+        items[nextIdx]!.focus();
+    };
+
     return (
         <div className="mt-6 border-b border-border" role="tablist" aria-label="Channel sections">
             <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
-                <nav className="-mb-px flex gap-8">
+                <nav className="-mb-px flex gap-8" onKeyDown={onKeyDown}>
                     {tabs.map((tab) => {
                         const href = tab.slug ? `${base}/${tab.slug}` : base;
                         // Active when the current path matches the tab base
@@ -60,7 +78,8 @@ export const ChannelTabs = ({ handle, showHome = false }: ChannelTabsProps) => {
                                 role="tab"
                                 aria-selected={active}
                                 className={cn(
-                                    "inline-flex items-center border-b-2 pb-3 pt-3 text-base font-bold tracking-tight transition-colors",
+                                    "inline-flex items-center rounded-sm border-b-2 pb-3 pt-3 text-base font-bold tracking-tight transition-colors",
+                                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                     active
                                         ? "border-foreground text-foreground"
                                         : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",

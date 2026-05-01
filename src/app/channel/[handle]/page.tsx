@@ -20,6 +20,7 @@ const ChannelPage = async ({ params }: ChannelPageProps) => {
             id: channels.id,
             name: channels.name,
             handle: channels.handle,
+            avatarPath: channels.avatarPath,
             pinnedVideoId: channels.pinnedVideoId,
         })
         .from(channels)
@@ -60,7 +61,12 @@ const ChannelPage = async ({ params }: ChannelPageProps) => {
 
     const videoList = channelVideos.map((v) => ({
         ...v,
-        channel: { name: channel.name, handle: channel.handle },
+        channel: {
+            id: channel.id,
+            name: channel.name,
+            handle: channel.handle,
+            avatarPath: channel.avatarPath,
+        },
     }));
 
     return (

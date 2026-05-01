@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
+import { Cancel01Icon } from "hugeicons-react";
 import { toast } from "sonner";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -69,7 +70,43 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
     const [captionFiles, setCaptionFiles] = useState<File[]>([]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [tags, setTags] = useState("");
+    const [tagList, setTagList] = useState<string[]>([]);
+    const [tagDraft, setTagDraft] = useState("");
+    const tagInputRef = useRef<HTMLInputElement>(null);
+
+    const commitTagDraft = (raw: string): boolean => {
+        // Split on commas so paste-and-Enter ("a, b, c") expands into chips.
+        const parts = raw
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        if (parts.length === 0) return false;
+        setTagList((prev) => {
+            const seen = new Set(prev.map((t) => t.toLowerCase()));
+            const next = [...prev];
+            for (const p of parts) {
+                if (!seen.has(p.toLowerCase())) {
+                    next.push(p);
+                    seen.add(p.toLowerCase());
+                }
+            }
+            return next;
+        });
+        setTagDraft("");
+        return true;
+    };
+
+    const onTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            commitTagDraft(tagDraft);
+            return;
+        }
+        if (e.key === "Backspace" && tagDraft === "" && tagList.length > 0) {
+            e.preventDefault();
+            setTagList((prev) => prev.slice(0, -1));
+        }
+    };
     const [privacy, setPrivacy] = useState<PrivacyValue>("public");
     const [isDragging, setIsDragging] = useState(false);
     const [draft, setDraft] = useState(false);
@@ -250,7 +287,18 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
         formData.set("description", description.trim());
         formData.set("privacy", privacy);
         formData.set("channelId", channel.id);
-        if (tags.trim()) formData.set("tags", tags.trim());
+        // Flush any uncommitted draft text in the tag input so the user
+        // doesn't lose tags they typed but never pressed Enter on.
+        const finalTags = tagDraft.trim()
+            ? [
+                  ...tagList,
+                  ...tagDraft
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+              ]
+            : tagList;
+        if (finalTags.length > 0) formData.set("tags", finalTags.join(","));
         // Draft and scheduled-publish flags. The route promotes a future
         // publishAt to draft=true automatically, but we still send both so
         // an explicit draft-without-schedule case is unambiguous.
@@ -489,24 +537,52 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                             />
                         </div>
 
-                        {/* Tags */}
+                        {/* Tags — chip-style input. Enter or comma commits a
+                            chip; Backspace at empty draft removes the last. */}
                         <div className="space-y-1.5">
                             <label htmlFor="upload-tags" className="text-sm font-medium leading-none">
                                 Tags <span className="font-normal text-muted-foreground">(optional)</span>
                             </label>
-                            <input
-                                id="upload-tags"
-                                type="text"
-                                value={tags}
-                                onChange={(e) => setTags(e.target.value)}
-                                disabled={formDisabled}
-                                placeholder="Comma-separated, e.g. cooking, knife-skills"
+                            <div
+                                onClick={() => tagInputRef.current?.focus()}
                                 className={cn(
-                                    "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
-                                    "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                                    "disabled:pointer-events-none disabled:opacity-50",
+                                    "flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-lg border border-input bg-transparent px-2 py-1.5 text-sm shadow-sm transition-colors",
+                                    "focus-within:outline-none focus-within:ring-1 focus-within:ring-ring",
+                                    formDisabled && "pointer-events-none opacity-50",
                                 )}
-                            />
+                            >
+                                {tagList.map((tag, i) => (
+                                    <span
+                                        key={`${tag}-${i}`}
+                                        className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs"
+                                    >
+                                        {tag}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setTagList((prev) => prev.filter((_, idx) => idx !== i));
+                                            }}
+                                            className="text-muted-foreground hover:text-foreground"
+                                            aria-label={`Remove ${tag}`}
+                                        >
+                                            <Cancel01Icon size={12} strokeWidth={2} />
+                                        </button>
+                                    </span>
+                                ))}
+                                <input
+                                    id="upload-tags"
+                                    ref={tagInputRef}
+                                    type="text"
+                                    value={tagDraft}
+                                    onChange={(e) => setTagDraft(e.target.value)}
+                                    onKeyDown={onTagKeyDown}
+                                    onBlur={() => commitTagDraft(tagDraft)}
+                                    disabled={formDisabled}
+                                    placeholder={tagList.length === 0 ? "e.g. cooking, knife-skills" : ""}
+                                    className="min-w-[8ch] flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                                />
+                            </div>
                         </div>
 
                         {/* Privacy */}
@@ -580,14 +656,18 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                             </div>
                         </div>
 
-                        {/* Captions */}
+                        {/* Captions — native file input is hidden; we drive it
+                            from a styled button so it blends with the rest of
+                            the form, and selected files render as chips. */}
                         <div className="space-y-1.5">
                             <label htmlFor="upload-captions" className="text-sm font-medium leading-none">
-                                Captions{" "}
-                                <span className="font-normal text-muted-foreground">
-                                    (optional, .vtt — name as <code className="text-xs">lang-Label.vtt</code>)
-                                </span>
+                                Captions <span className="font-normal text-muted-foreground">(optional)</span>
                             </label>
+                            <p className="text-xs text-muted-foreground">
+                                .vtt files named <code className="rounded bg-muted px-1 py-0.5">lang-Label.vtt</code>
+                                {" — e.g. "}
+                                <code className="rounded bg-muted px-1 py-0.5">en-English.vtt</code>.
+                            </p>
                             <input
                                 id="upload-captions"
                                 ref={captionsInputRef}
@@ -596,13 +676,44 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                                 multiple
                                 onChange={onCaptionsChange}
                                 disabled={formDisabled}
-                                className="text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-medium file:text-foreground hover:file:bg-muted/80 disabled:opacity-50"
+                                className="hidden"
                             />
+                            <div className="flex flex-wrap items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => captionsInputRef.current?.click()}
+                                    disabled={formDisabled}
+                                    className={cn(
+                                        "inline-flex h-8 items-center rounded-lg border border-input bg-transparent px-3 text-xs font-medium transition-colors",
+                                        "hover:bg-accent hover:text-accent-foreground",
+                                        "disabled:pointer-events-none disabled:opacity-50",
+                                    )}
+                                >
+                                    {captionFiles.length === 0 ? "Choose .vtt files" : "Add more"}
+                                </button>
+                                {captionFiles.length === 0 && (
+                                    <span className="text-xs text-muted-foreground">No files selected</span>
+                                )}
+                            </div>
                             {captionFiles.length > 0 && (
-                                <ul className="space-y-0.5">
-                                    {captionFiles.map((f) => (
-                                        <li key={f.name} className="text-xs text-muted-foreground">
+                                <ul className="flex flex-wrap gap-1.5 pt-1">
+                                    {captionFiles.map((f, i) => (
+                                        <li
+                                            key={`${f.name}-${i}`}
+                                            className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs"
+                                        >
                                             {f.name}
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setCaptionFiles((prev) => prev.filter((_, idx) => idx !== i))
+                                                }
+                                                disabled={formDisabled}
+                                                className="text-muted-foreground hover:text-foreground"
+                                                aria-label={`Remove ${f.name}`}
+                                            >
+                                                <Cancel01Icon size={12} strokeWidth={2} />
+                                            </button>
                                         </li>
                                     ))}
                                 </ul>

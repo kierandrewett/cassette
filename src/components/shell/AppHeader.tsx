@@ -325,22 +325,16 @@ export const AppHeader = ({ user, isAdmin = false }: AppHeaderProps) => {
                                 <DropdownMenuSubContent className="w-44">
                                     <DropdownMenuRadioGroup value={theme} onValueChange={handleThemeSelect}>
                                         <DropdownMenuRadioItem value="light">
-                                            <span className="ml-6 flex items-center gap-2">
-                                                <Sun03Icon size={16} strokeWidth={1.6} />
-                                                {tSettings("themeLight")}
-                                            </span>
+                                            <Sun03Icon size={16} strokeWidth={1.6} />
+                                            {tSettings("themeLight")}
                                         </DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="dark">
-                                            <span className="ml-6 flex items-center gap-2">
-                                                <Moon02Icon size={16} strokeWidth={1.6} />
-                                                {tSettings("themeDark")}
-                                            </span>
+                                            <Moon02Icon size={16} strokeWidth={1.6} />
+                                            {tSettings("themeDark")}
                                         </DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="system">
-                                            <span className="ml-6 flex items-center gap-2">
-                                                <ComputerIcon size={16} strokeWidth={1.6} />
-                                                {tSettings("themeSystem")}
-                                            </span>
+                                            <ComputerIcon size={16} strokeWidth={1.6} />
+                                            {tSettings("themeSystem")}
                                         </DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuSubContent>
@@ -357,9 +351,7 @@ export const AppHeader = ({ user, isAdmin = false }: AppHeaderProps) => {
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent className="w-56">
                                     <DropdownMenuRadioGroup value={locale} onValueChange={handleLocaleSelect}>
-                                        <DropdownMenuRadioItem value="en">
-                                            <span className="ml-6">English</span>
-                                        </DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem disabled className="text-xs">
