@@ -1,9 +1,20 @@
 import { createCallerFactory, createTRPCRouter, publicProcedure } from "./trpc";
-import { channelRouter, videoRouter } from "./routers";
+import {
+    channelRouter,
+    commentRouter,
+    historyRouter,
+    likeRouter,
+    notificationRouter,
+    playlistRouter,
+    searchRouter,
+    subscriptionRouter,
+    videoRouter,
+} from "./routers";
 
-// The application router. Sub-routers are added by the per-milestone agents
-// as they land. `health.ping` exists from the start so the wire shape is real
-// even before any feature routers register.
+// The application router. Every domain router is registered here; the
+// per-domain implementations live under ./routers/. `health.ping` is kept as
+// a tiny no-auth procedure for liveness checks and as the canonical "is the
+// tRPC wire shape live" probe.
 
 export const appRouter = createTRPCRouter({
     health: createTRPCRouter({
@@ -11,6 +22,13 @@ export const appRouter = createTRPCRouter({
     }),
     channel: channelRouter,
     video: videoRouter,
+    comment: commentRouter,
+    subscription: subscriptionRouter,
+    like: likeRouter,
+    playlist: playlistRouter,
+    history: historyRouter,
+    search: searchRouter,
+    notification: notificationRouter,
 });
 
 export type AppRouter = typeof appRouter;

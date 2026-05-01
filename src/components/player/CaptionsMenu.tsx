@@ -1,0 +1,102 @@
+"use client";
+
+import { useMediaRemote, useMediaState, useCaptionOptions, useMediaPlayer } from "@vidstack/react";
+import { Subtitles } from "lucide-react";
+import { useState } from "react";
+
+import { cn } from "@/lib/utils";
+
+/**
+ * Captions language picker with an on/off toggle.
+ * Uses Vidstack's useCaptionOptions to get the available caption tracks.
+ */
+export const CaptionsMenu = () => {
+    const [open, setOpen] = useState(false);
+    const options = useCaptionOptions();
+    const remote = useMediaRemote();
+    const player = useMediaPlayer();
+    const textTrack = useMediaState("textTrack");
+
+    const isOn = textTrack !== null;
+
+    if (options.length === 0) return null;
+
+    return (
+        <div className="relative">
+            <button
+                aria-label="Captions"
+                aria-expanded={open}
+                aria-pressed={isOn}
+                onClick={() => setOpen((v) => !v)}
+                className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-full",
+                    "hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
+                    "transition-colors",
+                    isOn ? "text-white" : "text-white/50",
+                    open && "bg-white/10",
+                )}
+            >
+                <Subtitles className="h-5 w-5" />
+            </button>
+
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                    <div
+                        className="absolute bottom-full right-0 mb-2 z-50 w-44 overflow-hidden rounded-xl surface-glass shadow-2xl py-2"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Off option */}
+                        <button
+                            className={cn(
+                                "flex w-full items-center justify-between px-4 py-2 text-sm",
+                                "hover:bg-white/10 transition-colors",
+                                !isOn ? "text-white font-medium" : "text-white/70",
+                            )}
+                            onClick={() => {
+                                // Disable all caption tracks by setting mode to 'disabled'.
+                                const tracks = player?.textTracks;
+                                if (tracks) {
+                                    for (let i = 0; i < tracks.length; i++) {
+                                        const t = tracks[i];
+                                        if (t && (t.kind === "subtitles" || t.kind === "captions")) {
+                                            remote.changeTextTrackMode(i, "disabled");
+                                        }
+                                    }
+                                }
+                                setOpen(false);
+                            }}
+                        >
+                            <span>Off</span>
+                            {!isOn && <Check />}
+                        </button>
+
+                        {options.map((opt) => (
+                            <button
+                                key={opt.label}
+                                className={cn(
+                                    "flex w-full items-center justify-between px-4 py-2 text-sm",
+                                    "hover:bg-white/10 transition-colors",
+                                    opt.selected ? "text-white font-medium" : "text-white/70",
+                                )}
+                                onClick={() => {
+                                    opt.select();
+                                    setOpen(false);
+                                }}
+                            >
+                                <span>{opt.label}</span>
+                                {opt.selected && isOn && <Check />}
+                            </button>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+
+const Check = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);

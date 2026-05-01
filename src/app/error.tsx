@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 import { CassetteWordmark } from "@/components/branding/CassetteWordmark";
 
@@ -39,12 +40,12 @@ const ErrorPage = ({ error, reset }: { error: Error & { digest?: string }; reset
                 >
                     Try again
                 </button>
-                <a
+                <Link
                     href="/"
                     className="rounded-full border border-border bg-secondary/40 px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-secondary/70"
                 >
                     Back to home
-                </a>
+                </Link>
             </div>
         </main>
     );

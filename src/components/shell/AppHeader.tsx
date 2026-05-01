@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import { CassetteWordmark } from "@/components/branding/CassetteWordmark";
+import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 
 export interface AppHeaderUser {
     name: string;
@@ -104,19 +105,15 @@ export const AppHeader = ({ user, onMenuToggle }: AppHeaderProps) => {
                             />
                         </form>
                     </PopoverAnchor>
-                    {/* Autocomplete placeholder — search results agent will fill this */}
                     <PopoverContent
                         align="center"
                         className="w-[var(--radix-popover-trigger-width)] min-w-64 p-0"
                         onOpenAutoFocus={(e) => e.preventDefault()}
                     >
-                        <div className="px-3 py-2 text-sm text-muted-foreground">
-                            {searchValue.trim() ? (
-                                <span>Press Enter to search for &ldquo;{searchValue}&rdquo;</span>
-                            ) : (
-                                <span>Start typing to search&hellip;</span>
-                            )}
-                        </div>
+                        <SearchAutocomplete
+                            query={searchValue}
+                            onClose={() => setSearchOpen(false)}
+                        />
                     </PopoverContent>
                 </Popover>
             </div>
