@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Plus, Check, List } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { useSession } from "@/lib/auth-client";
@@ -118,7 +117,6 @@ const CreatePlaylistForm = ({
 
 export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
     const { data: session } = useSession();
-    const router = useRouter();
     const [open, setOpen] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
     const [queueAdded, setQueueAdded] = useState(false);
@@ -152,26 +150,11 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
         onError: () => toast.error("Failed to add to playlist"),
     });
 
-    if (!session?.user) {
-        // Unauthenticated: render a button (NOT a <Link>) that programmatically
-        // navigates. VideoCard already wraps the whole card in a <Link>, so a
-        // nested <a> would be invalid HTML and trip a hydration error.
-        return (
-            <button
-                type="button"
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    router.push("/login");
-                }}
-                className="flex items-center gap-1.5 rounded-lg bg-secondary/80 px-2.5 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
-                aria-label="Sign in to save this video"
-            >
-                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                Sign in to save
-            </button>
-        );
-    }
+    // Signed-out viewers don't see the playlist button at all. The whole
+    // card already navigates to /watch/<id>; surfacing a "Sign in to save"
+    // pill in the corner just bleeds past the duration badge and reads as
+    // broken UI. Sign-in CTAs live in the action row on the watch page.
+    if (!session?.user) return null;
 
     const userPlaylists = playlists ?? [];
 
