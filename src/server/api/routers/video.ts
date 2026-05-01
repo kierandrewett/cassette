@@ -565,6 +565,59 @@ export const videoRouter = createTRPCRouter({
     // The caller is responsible for separately wiping the on-disk source +
     // hls files; we leave that to a future janitor pass so a delete is fast.
     // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
+    // trending — public+ready videos ranked by HN-style gravity decay so a
+    // freshly-uploaded video with strong views ranks above an older video
+    // with the same view count. Score = view_count / pow(age_hours + 2, 1.5).
+    // ---------------------------------------------------------------------------
+    trending: publicProcedure
+        .input(
+            z.object({
+                limit: z.number().int().min(1).max(50).default(20),
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            type Row = {
+                id: string;
+                title: string;
+                thumbnailPath: string | null;
+                durationSec: number | null;
+                viewCount: number;
+                publishedAt: Date | null;
+                channelName: string;
+                channelHandle: string;
+            };
+
+            const rows = await ctx.db.execute<Row>(sql`
+                SELECT
+                    v.id,
+                    v.title,
+                    v.thumbnail_path AS "thumbnailPath",
+                    v.duration_sec   AS "durationSec",
+                    v.view_count     AS "viewCount",
+                    v.published_at   AS "publishedAt",
+                    c.name           AS "channelName",
+                    c.handle         AS "channelHandle"
+                FROM videos v
+                JOIN channels c ON c.id = v.channel_id
+                WHERE v.privacy = 'public' AND v.status = 'ready'
+                ORDER BY (v.view_count::float /
+                    power(extract(epoch from now() - coalesce(v.published_at, v.created_at)) / 3600.0 + 2.0, 1.5)) DESC,
+                    v.published_at DESC
+                LIMIT ${input.limit}
+            `);
+
+            return rows.map((r) => ({
+                id: r.id,
+                title: r.title,
+                thumbnailPath: r.thumbnailPath,
+                durationSec: r.durationSec,
+                viewCount: Number(r.viewCount),
+                publishedAt: r.publishedAt,
+                channel: { name: r.channelName, handle: r.channelHandle },
+            }));
+        }),
+
     delete: protectedProcedure
         .input(z.object({ videoId: z.string().uuid() }))
         .mutation(async ({ ctx, input }) => {

@@ -8,10 +8,11 @@ import { db } from "@/server/db/client";
 import { channels } from "@/server/db/schema/channels";
 import { subscriptions } from "@/server/db/schema/social";
 import { videos } from "@/server/db/schema/videos";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 const RECENT_LIMIT = 24;
 const SUBS_LIMIT = 12;
+const TRENDING_LIMIT = 12;
 
 // /home is the landing surface for signed-in viewers, but anonymous viewers
 // also reach it from /; /'s redirect to /home only fires for authenticated
@@ -47,13 +48,27 @@ const HomePage = async () => {
               .limit(SUBS_LIMIT)
         : [];
 
-    const recent = await db
-        .select({ video: videos, channel: channels })
-        .from(videos)
-        .innerJoin(channels, eq(videos.channelId, channels.id))
-        .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready")))
-        .orderBy(desc(videos.publishedAt))
-        .limit(RECENT_LIMIT);
+    const [recent, trending] = await Promise.all([
+        db
+            .select({ video: videos, channel: channels })
+            .from(videos)
+            .innerJoin(channels, eq(videos.channelId, channels.id))
+            .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready")))
+            .orderBy(desc(videos.publishedAt))
+            .limit(RECENT_LIMIT),
+        // HN-style gravity decay so freshly uploaded videos with strong
+        // viewership rank above older videos with similar totals.
+        db
+            .select({ video: videos, channel: channels })
+            .from(videos)
+            .innerJoin(channels, eq(videos.channelId, channels.id))
+            .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready")))
+            .orderBy(
+                sql`(videos.view_count::float / power(extract(epoch from now() - coalesce(videos.published_at, videos.created_at)) / 3600.0 + 2.0, 1.5)) DESC`,
+                desc(videos.publishedAt),
+            )
+            .limit(TRENDING_LIMIT),
+    ]);
 
     return (
         <AppShell>
@@ -68,6 +83,25 @@ const HomePage = async () => {
                         </div>
                         <VideoGrid
                             videos={subFeed.map(({ video, channel }) => ({
+                                id: video.id,
+                                title: video.title,
+                                thumbnailPath: video.thumbnailPath,
+                                durationSec: video.durationSec,
+                                viewCount: video.viewCount,
+                                publishedAt: video.publishedAt,
+                                channel: { name: channel.name, handle: channel.handle },
+                            }))}
+                        />
+                    </section>
+                ) : null}
+
+                {trending.length > 0 ? (
+                    <section className="space-y-4">
+                        <div className="flex items-baseline justify-between">
+                            <h2 className="text-xl font-semibold tracking-tight">Trending</h2>
+                        </div>
+                        <VideoGrid
+                            videos={trending.map(({ video, channel }) => ({
                                 id: video.id,
                                 title: video.title,
                                 thumbnailPath: video.thumbnailPath,
