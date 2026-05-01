@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { TRPCError } from "@trpc/server";
 
@@ -10,17 +10,15 @@ import { Description } from "@/components/watch/Description";
 import { DocumentTitle } from "@/components/watch/DocumentTitle";
 import { UpNextSidebar } from "@/components/watch/UpNextSidebar";
 import { CommentTree } from "@/components/comments/CommentTree";
-import { ShareButton } from "@/components/watch/ShareButton";
-import { TranscriptToggleButton } from "@/components/watch/TranscriptToggleButton";
-import { AddToPlaylistButton } from "@/components/playlist/AddToPlaylistButton";
-import { AddToWatchLaterChip } from "@/components/social/AddToWatchLaterChip";
+import { ActionRow } from "@/components/watch/ActionRow";
 import { TagChipRow } from "@/components/video/TagChip";
+import { looksLikeUuid } from "@/lib/slug";
+import { parseTimestamp } from "@/lib/timestamp";
 import { formatCount, formatRelativeTime } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 
 interface WatchPageProps {
     params: Promise<{ videoId: string }>;
-    searchParams: Promise<{ slug?: string }>;
+    searchParams: Promise<{ slug?: string; t?: string }>;
 }
 
 export async function generateMetadata({ params, searchParams }: WatchPageProps): Promise<Metadata> {
@@ -40,7 +38,8 @@ export async function generateMetadata({ params, searchParams }: WatchPageProps)
 
 export default async function WatchPage({ params, searchParams }: WatchPageProps) {
     const { videoId } = await params;
-    const { slug } = await searchParams;
+    const sp = await searchParams;
+    const { slug, t } = sp;
 
     let data: Awaited<ReturnType<typeof trpc.video.byId>>;
     try {
@@ -53,6 +52,19 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
     }
 
     const { video, channel, variants, captions, chapters, isLikedByMe, isSubscribed, signedToken } = data;
+
+    // Canonicalise: if the URL still uses the internal UUID, 308-redirect to
+    // the short publicId form. Preserve the rest of the query string (slug,
+    // ?t=, etc.) so deep links keep working.
+    if (looksLikeUuid(videoId) && video.publicId && video.publicId !== videoId) {
+        const qs = new URLSearchParams();
+        if (slug) qs.set("slug", slug);
+        if (t) qs.set("t", t);
+        const tail = qs.toString();
+        permanentRedirect(`/watch/${video.publicId}${tail ? `?${tail}` : ""}`);
+    }
+
+    const startSec = parseTimestamp(t) ?? undefined;
 
     // Fetch the autoplay-next video (queue integration lands in M7; this is the channel fallback).
     let nextVideo: Awaited<ReturnType<typeof trpc.video.nextInChannel>> = null;
@@ -78,9 +90,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
           ]
         : [];
 
-    const publishedAtStr = video.publishedAt
-        ? formatRelativeTime(video.publishedAt)
-        : null;
+    const publishedAtStr = video.publishedAt ? formatRelativeTime(video.publishedAt) : null;
 
     return (
         <AppShell>
@@ -100,7 +110,11 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                 <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
                     {/* ---- Left column ---- */}
                     <div className="min-w-0 flex-1">
-                        {/* Player */}
+                        {/* Player.  `autoplay` requests playback on load —
+                            Vidstack will start muted on browsers that block
+                            unmuted autoplay; the in-player chrome surfaces a
+                            "tap to unmute" affordance.  `startSec` honours
+                            the ?t= deep-link parameter. */}
                         <div className="w-full overflow-hidden rounded-2xl bg-black shadow-2xl">
                             <Player
                                 video={video}
@@ -120,6 +134,9 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                                         : null
                                 }
                                 channel={channel}
+                                autoplay
+                                muted
+                                startSec={startSec}
                             />
                         </div>
 
@@ -127,17 +144,18 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                         <div className="mt-4 space-y-3">
                             <h1 className="text-xl font-semibold leading-snug text-foreground">{video.title}</h1>
 
-                            {video.tags.length > 0 && (
-                                <TagChipRow tags={video.tags} />
-                            )}
+                            {video.tags.length > 0 && <TagChipRow tags={video.tags} />}
 
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 {/* Channel + stats */}
                                 <div className="flex items-center gap-3">
-                                    {/* Channel avatar */}
+                                    {/* Channel avatar — channels keep their explicit avatar
+                                        upload pipeline; if not set we fall back to the
+                                        first-letter chip (no Gravatar lookup, the channel
+                                        is not a user account). */}
                                     <a
                                         href={`/c/${channel.handle}`}
-                                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border/50 hover:ring-border transition-all"
+                                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-1 ring-border/50 transition-all hover:ring-border"
                                         aria-label={`${channel.name}'s channel`}
                                     >
                                         {channel.avatarPath ? (
@@ -159,7 +177,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                                     <div>
                                         <a
                                             href={`/c/${channel.handle}`}
-                                            className="block text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
+                                            className="block text-sm font-semibold text-foreground transition-colors hover:text-foreground/80"
                                         >
                                             {channel.name}
                                         </a>
@@ -168,67 +186,43 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
 
                                     {/* Subscribe button — B2 will wire real logic; placeholder for now */}
                                     <button
-                                        className="ml-2 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="ml-2 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         aria-label={isSubscribed ? "Subscribed" : "Subscribe"}
                                     >
                                         {isSubscribed ? "Subscribed" : "Subscribe"}
                                     </button>
                                 </div>
 
-                                {/* Action buttons (like / share / save) — social router (B2/M6) wires the real mutations */}
-                                <div className="flex items-center gap-2">
-                                    <ActionGroup>
-                                        <ActionButton aria-label={isLikedByMe === "like" ? "Unlike" : "Like"}>
-                                            <ThumbUpIcon active={isLikedByMe === "like"} />
-                                            <span>{formatCount(video.likeCount)}</span>
-                                        </ActionButton>
-                                        <Divider />
-                                        <ActionButton aria-label={isLikedByMe === "dislike" ? "Remove dislike" : "Dislike"}>
-                                            <ThumbDownIcon active={isLikedByMe === "dislike"} />
-                                        </ActionButton>
-                                    </ActionGroup>
-
-                                    <ActionGroup>
-                                        <ShareButton
-                                            videoId={video.id}
-                                            slug={video.unlistedSlug ?? undefined}
-                                            isPrivate={video.privacy === "private"}
-                                        />
-                                    </ActionGroup>
-
-                                    <ActionGroup>
-                                        <TranscriptToggleButton
-                                            videoId={video.id}
-                                            captions={captions.map((c) => ({
-                                                lang: c.lang,
-                                                label: c.label,
-                                                isDefault: c.isDefault,
-                                            }))}
-                                            signedToken={signedToken}
-                                        />
-                                    </ActionGroup>
-
-                                    <AddToWatchLaterChip videoId={video.id} />
-                                    <AddToPlaylistButton videoId={video.id} />
-                                </div>
+                                {/* Action row: Like | Dislike | Watch Later | … */}
+                                <ActionRow
+                                    videoId={video.id}
+                                    slug={video.unlistedSlug ?? undefined}
+                                    isPrivate={video.privacy === "private"}
+                                    likeCount={video.likeCount}
+                                    dislikeCount={video.dislikeCount ?? 0}
+                                    isLikedByMe={isLikedByMe}
+                                    captions={captions.map((c) => ({
+                                        lang: c.lang,
+                                        label: c.label,
+                                        isDefault: c.isDefault,
+                                    }))}
+                                    signedToken={signedToken}
+                                />
                             </div>
+                        </div>
 
-                            {/* View count + date */}
-                            <p className="text-sm text-muted-foreground">
+                        {/* Description card — views/date now sit at the top so
+                            they have proper container context. */}
+                        <div className="mt-4 rounded-xl bg-secondary/40 p-4 ring-1 ring-border/40">
+                            <p className="mb-2 text-sm font-medium text-foreground">
                                 {formatCount(video.viewCount)} views
                                 {publishedAtStr && (
                                     <>
                                         {" "}
-                                        <span aria-hidden="true">&middot;</span>
-                                        {" "}
-                                        {publishedAtStr}
+                                        <span aria-hidden="true">&middot;</span> {publishedAtStr}
                                     </>
                                 )}
                             </p>
-                        </div>
-
-                        {/* Description */}
-                        <div className="mt-4 rounded-xl bg-secondary/30 p-4">
                             <Description text={video.description} />
                         </div>
 
@@ -241,10 +235,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                     </div>
 
                     {/* ---- Right column (Up Next sidebar) ---- */}
-                    <aside
-                        className="w-full lg:w-[var(--watch-sidebar-w,360px)] lg:flex-shrink-0"
-                        aria-label="Up Next"
-                    >
+                    <aside className="w-full lg:w-[var(--watch-sidebar-w,360px)] lg:flex-shrink-0" aria-label="Up Next">
                         <UpNextSidebar videos={sidebarVideos} />
                     </aside>
                 </div>
@@ -253,52 +244,5 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
     );
 }
 
-// ---- Helper components used in the watch page layout ----
-
-const ActionGroup = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex items-center overflow-hidden rounded-full bg-secondary/60 hover:bg-secondary/80 transition-colors">
-        {children}
-    </div>
-);
-
-const ActionButton = ({
-    children,
-    className,
-    ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-    <button
-        {...props}
-        className={cn(
-            "flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-foreground/80",
-            "hover:text-foreground hover:bg-white/5 transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            className,
-        )}
-    >
-        {children}
-    </button>
-);
-
-const Divider = () => <div className="h-5 w-px bg-border/60" />;
-
-const ThumbUpIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        className={cn("h-4 w-4", active ? "fill-foreground" : "fill-none stroke-current")}
-        strokeWidth={1.8}
-        aria-hidden="true"
-    >
-        <path d="M7 22V11L12 2l.85.35q.425.175.725.625t.3 1.025L12.65 9H19q.8 0 1.4.6t.6 1.4v2q0 .2-.05.45t-.1.45l-3 7.05q-.25.55-.85.925T15.7 22H7zm0-2h8.7l3-7v-2h-8.15l1.35-6.45L7 9.5V20zm-2 0V11H2v9h3z" />
-    </svg>
-);
-
-const ThumbDownIcon = ({ active }: { active: boolean }) => (
-    <svg
-        viewBox="0 0 24 24"
-        className={cn("h-4 w-4 scale-y-[-1]", active ? "fill-foreground" : "fill-none stroke-current")}
-        strokeWidth={1.8}
-        aria-hidden="true"
-    >
-        <path d="M7 22V11L12 2l.85.35q.425.175.725.625t.3 1.025L12.65 9H19q.8 0 1.4.6t.6 1.4v2q0 .2-.05.45t-.1.45l-3 7.05q-.25.55-.85.925T15.7 22H7zm0-2h8.7l3-7v-2h-8.15l1.35-6.45L7 9.5V20zm-2 0V11H2v9h3z" />
-    </svg>
-);
+// Helper components for the action row + thumbs icons live alongside ActionRow
+// in src/components/watch/ActionRow.tsx.
