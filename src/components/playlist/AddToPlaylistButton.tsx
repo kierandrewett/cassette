@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check, Clock, ListVideo } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Check, Clock, Forward, ListVideo } from "lucide-react";
 import { toast } from "sonner";
 
 import { useSession } from "@/lib/auth-client";
@@ -118,12 +119,23 @@ const CreatePlaylistForm = ({
 
 export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
     const { data: session } = useSession();
+    const router = useRouter();
+    const utils = api.useUtils();
     const [open, setOpen] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
     const [queueAdded, setQueueAdded] = useState(false);
+    const [playNextAdded, setPlayNextAdded] = useState(false);
     const [watchLaterAdded, setWatchLaterAdded] = useState(false);
 
     const { data: playlists } = api.playlist.list.useQuery({}, { enabled: !!session?.user && open });
+
+    // Sonner action that surfaces the header queue chip via the library page.
+    // We deliberately avoid a global popover-control store: routing to /library
+    // is enough to make the queue feel real and hands the user a richer view.
+    const queueToastAction = {
+        label: "View queue",
+        onClick: () => router.push("/library#up-next"),
+    };
 
     const addToQueue = api.playlist.queue.add.useMutation({
         onMutate: () => setQueueAdded(true),
@@ -131,7 +143,22 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
             setQueueAdded(false);
             toast.error("Failed to add to queue");
         },
-        onSuccess: () => toast.success("Added to queue"),
+        onSuccess: async () => {
+            toast.success("Added to queue", { action: queueToastAction });
+            await utils.playlist.queue.list.invalidate();
+        },
+    });
+
+    const playNext = api.playlist.queue.add.useMutation({
+        onMutate: () => setPlayNextAdded(true),
+        onError: () => {
+            setPlayNextAdded(false);
+            toast.error("Failed to add to queue");
+        },
+        onSuccess: async () => {
+            toast.success("Playing next", { action: queueToastAction });
+            await utils.playlist.queue.list.invalidate();
+        },
     });
 
     const addToWatchLater = api.playlist.watchLater.add.useMutation({
@@ -183,11 +210,27 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                 <DropdownMenuLabel>Save video to…</DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
-                {/* System destinations: queue + watch later. Each row uses
-                    its own semantic icon (ListVideo for queue, Clock for
-                    Watch Later — Check used to be on Watch Later, which
-                    incorrectly read as "already saved"). A right-aligned
-                    Check appears AFTER the action succeeds. */}
+                {/* System destinations: play-next, queue, watch later.
+                    Each row uses its own semantic icon (Forward to push to
+                    the head, ListVideo for the tail, Clock for Watch Later
+                    — Check used to be on Watch Later, which incorrectly read
+                    as "already saved"). A right-aligned Check appears AFTER
+                    the action succeeds. */}
+                <DropdownMenuItem
+                    onSelect={(e) => {
+                        e.preventDefault();
+                        if (!playNextAdded) playNext.mutate({ videoId, position: 0 });
+                        setOpen(false);
+                    }}
+                    disabled={playNext.isPending || playNextAdded}
+                    className="justify-between gap-3"
+                >
+                    <span className="flex items-center gap-2">
+                        <Forward className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        Play next
+                    </span>
+                    {playNextAdded && <Check className="h-4 w-4 text-primary" aria-hidden="true" />}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                     onSelect={(e) => {
                         e.preventDefault();
