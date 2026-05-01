@@ -19,8 +19,12 @@ export const gravatarHash = (email: string): string => hash(email);
 
 export const gravatarUrl = (email: string, size = 80): string => gravatarUrlFromHash(gravatarHash(email), size);
 
+// `d=404` asks the upstream to return an actual 404 when the user has not
+// registered a libravatar (instead of the generic mystery-person silhouette
+// which we can't visually distinguish). The client falls through to its
+// initials roundel when the load errors.
 export const gravatarUrlFromHash = (hash: string, size = 80): string =>
-    `https://www.libravatar.org/avatar/${hash}?s=${size}&d=mp`;
+    `https://www.libravatar.org/avatar/${hash}?s=${size}&d=404`;
 
 // Initials fallback used when we want to render entirely on-server with no
 // network round trip — e.g. a tiny avatar in a comment row that we'd rather
