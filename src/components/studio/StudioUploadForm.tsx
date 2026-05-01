@@ -63,6 +63,9 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
     const [tags, setTags] = useState("");
     const [privacy, setPrivacy] = useState<PrivacyValue>("public");
     const [isDragging, setIsDragging] = useState(false);
+    const [draft, setDraft] = useState(false);
+    // datetime-local string in local time. Empty string = no schedule.
+    const [scheduledAt, setScheduledAt] = useState("");
 
     // Upload state
     const [stage, setStage] = useState<UploadStage | null>(null);
@@ -168,6 +171,18 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
         formData.set("privacy", privacy);
         formData.set("channelId", channel.id);
         if (tags.trim()) formData.set("tags", tags.trim());
+        // Draft and scheduled-publish flags. The route promotes a future
+        // publishAt to draft=true automatically, but we still send both so
+        // an explicit draft-without-schedule case is unambiguous.
+        if (draft || scheduledAt) {
+            formData.set("draft", "true");
+        }
+        if (scheduledAt) {
+            const dt = new Date(scheduledAt);
+            if (!isNaN(dt.getTime())) {
+                formData.set("publishAt", dt.toISOString());
+            }
+        }
         formData.set("file", selectedFile, selectedFile.name);
 
         for (const cap of captionFiles) {
@@ -195,9 +210,11 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
             xhrRef.current = null;
             if (xhr.status === 201) {
                 let videoId: string | null = null;
+                let respStatus: string | null = null;
                 try {
-                    const body = JSON.parse(xhr.responseText) as { videoId?: string };
+                    const body = JSON.parse(xhr.responseText) as { videoId?: string; status?: string };
                     videoId = body.videoId ?? null;
+                    respStatus = body.status ?? null;
                 } catch {
                     // fall through
                 }
@@ -206,6 +223,18 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                     setIsUploading(false);
                     setStage(null);
                     toast.error("Unexpected response from server.");
+                    return;
+                }
+
+                // Drafts and scheduled publishes skip the transcode poll
+                // entirely — they don't enter the queue until the operator
+                // publishes (or the schedule fires). Bounce to the studio
+                // videos table so the user can find the new draft.
+                if (respStatus === "draft" || respStatus === "scheduled") {
+                    setIsUploading(false);
+                    setStage(null);
+                    toast.success(respStatus === "scheduled" ? "Scheduled for later." : "Draft saved.");
+                    setTimeout(() => router.push(`/studio/c/${channel.handle}/videos`), 800);
                     return;
                 }
 
@@ -423,6 +452,47 @@ export const StudioUploadForm = ({ channel }: StudioUploadFormProps) => {
                                         <span className="text-sm font-medium capitalize">{v}</span>
                                     </label>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Draft / schedule */}
+                        <div className="space-y-3 rounded-lg border border-border bg-card/40 p-4">
+                            <label className="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={draft}
+                                    onChange={(e) => setDraft(e.target.checked)}
+                                    disabled={formDisabled}
+                                    className="mt-1 accent-primary"
+                                />
+                                <div className="space-y-0.5">
+                                    <p className="text-sm font-medium leading-none">Save as draft</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Hold the file without queuing the transcode. Publish manually from the videos
+                                        table later.
+                                    </p>
+                                </div>
+                            </label>
+                            <div className="space-y-1.5">
+                                <label htmlFor="upload-publish-at" className="text-sm font-medium leading-none">
+                                    Or schedule a future publish time{" "}
+                                    <span className="font-normal text-muted-foreground">(optional)</span>
+                                </label>
+                                <input
+                                    id="upload-publish-at"
+                                    type="datetime-local"
+                                    value={scheduledAt}
+                                    onChange={(e) => setScheduledAt(e.target.value)}
+                                    disabled={formDisabled}
+                                    className={cn(
+                                        "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+                                        "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                        "disabled:pointer-events-none disabled:opacity-50",
+                                    )}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    A future date enqueues a publish job; past values are ignored.
+                                </p>
                             </div>
                         </div>
 

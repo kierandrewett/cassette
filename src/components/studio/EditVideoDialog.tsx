@@ -59,9 +59,24 @@ type EditVideoDialogProps = {
         title: string;
         description: string;
         tags?: string[];
+        /** Whether the video is currently a draft. Controls the schedule UI. */
+        isDraft?: boolean;
+        /** Existing scheduled publish time, if any. */
+        publishAt?: Date | string | null;
         /** Chapters for the manual editor — optional for backwards compat. */
         chapters?: Array<{ startSec: number; title: string; source: string }>;
     };
+};
+
+// Format a Date to the value shape `<input type="datetime-local">` expects:
+// "YYYY-MM-DDTHH:MM" in *local* time. Returning empty string when undefined
+// so the input renders empty for "no schedule".
+const toDateTimeLocal = (d: Date | string | null | undefined): string => {
+    if (!d) return "";
+    const date = typeof d === "string" ? new Date(d) : d;
+    if (isNaN(date.getTime())) return "";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
 // ---------------------------------------------------------------------------
@@ -85,6 +100,11 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
         },
     });
 
+    // Local state for the schedule input — kept outside react-hook-form so
+    // it can be saved independently of the metadata form (a "save schedule"
+    // call shouldn't require a title-or-description edit).
+    const [publishAtLocal, setPublishAtLocal] = useState<string>(toDateTimeLocal(video.publishAt));
+
     // Keep form in sync when the dialog opens for a different video.
     useEffect(() => {
         reset({
@@ -92,7 +112,8 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
             description: video.description,
             tagsRaw: (video.tags ?? []).join(", "),
         });
-    }, [video.id, video.title, video.description, video.tags, reset]);
+        setPublishAtLocal(toDateTimeLocal(video.publishAt));
+    }, [video.id, video.title, video.description, video.tags, video.publishAt, reset]);
 
     const updateMetadata = api.video.updateMetadata.useMutation({
         onSuccess: async () => {
@@ -102,6 +123,16 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
         },
         onError: (err) => {
             toast.error(err.message ?? "Failed to update video.");
+        },
+    });
+
+    const schedule = api.video.schedule.useMutation({
+        onSuccess: async () => {
+            await utils.video.listForChannel.invalidate({ channelId });
+            toast.success("Schedule updated.");
+        },
+        onError: (err) => {
+            toast.error(err.message ?? "Failed to update schedule.");
         },
     });
 
@@ -125,6 +156,7 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
                         <TabsTrigger value="metadata">Metadata</TabsTrigger>
                         <TabsTrigger value="thumbnail">Thumbnail</TabsTrigger>
                         <TabsTrigger value="chapters">Chapters</TabsTrigger>
+                        {video.isDraft ? <TabsTrigger value="schedule">Schedule</TabsTrigger> : null}
                     </TabsList>
 
                     {/* ---- Metadata tab ---- */}
@@ -279,6 +311,64 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
                             initialChapters={video.chapters ?? []}
                         />
                     </TabsContent>
+
+                    {/* ---- Schedule tab (drafts only) ---- */}
+                    {video.isDraft ? (
+                        <TabsContent value="schedule" className="space-y-4 pt-2">
+                            <p className="text-sm text-muted-foreground">
+                                Pick a future date and time to publish this draft. The transcode job is enqueued at that
+                                moment, then the video goes live on its channel and feeds. Leave blank and save to keep
+                                it as an indefinite draft.
+                            </p>
+                            <div className="space-y-1.5">
+                                <label htmlFor="edit-publish-at" className="text-sm font-medium leading-none">
+                                    Publish at
+                                </label>
+                                <input
+                                    id="edit-publish-at"
+                                    type="datetime-local"
+                                    value={publishAtLocal}
+                                    onChange={(e) => setPublishAtLocal(e.target.value)}
+                                    className={cn(
+                                        "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+                                        "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                    )}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Times are interpreted in your local time zone.
+                                </p>
+                            </div>
+                            <DialogFooter>
+                                <button
+                                    type="button"
+                                    onClick={() => onOpenChange(false)}
+                                    className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-transparent px-4 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                >
+                                    Close
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={schedule.isPending}
+                                    onClick={() => {
+                                        const next = publishAtLocal ? new Date(publishAtLocal) : null;
+                                        if (next && isNaN(next.getTime())) {
+                                            toast.error("Invalid date/time.");
+                                            return;
+                                        }
+                                        schedule.mutate({ videoId: video.id, publishAt: next });
+                                    }}
+                                    className={cn(
+                                        "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4",
+                                        "text-sm font-medium text-primary-foreground shadow transition-colors",
+                                        "hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                        "disabled:pointer-events-none disabled:opacity-50",
+                                    )}
+                                >
+                                    {schedule.isPending ? "Saving…" : "Save schedule"}
+                                </button>
+                            </DialogFooter>
+                        </TabsContent>
+                    ) : null}
                 </Tabs>
             </DialogContent>
         </Dialog>

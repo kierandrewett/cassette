@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { and, desc, eq } from "drizzle-orm";
 
 import { ChannelCustomiseForm } from "@/components/studio/ChannelCustomiseForm";
 import { QuotaPanel } from "@/components/studio/QuotaPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc/server";
+import { db } from "@/server/db/client";
+import { channels as channelsTable } from "@/server/db/schema/channels";
+import { videos } from "@/server/db/schema/videos";
 
 type Props = {
     params: Promise<{ handle: string }>;
@@ -47,6 +51,36 @@ const CustomiseChannelPage = async ({ params }: Props) => {
     const avatarUrl = channel.avatarPath ? `/api/channel/${channel.id}/asset/avatar` : null;
     const bannerUrl = channel.bannerPath ? `/api/channel/${channel.id}/asset/banner` : null;
 
+    // Channel-trailer + moderation flag come from the row directly (the
+    // public byHandle procedure intentionally omits them).
+    const extraRows = await db
+        .select({
+            pinnedVideoId: channelsTable.pinnedVideoId,
+            moderateComments: channelsTable.moderateComments,
+        })
+        .from(channelsTable)
+        .where(eq(channelsTable.id, channel.id))
+        .limit(1);
+    const extra = extraRows[0] ?? { pinnedVideoId: null, moderateComments: false };
+
+    // Eligible trailers: this channel's public+ready+non-draft videos. We
+    // cap at the 50 most recent so the dropdown stays reasonable; channels
+    // with hundreds of videos will need a search-driven picker eventually.
+    const eligibleTrailers = await db
+        .select({ id: videos.id, title: videos.title })
+        .from(videos)
+        .where(
+            and(
+                eq(videos.channelId, channel.id),
+                eq(videos.privacy, "public"),
+                eq(videos.status, "ready"),
+                eq(videos.isDraft, false),
+            ),
+        )
+        .orderBy(desc(videos.publishedAt))
+        .limit(50)
+        .catch(() => []);
+
     // Load usage / quota data (best-effort — silently omit if it fails).
     let usageData: { used: number; quota: number | null; autoPruneDays: number | null } | null = null;
     if (membership.role === "owner") {
@@ -81,6 +115,9 @@ const CustomiseChannelPage = async ({ params }: Props) => {
                         initialDescription={channel.description}
                         avatarUrl={avatarUrl}
                         bannerUrl={bannerUrl}
+                        initialPinnedVideoId={extra.pinnedVideoId ?? null}
+                        initialModerateComments={!!extra.moderateComments}
+                        eligibleTrailers={eligibleTrailers}
                     />
                 </CardContent>
             </Card>

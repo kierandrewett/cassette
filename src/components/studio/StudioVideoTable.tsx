@@ -97,6 +97,16 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
         },
     });
 
+    const publish = api.video.publish.useMutation({
+        onSuccess: async () => {
+            await utils.video.listForChannel.invalidate({ channelId });
+            toast.success("Publishing — transcode queued.");
+        },
+        onError: (err) => {
+            toast.error(err.message ?? "Failed to publish video.");
+        },
+    });
+
     const handlePrivacyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const privacy = e.target.value as PrivacyValue;
         setPrivacy.mutate({ videoId: video.id, privacy });
@@ -131,14 +141,20 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
 
             {/* Status */}
             <td className="whitespace-nowrap px-3 py-3">
-                <span
-                    className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                        statusClass(video.status),
-                    )}
-                >
-                    {STATUS_LABELS[video.status] ?? video.status}
-                </span>
+                {video.isDraft ? (
+                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400">
+                        {video.publishAt && new Date(video.publishAt).getTime() > Date.now() ? "Scheduled" : "Draft"}
+                    </span>
+                ) : (
+                    <span
+                        className={cn(
+                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                            statusClass(video.status),
+                        )}
+                    >
+                        {STATUS_LABELS[video.status] ?? video.status}
+                    </span>
+                )}
             </td>
 
             {/* Privacy */}
@@ -197,7 +213,16 @@ const VideoRow = ({ video, channelId, onEdit, onDeleteRequest }: VideoRowProps) 
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onEdit(video)}>Edit metadata</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void copyLink(video)}>Copy link</DropdownMenuItem>
+                        {video.isDraft ? (
+                            <DropdownMenuItem
+                                onClick={() => publish.mutate({ videoId: video.id })}
+                                disabled={publish.isPending}
+                            >
+                                Publish now
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem onClick={() => void copyLink(video)}>Copy link</DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             onClick={() => onDeleteRequest(video)}
@@ -442,6 +467,8 @@ export const StudioVideoTable = ({ channelId, channelHandle, videos }: StudioVid
                         title: editVideo.title,
                         description: editVideo.description,
                         tags: editVideo.tags,
+                        isDraft: editVideo.isDraft,
+                        publishAt: editVideo.publishAt,
                     }}
                 />
             )}
