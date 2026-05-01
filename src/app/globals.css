@@ -9,53 +9,52 @@
         --rail-collapsed-width: 60px;
 
         /* Light theme palette — clean slate, slightly warm white surfaces.
-           Brand hue is a vivid coral/orange (~#fa6638) — evokes the warm
-           analog-tape rust palette the cassette name references. */
+           Brand hue is electric violet (~#7c5cf2). */
         --background: 0 0% 97%;
         --foreground: 0 0% 6%;
         --card: 0 0% 100%;
         --card-foreground: 0 0% 6%;
         --popover: 0 0% 100%;
         --popover-foreground: 0 0% 6%;
-        --primary: 13 95% 50%;
+        --primary: 252 83% 58%;
         --primary-foreground: 0 0% 100%;
         --secondary: 0 0% 93%;
         --secondary-foreground: 0 0% 9%;
         --muted: 0 0% 93%;
         --muted-foreground: 0 0% 42%;
-        --accent: 13 95% 95%;
-        --accent-foreground: 13 80% 30%;
+        --accent: 252 83% 96%;
+        --accent-foreground: 252 60% 35%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
         --border: 0 0% 87%;
         --input: 0 0% 87%;
-        --ring: 13 95% 50%;
+        --ring: 252 83% 58%;
         --radius: 0.625rem;
     }
 
     .dark {
-        /* The cassette dark palette: true black surfaces for the player area,
-           off-black for chrome. The brand coral lifts a touch on dark for
-           contrast against true-black backgrounds. */
-        --background: 0 0% 0%;
+        /* Cassette dark palette — softer than true black so HLS frames
+           still pop without making the whole shell feel like a void.
+           The brand violet lifts to 68% L for contrast on dark surfaces. */
+        --background: 240 6% 9%;
         --foreground: 0 0% 98%;
-        --card: 0 0% 4%;
+        --card: 240 5% 12%;
         --card-foreground: 0 0% 98%;
-        --popover: 0 0% 6%;
+        --popover: 240 5% 14%;
         --popover-foreground: 0 0% 98%;
-        --primary: 13 95% 60%;
+        --primary: 252 90% 68%;
         --primary-foreground: 0 0% 100%;
-        --secondary: 0 0% 11%;
+        --secondary: 240 5% 17%;
         --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 11%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 13 95% 18%;
-        --accent-foreground: 13 95% 85%;
+        --muted: 240 5% 17%;
+        --muted-foreground: 240 5% 65%;
+        --accent: 252 50% 25%;
+        --accent-foreground: 252 90% 90%;
         --destructive: 0 72.2% 50.6%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14%;
-        --input: 0 0% 14%;
-        --ring: 13 95% 60%;
+        --border: 240 5% 20%;
+        --input: 240 5% 20%;
+        --ring: 252 90% 68%;
     }
 }
 
