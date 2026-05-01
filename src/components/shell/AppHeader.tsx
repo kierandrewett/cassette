@@ -171,7 +171,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
     };
 
     return (
-        <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 border-b border-border bg-background/90 px-3 backdrop-blur-sm">
+        <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 bg-background/90 px-3 backdrop-blur-sm">
             {/* Left: hamburger + wordmark */}
             <div className="flex shrink-0 items-center gap-1">
                 <Button

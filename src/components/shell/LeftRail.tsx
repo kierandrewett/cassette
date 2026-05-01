@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import {
     Home02Icon,
     Tv01Icon,
-    Album02Icon,
+    Bookshelf02Icon,
     Clock01Icon,
     Playlist01Icon,
     PlusSignIcon,
@@ -47,9 +47,9 @@ const PRIMARY_ITEMS: NavItemDef[] = [
 ];
 
 const LIBRARY_ITEMS: NavItemDef[] = [
-    { href: "/library", labelKey: "library", icon: Album02Icon, matchPrefix: true },
+    { href: "/library", labelKey: "library", icon: Bookshelf02Icon, matchPrefix: true },
     { href: "/history", labelKey: "history", icon: Clock01Icon, matchPrefix: true },
-    { href: "/playlist", labelKey: "playlists", icon: Playlist01Icon, matchPrefix: true },
+    { href: "/playlists", labelKey: "playlists", icon: Playlist01Icon, matchPrefix: true },
 ];
 
 interface LeftRailProps {
@@ -78,30 +78,22 @@ interface RailLinkProps {
     avatar?: React.ReactNode;
 }
 
-// Single rail row. Compact density (~32px tall) so the rail reads as a list,
-// not a touch target. Active state gets a subtle accent fill plus a 3 px
-// accent left border.
+// YouTube-style rail row. ~40px tall, rounded-lg, gap-3 between icon and
+// label. Active state is a filled background only — no left accent stripe.
 const RailLink = ({ href, label, Icon, active, badge, avatar }: RailLinkProps) => {
     return (
         <Link
             href={href}
             className={cn(
-                "group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors",
-                "hover:bg-accent/60 hover:text-foreground",
-                active ? "bg-accent text-accent-foreground" : "text-foreground/85",
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                active
+                    ? "bg-secondary font-medium text-foreground"
+                    : "font-normal text-foreground/85 hover:bg-secondary/60 hover:text-foreground",
             )}
             aria-current={active ? "page" : undefined}
         >
-            {/* Active indicator — 3 px accent strip on the left. */}
-            <span
-                aria-hidden="true"
-                className={cn(
-                    "absolute bottom-1 left-0 top-1 w-[3px] rounded-r-full transition-opacity",
-                    active ? "bg-foreground opacity-90" : "bg-foreground opacity-0 group-hover:opacity-30",
-                )}
-            />
             <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                {avatar ? avatar : <Icon size={18} strokeWidth={active ? 1.8 : 1.5} />}
+                {avatar ? avatar : <Icon size={22} strokeWidth={active ? 2 : 1.6} />}
             </span>
             <span className="flex-1 truncate">{label}</span>
             {badge !== undefined && badge > 0 && (
@@ -114,12 +106,10 @@ const RailLink = ({ href, label, Icon, active, badge, avatar }: RailLinkProps) =
 };
 
 const SectionHeader = ({ children }: { children: React.ReactNode }) => (
-    <p className="mb-1 mt-1 px-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70">
-        {children}
-    </p>
+    <p className="mb-1 mt-2 px-3 text-base font-semibold tracking-tight text-foreground">{children}</p>
 );
 
-const Divider = () => <div className="mx-2.5 my-2 h-px bg-border/50" aria-hidden="true" />;
+const Divider = () => <div className="mx-3 my-2 h-px bg-border/50" aria-hidden="true" />;
 
 export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }: LeftRailProps) => {
     const pathname = usePathname();
@@ -129,7 +119,7 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
     return (
         <aside
             className={cn(
-                "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border bg-background",
+                "fixed inset-y-0 left-0 z-40 flex flex-col bg-background",
                 // Header offset — 56px matches AppHeader height.
                 "pt-14",
                 "w-[var(--rail-width)]",
@@ -220,14 +210,14 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                                                 Icon={UserCircleIcon}
                                                 active={active}
                                                 avatar={
-                                                    <Avatar className="h-5 w-5">
+                                                    <Avatar className="h-6 w-6">
                                                         {channel.avatarPath && (
                                                             <AvatarImage
                                                                 src={`/api/channel/${channel.id}/asset/avatar`}
                                                                 alt={channel.name}
                                                             />
                                                         )}
-                                                        <AvatarFallback className="text-[9px]">
+                                                        <AvatarFallback className="text-[10px]">
                                                             {initials}
                                                         </AvatarFallback>
                                                     </Avatar>
@@ -249,12 +239,12 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                                 <Link
                                     href="/account/channels"
                                     className={cn(
-                                        "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium",
-                                        "text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground",
+                                        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm",
+                                        "text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground",
                                     )}
                                 >
                                     <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                                        <PlusSignIcon size={18} strokeWidth={1.5} />
+                                        <PlusSignIcon size={22} strokeWidth={1.6} />
                                     </span>
                                     <span className="flex-1 truncate">
                                         {channels.length > 0 ? t("newChannel") : t("createChannel")}
