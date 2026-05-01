@@ -9,7 +9,7 @@ import { VideoCard } from "@/components/video/VideoCard";
 import { auth } from "@/lib/auth";
 import { db } from "@/server/db/client";
 import { channels } from "@/server/db/schema/channels";
-import { watchHistory } from "@/server/db/schema/history";
+import { watchHistory, watchProgress } from "@/server/db/schema/history";
 import { playlistItems, playlists } from "@/server/db/schema/playlists";
 import { subscriptions } from "@/server/db/schema/social";
 import { videos } from "@/server/db/schema/videos";
@@ -41,7 +41,7 @@ const LibraryPage = async () => {
     const watchLaterPlaylistId = systemPlaylists.find((p) => p.kind === "watch_later")?.id;
 
     // Fetch all sections in parallel.
-    const [queueItems, historyRows, watchLaterItems, userPlaylists, subChannelIds] = await Promise.all([
+    const [queueItems, continueRows, recentRows, watchLaterItems, userPlaylists, subChannelIds] = await Promise.all([
         // Queue items
         queuePlaylistId
             ? db
@@ -65,7 +65,39 @@ const LibraryPage = async () => {
                   .limit(12)
             : Promise.resolve([]),
 
-        // Recent history
+        // Continue watching — history entries with an incomplete watchProgress record.
+        // INNER JOIN with watchProgress filtered to completed=false so only videos
+        // the user has started (beacon fired) but not yet finished are shown.
+        db
+            .select({
+                historyId: watchHistory.id,
+                watchedAt: watchHistory.watchedAt,
+                video: {
+                    id: videos.id,
+                    title: videos.title,
+                    thumbnailPath: videos.thumbnailPath,
+                    durationSec: videos.durationSec,
+                    viewCount: videos.viewCount,
+                    publishedAt: videos.publishedAt,
+                },
+                channel: { name: channels.name, handle: channels.handle },
+            })
+            .from(watchHistory)
+            .innerJoin(videos, eq(videos.id, watchHistory.videoId))
+            .innerJoin(channels, eq(channels.id, videos.channelId))
+            .innerJoin(
+                watchProgress,
+                and(
+                    eq(watchProgress.userId, watchHistory.userId),
+                    eq(watchProgress.videoId, watchHistory.videoId),
+                    eq(watchProgress.completed, false),
+                ),
+            )
+            .where(eq(watchHistory.userId, userId))
+            .orderBy(desc(watchHistory.watchedAt))
+            .limit(12),
+
+        // Recent history — unfiltered, for the "Recent" row at the bottom.
         db
             .select({
                 historyId: watchHistory.id,
@@ -85,7 +117,7 @@ const LibraryPage = async () => {
             .innerJoin(channels, eq(channels.id, videos.channelId))
             .where(eq(watchHistory.userId, userId))
             .orderBy(desc(watchHistory.watchedAt))
-            .limit(12),
+            .limit(8),
 
         // Watch Later items
         watchLaterPlaylistId
@@ -171,13 +203,13 @@ const LibraryPage = async () => {
                     ))}
                 </LibraryRow>
 
-                {/* Continue watching — recent history (see report for note on incomplete filter) */}
+                {/* Continue watching — incomplete watchProgress only */}
                 <LibraryRow
                     heading="Continue watching"
-                    isEmpty={historyRows.length === 0}
+                    isEmpty={continueRows.length === 0}
                     emptyMessage="Videos you've started watching will appear here."
                 >
-                    {historyRows.map((item) => (
+                    {continueRows.map((item) => (
                         <div key={item.historyId} className="w-56 flex-shrink-0">
                             <VideoCard video={{ ...item.video, channel: item.channel }} />
                         </div>
@@ -220,14 +252,14 @@ const LibraryPage = async () => {
                     </div>
                 </section>
 
-                {/* Recent history */}
+                {/* Recent history — unfiltered */}
                 <LibraryRow
                     heading="Recent"
                     seeAllHref="/history"
-                    isEmpty={historyRows.length === 0}
+                    isEmpty={recentRows.length === 0}
                     emptyMessage="Videos you watch will appear here."
                 >
-                    {historyRows.slice(0, 8).map((item) => (
+                    {recentRows.map((item) => (
                         <div key={item.historyId} className="w-56 flex-shrink-0">
                             <VideoCard video={{ ...item.video, channel: item.channel }} />
                         </div>

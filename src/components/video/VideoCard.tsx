@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 import { formatDuration, formatCount, formatRelativeTime } from "@/lib/utils";
+import { VideoCardActions } from "./VideoCardActions";
 
 export interface VideoCardVideo {
     id: string;
@@ -58,12 +59,15 @@ export const VideoCard = ({ video, progress, className }: VideoCardProps) => {
                     </div>
                 )}
 
-                {/* Duration chip */}
+                {/* Duration chip — shifted left when duration is shown so actions don't overlap */}
                 {hasDuration && (
-                    <span className="absolute bottom-2 right-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums">
+                    <span className="absolute bottom-2 right-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums group-hover:right-10 transition-[right] duration-150">
                         {formatDuration(video.durationSec!)}
                     </span>
                 )}
+
+                {/* Overflow actions (add to playlist) — client island, visible on hover */}
+                <VideoCardActions videoId={video.id} />
 
                 {/* Progress bar — 2 px red bar if partially watched */}
                 {hasProgress && (

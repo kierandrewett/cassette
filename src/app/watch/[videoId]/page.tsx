@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { TRPCError } from "@trpc/server";
@@ -8,6 +9,7 @@ import { Player } from "@/components/player/Player";
 import { Description } from "@/components/watch/Description";
 import { UpNextSidebar } from "@/components/watch/UpNextSidebar";
 import { CommentsPlaceholder } from "@/components/watch/CommentsPlaceholder";
+import { ShareButton } from "@/components/watch/ShareButton";
 import { formatCount, formatRelativeTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -127,9 +129,12 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                                         aria-label={`${channel.name}'s channel`}
                                     >
                                         {channel.avatarPath ? (
-                                            <img
+                                            <Image
                                                 src={`/api/hls/${channel.handle}/avatar`}
                                                 alt={channel.name}
+                                                width={40}
+                                                height={40}
+                                                unoptimized
                                                 className="h-full w-full object-cover"
                                             />
                                         ) : (
@@ -172,10 +177,11 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                                     </ActionGroup>
 
                                     <ActionGroup>
-                                        <ActionButton aria-label="Share">
-                                            <ShareIcon />
-                                            <span>Share</span>
-                                        </ActionButton>
+                                        <ShareButton
+                                            videoId={video.id}
+                                            slug={video.unlistedSlug ?? undefined}
+                                            isPrivate={video.privacy === "private"}
+                                        />
                                     </ActionGroup>
                                 </div>
                             </div>
@@ -265,13 +271,5 @@ const ThumbDownIcon = ({ active }: { active: boolean }) => (
         aria-hidden="true"
     >
         <path d="M7 22V11L12 2l.85.35q.425.175.725.625t.3 1.025L12.65 9H19q.8 0 1.4.6t.6 1.4v2q0 .2-.05.45t-.1.45l-3 7.05q-.25.55-.85.925T15.7 22H7zm0-2h8.7l3-7v-2h-8.15l1.35-6.45L7 9.5V20zm-2 0V11H2v9h3z" />
-    </svg>
-);
-
-const ShareIcon = () => (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth={1.8} aria-hidden="true">
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" strokeLinecap="round" strokeLinejoin="round" />
-        <polyline points="16 6 12 2 8 6" strokeLinecap="round" strokeLinejoin="round" />
-        <line x1="12" y1="2" x2="12" y2="15" strokeLinecap="round" />
     </svg>
 );

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { formatDuration, formatCount, formatRelativeTime } from "@/lib/utils";
@@ -55,11 +56,12 @@ const SidebarCard = ({ video, isNext }: { video: SidebarVideo; isNext: boolean }
             {/* Thumbnail */}
             <div className="relative w-40 flex-shrink-0 overflow-hidden rounded-lg aspect-video bg-secondary">
                 {video.thumbnailPath ? (
-                    <img
+                    <Image
                         src={`/api/hls/${video.id}/thumb/sprite.jpg`}
                         alt=""
-                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
-                        loading="lazy"
+                        fill
+                        unoptimized
+                        className="object-cover transition-transform duration-200 group-hover:scale-[1.02]"
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

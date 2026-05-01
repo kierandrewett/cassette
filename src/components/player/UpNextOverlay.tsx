@@ -2,6 +2,7 @@
 
 import { useMediaState } from "@vidstack/react";
 import { X } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -79,12 +80,14 @@ export const UpNextOverlay = ({ next }: UpNextOverlayProps) => {
 
             {/* Thumbnail + countdown */}
             <div className="relative cursor-pointer" onClick={handleAdvance}>
-                <div className="aspect-video bg-black/50">
+                <div className="relative aspect-video bg-black/50">
                     {next.thumbnailPath ? (
-                        <img
+                        <Image
                             src={`/api/hls/${next.id}/thumb/sprite.jpg`}
                             alt=""
-                            className="h-full w-full object-cover"
+                            fill
+                            unoptimized
+                            className="object-cover"
                         />
                     ) : (
                         <div className="h-full w-full bg-secondary" />

@@ -2,6 +2,7 @@
 
 import { TimeSlider, useMediaRemote, useMediaState } from "@vidstack/react";
 import { Maximize, Minimize, PictureInPicture2, SkipForward, Volume2, VolumeX } from "lucide-react";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 import { formatDuration } from "@/lib/utils";
@@ -179,14 +180,15 @@ const PreviewContent = ({ videoId, chapters: _chapters }: { videoId: string; cha
                 format="time"
             />
             <div
-                className="surface-glass overflow-hidden rounded-lg border border-white/10 shadow-xl"
+                className="surface-glass relative overflow-hidden rounded-lg border border-white/10 shadow-xl"
                 style={{ width: 160, height: 90 }}
             >
-                <img
+                <Image
                     src={`/api/hls/${videoId}/thumb/sprite.jpg`}
                     alt=""
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                    fill
+                    unoptimized
+                    className="object-cover"
                 />
             </div>
         </div>

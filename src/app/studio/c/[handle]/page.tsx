@@ -74,8 +74,25 @@ const StudioChannelPage = async ({ params, searchParams }: Props) => {
             )}
 
             {tab === "videos" && (
-                <div className="py-8 text-center text-muted-foreground">
-                    <p>Video management — coming soon.</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <a
+                        href={`/studio/c/${handle}/videos`}
+                        className="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-card/80"
+                    >
+                        <span className="text-base font-semibold">Manage videos</span>
+                        <span className="text-sm text-muted-foreground">
+                            View, edit, and manage all your channel videos.
+                        </span>
+                    </a>
+                    <a
+                        href={`/studio/c/${handle}/upload`}
+                        className="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-card/80"
+                    >
+                        <span className="text-base font-semibold">+ Upload video</span>
+                        <span className="text-sm text-muted-foreground">
+                            Upload a new video to your channel.
+                        </span>
+                    </a>
                 </div>
             )}
 

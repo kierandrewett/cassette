@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import Image from "next/image";
 
 import { usePlayerStore } from "@/lib/player/store";
 
@@ -37,9 +38,12 @@ export const PlayerTopBar = ({
         >
             {/* Channel avatar */}
             {avatarPath ? (
-                <img
+                <Image
                     src={`/api/hls/${channelHandle}/avatar`}
                     alt={channelName}
+                    width={32}
+                    height={32}
+                    unoptimized
                     className="h-8 w-8 rounded-full object-cover ring-1 ring-white/20 flex-shrink-0"
                 />
             ) : (

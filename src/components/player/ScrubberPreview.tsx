@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import type { VideoChapter } from "@/server/db/schema/videos";
 import { formatDuration } from "@/lib/utils";
 
@@ -38,14 +40,15 @@ export const ScrubberPreview = ({ videoId, chapters: _chapters }: ScrubberPrevie
 
 const ThumbnailFrame = ({ videoId }: { videoId: string }) => (
     <div
-        className="surface-glass overflow-hidden rounded-lg border border-white/10 shadow-xl"
+        className="surface-glass relative overflow-hidden rounded-lg border border-white/10 shadow-xl"
         style={{ width: 160, height: 90 }}
     >
-        <img
+        <Image
             src={`/api/hls/${videoId}/thumb/sprite.jpg`}
             alt=""
-            className="h-full w-full object-cover"
-            loading="lazy"
+            fill
+            unoptimized
+            className="object-cover"
         />
     </div>
 );
@@ -76,14 +79,15 @@ export const ScrubberPreviewInner = ({
                 </span>
             )}
             <div
-                className="surface-glass overflow-hidden rounded-lg border border-white/10 shadow-xl"
+                className="surface-glass relative overflow-hidden rounded-lg border border-white/10 shadow-xl"
                 style={{ width: 160, height: 90 }}
             >
-                <img
+                <Image
                     src={`/api/hls/${videoId}/thumb/sprite.jpg`}
                     alt=""
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                    fill
+                    unoptimized
+                    className="object-cover"
                 />
             </div>
             <span className="text-xs font-medium text-white tabular-nums drop-shadow">

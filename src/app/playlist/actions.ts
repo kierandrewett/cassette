@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-import { and, eq, max, sql } from "drizzle-orm";
+import { and, eq, max } from "drizzle-orm";
 
 import { unlistedSlug } from "@/lib/slug";
 import { auth } from "@/lib/auth";
