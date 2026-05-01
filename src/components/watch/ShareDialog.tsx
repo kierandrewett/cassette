@@ -3,43 +3,74 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, ChevronRight, Code2, Link2 } from "lucide-react";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-interface ShareButtonProps {
+interface ShareDialogProps {
     videoId: string;
     /** The unlisted slug, if applicable. Appended as ?slug=<slug> for unlisted videos. */
     slug?: string | null;
     /** If true, clipboard copy is disabled and a tooltip explains why. */
     isPrivate?: boolean;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }
 
-export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonProps) => {
-    const [open, setOpen] = useState(false);
+// Listen for the player's broadcasted current-time event so we can pre-fill
+// `?t=<seconds>` in the share URL when the user has scrubbed away from 0.
+//
+// Player.tsx dispatches `cassette:position` with `{ seconds }` ~4×/s. We
+// keep our local state at 0 until the dialog opens; on open we wait for
+// the next tick (or use the most recent value if available) so the URL
+// reflects the moment the user clicked "Share".
+const POSITION_EVENT = "cassette:position";
+
+export const ShareDialog = ({ videoId, slug, isPrivate = false, open, onOpenChange }: ShareDialogProps) => {
     const [copiedKind, setCopiedKind] = useState<"link" | "embed" | null>(null);
     const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Embed options state.
     const [embedOptionsOpen, setEmbedOptionsOpen] = useState(false);
     const [embedAutoplay, setEmbedAutoplay] = useState(false);
-    const [embedMuted, setEmbedMuted] = useState(true); // default muted when autoplay
+    const [embedMuted, setEmbedMuted] = useState(true);
     const [embedLoop, setEmbedLoop] = useState(false);
     const [embedStart, setEmbedStart] = useState(0);
 
+    // Snapshot current player position when the dialog opens. The player
+    // broadcasts position regardless — we just remember the latest tick.
+    const lastPositionRef = useRef(0);
+    const [includeTimestamp, setIncludeTimestamp] = useState(false);
+    const [snapshotSec, setSnapshotSec] = useState(0);
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent<{ seconds: number }>).detail;
+            if (typeof detail?.seconds === "number") {
+                lastPositionRef.current = detail.seconds;
+            }
+        };
+        window.addEventListener(POSITION_EVENT, handler);
+        return () => window.removeEventListener(POSITION_EVENT, handler);
+    }, []);
+
+    useEffect(() => {
+        if (!open) return;
+        const sec = Math.floor(lastPositionRef.current);
+        setSnapshotSec(sec);
+        setIncludeTimestamp(sec > 0);
+    }, [open]);
+
     const origin = typeof window !== "undefined" ? window.location.origin : "";
 
-    const url = `${origin}/watch/${videoId}${slug ? `?slug=${slug}` : ""}`;
-
-    // Feature-detect Web Share API. On mobile (viewport <= 768 px) we hand off
-    // to the OS share sheet directly instead of opening the Popover.
-    const canNativeShare =
-        typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        typeof window !== "undefined" &&
-        window.matchMedia("(max-width: 768px)").matches;
+    const url = useMemo(() => {
+        const params = new URLSearchParams();
+        if (slug) params.set("slug", slug);
+        if (includeTimestamp && snapshotSec > 0) params.set("t", String(snapshotSec));
+        const qs = params.toString();
+        return `${origin}/watch/${videoId}${qs ? `?${qs}` : ""}`;
+    }, [origin, videoId, slug, includeTimestamp, snapshotSec]);
 
     const embedSrc = useMemo(() => {
         const params = new URLSearchParams();
@@ -84,61 +115,41 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
         }
     };
 
-    const handleNativeShare = () => {
-        if (!canNativeShare) return;
-        void navigator.share({ title: document.title, url });
-    };
-
-    useEffect(() => () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current); }, []);
-
-    // On mobile with Web Share API: bypass the Popover entirely.
-    if (canNativeShare) {
-        return (
-            <button
-                type="button"
-                onClick={handleNativeShare}
-                className={cn(
-                    "flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-foreground/80",
-                    "hover:text-foreground hover:bg-white/5 transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
-                aria-label="Share this video"
-            >
-                <ShareIcon />
-                <span>Share</span>
-            </button>
-        );
-    }
+    useEffect(
+        () => () => {
+            if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+        },
+        [],
+    );
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <button
-                    className={cn(
-                        "flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-foreground/80",
-                        "hover:text-foreground hover:bg-white/5 transition-colors",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    )}
-                    aria-label="Share this video"
-                >
-                    <ShareIcon />
-                    <span>Share</span>
-                </button>
-            </PopoverTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Share</DialogTitle>
+                </DialogHeader>
 
-            <PopoverContent className="w-96 space-y-4 p-4" align="end">
-                <p className="text-sm font-semibold text-foreground">Share</p>
-
-                {/* Link section */}
+                {/* Link */}
                 <div className="space-y-2">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Link</p>
                     <Input
                         readOnly
                         value={url}
                         onClick={(e) => (e.target as HTMLInputElement).select()}
-                        className="flex-1 text-xs font-mono text-foreground/80 bg-secondary/50"
+                        className="flex-1 bg-secondary/50 font-mono text-xs text-foreground/80"
                         aria-label="Video URL"
                     />
+                    {snapshotSec > 0 && (
+                        <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+                            <input
+                                type="checkbox"
+                                checked={includeTimestamp}
+                                onChange={(e) => setIncludeTimestamp(e.target.checked)}
+                                className="h-3.5 w-3.5 accent-foreground"
+                            />
+                            Start at {formatSecondsHms(snapshotSec)}
+                        </label>
+                    )}
                     {isPrivate ? (
                         <TooltipProvider delayDuration={200}>
                             <Tooltip>
@@ -146,7 +157,7 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
                                     <span className="inline-block w-full">
                                         <Button
                                             variant="secondary"
-                                            className="w-full opacity-50 cursor-not-allowed"
+                                            className="w-full cursor-not-allowed opacity-50"
                                             disabled
                                             aria-disabled="true"
                                         >
@@ -156,18 +167,13 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
                                     </span>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom">
-                                    Playback of this video requires a signed-in member. The link is only
-                                    accessible to authorised viewers.
+                                    Playback of this video requires a signed-in member. The link is only accessible to
+                                    authorised viewers.
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     ) : (
-                        <Button
-                            variant="secondary"
-                            className="w-full"
-                            onClick={handleCopyLink}
-                            aria-live="polite"
-                        >
+                        <Button variant="secondary" className="w-full" onClick={handleCopyLink} aria-live="polite">
                             {copiedKind === "link" ? (
                                 <>
                                     <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
@@ -183,42 +189,41 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
                     )}
                 </div>
 
-                {/* Embed section. Hidden on private (the iframe could not load). */}
+                {/* Embed */}
                 {isPrivate ? null : (
                     <div className="space-y-2 border-t border-border pt-4">
-                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                            Embed
-                        </p>
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Embed</p>
                         <textarea
                             readOnly
                             value={embedSnippet}
                             onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                            className="flex-1 h-20 w-full resize-none rounded-md border border-border bg-secondary/50 p-2 text-[11px] font-mono text-foreground/80"
+                            className="h-20 w-full flex-1 resize-none rounded-md border border-border bg-secondary/50 p-2 font-mono text-[11px] text-foreground/80"
                             aria-label="Embed snippet"
                         />
 
-                        {/* Options disclosure */}
                         <button
                             type="button"
                             onClick={() => setEmbedOptionsOpen((v) => !v)}
-                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                             aria-expanded={embedOptionsOpen}
                         >
-                            {embedOptionsOpen
-                                ? <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-                                : <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />}
+                            {embedOptionsOpen ? (
+                                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                            ) : (
+                                <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                            )}
                             Options
                         </button>
 
                         {embedOptionsOpen && (
-                            <div className="rounded-md border border-border bg-secondary/30 p-3 space-y-2">
+                            <div className="space-y-2 rounded-md border border-border bg-secondary/30 p-3">
                                 <EmbedCheckbox
                                     id="embed-autoplay"
                                     label="Autoplay"
                                     checked={embedAutoplay}
                                     onChange={(v) => {
                                         setEmbedAutoplay(v);
-                                        if (v) setEmbedMuted(true); // autoplay requires muted
+                                        if (v) setEmbedMuted(true);
                                     }}
                                 />
                                 <EmbedCheckbox
@@ -235,7 +240,10 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
                                     onChange={setEmbedLoop}
                                 />
                                 <div className="flex items-center gap-2">
-                                    <label htmlFor="embed-start" className="text-xs text-muted-foreground w-24 shrink-0">
+                                    <label
+                                        htmlFor="embed-start"
+                                        className="w-24 shrink-0 text-xs text-muted-foreground"
+                                    >
                                         Start at (s)
                                     </label>
                                     <input
@@ -251,12 +259,7 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
                             </div>
                         )}
 
-                        <Button
-                            variant="secondary"
-                            className="w-full"
-                            onClick={handleCopyEmbed}
-                            aria-live="polite"
-                        >
+                        <Button variant="secondary" className="w-full" onClick={handleCopyEmbed} aria-live="polite">
                             {copiedKind === "embed" ? (
                                 <>
                                     <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
@@ -271,8 +274,8 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
                         </Button>
                     </div>
                 )}
-            </PopoverContent>
-        </Popover>
+            </DialogContent>
+        </Dialog>
     );
 };
 
@@ -296,21 +299,22 @@ const EmbedCheckbox = ({
             checked={checked}
             onChange={(e) => onChange(e.target.checked)}
             disabled={disabled}
-            className="h-3.5 w-3.5 accent-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-3.5 w-3.5 cursor-pointer accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
         />
         <label
             htmlFor={id}
-            className={cn("text-xs text-muted-foreground cursor-pointer", disabled && "opacity-50 cursor-not-allowed")}
+            className={cn("cursor-pointer text-xs text-muted-foreground", disabled && "cursor-not-allowed opacity-50")}
         >
             {label}
         </label>
     </div>
 );
 
-const ShareIcon = () => (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth={1.8} aria-hidden="true">
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" strokeLinecap="round" strokeLinejoin="round" />
-        <polyline points="16 6 12 2 8 6" strokeLinecap="round" strokeLinejoin="round" />
-        <line x1="12" y1="2" x2="12" y2="15" strokeLinecap="round" />
-    </svg>
-);
+const formatSecondsHms = (sec: number): string => {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${h}h${m}m${s}s`;
+    if (m > 0) return `${m}m${s}s`;
+    return `${s}s`;
+};
