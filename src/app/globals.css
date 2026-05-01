@@ -204,6 +204,61 @@
         width: 88px;
     }
 
+    /* Theatre mode — toggled by usePlayerStore.theatre via PlayerCanvas's
+       effect that writes data-theater="true|false" on #watch-page.
+       Strategy:
+         - The wrapper escapes its own padding by going full-bleed (100vw
+           with calc-based negative margin offsetting the AppShell's main
+           pad-x). Max-width is dropped.
+         - The grid collapses to a single column at all breakpoints, so
+           the right rail (recommendations + comments) drops below the
+           player rather than sitting next to it.
+         - The player itself loses its rounded corners and shadow because
+           a full-bleed black bar reads cleaner without the chrome.
+         - Inner sections (header, description, comments, sidebar) are
+           constrained to a centred reading column so they stay
+           comfortable to read on wide displays — the player widens, the
+           text doesn't.
+       Fullscreen still wins because Vidstack swaps the document into
+       :fullscreen state which has its own browser-level styling. */
+    #watch-page[data-theater="true"] {
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    #watch-page[data-theater="true"] .watch-grid {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    #watch-page[data-theater="true"] .watch-player {
+        border-radius: 0;
+        box-shadow: none;
+    }
+    /* Constrain the post-player sections to a comfortable reading column.
+       Matches the non-theatre max-w-[1600px] but with a tighter pad-x
+       so it lines up with the rest of the app. */
+    #watch-page[data-theater="true"] .watch-main > :not(.watch-player),
+    #watch-page[data-theater="true"] .watch-aside {
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+        max-width: 1280px;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    @media (min-width: 768px) {
+        #watch-page[data-theater="true"] .watch-main > :not(.watch-player),
+        #watch-page[data-theater="true"] .watch-aside {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+    }
+    @media (min-width: 1024px) {
+        #watch-page[data-theater="true"] .watch-aside {
+            width: 100%;
+        }
+    }
+
     /* NProgress top-loading bar — slim 2 px accent stripe pinned to the top.
        The default nprogress.css ships a blue stripe and an offscreen spinner;
        we override colour and hide the spinner. The component lives in

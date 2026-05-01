@@ -10,31 +10,32 @@ import { StatsOverlay } from "./StatsOverlay";
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
+const PANEL_INDEX = { root: 0, quality: 1, speed: 2 } as const;
+type Panel = keyof typeof PANEL_INDEX;
+const PANEL_COUNT = 3;
+
 /**
  * Gear icon opening a popover with Quality / Speed sub-panels.
  *
- * Stats-for-nerds lives in the right-click context menu (PlayerContextMenu)
- * — we don't surface it here. The mini-stats summary that used to sit
- * below the menu has been dropped too: power users go to the context menu;
- * casual viewers don't need quality+buffer numbers in their face.
+ * Stats-for-nerds is OWNED by the right-click context menu — never shown
+ * here. We still mount StatsOverlay because this component already sits
+ * inside PlayerCanvas and a single mount keeps wiring simple.
  *
- * Sub-panel transition: the active panel re-mounts under the same `panel`
- * key so the animate-in/slide-in-from-right utilities give it a YouTube-
- * like slide on every transition.
+ * Sub-panel transition: a single horizontal track holds all three panels
+ * side-by-side and translates by `panelIdx * (100 / N)%`. This is the
+ * Stripe / Amazon-mega-menu pattern — the panels share the same surface
+ * and slide as one unit, rather than fading + remounting per state change.
  */
 export const SettingsMenu = () => {
     const [open, setOpen] = useState(false);
-    const [panel, setPanel] = useState<"root" | "quality" | "speed">("root");
+    const [panel, setPanel] = useState<Panel>("root");
     const remote = useMediaRemote();
     const playbackRate = useMediaState("playbackRate");
     const quality = useMediaState("quality");
     const autoQuality = useMediaState("autoQuality");
     const qualities = useVideoQualityOptions();
 
-    // Stats overlay state lives in localStorage; the gear menu no longer
-    // toggles it — the context menu does. We still mount the overlay here
-    // because this component already sits inside PlayerCanvas and a single
-    // mount keeps wiring simple.
+    // Stats overlay state mirrors the right-click context menu's toggle.
     const [statsEnabled, setStatsEnabled] = useState<boolean>(() => {
         if (typeof window === "undefined") return false;
         return readPreferences().statsOverlayEnabled;
@@ -53,13 +54,25 @@ export const SettingsMenu = () => {
         setPanel("root");
     };
 
-    // Auto-close when the pointer leaves the player surface so the panel
-    // doesn't stick around when the user moves on.
     useEffect(() => {
         const onLeave = () => handleClose();
         window.addEventListener("cassette:player-leave", onLeave);
         return () => window.removeEventListener("cassette:player-leave", onLeave);
     }, []);
+
+    useEffect(() => {
+        if (!open) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                handleClose();
+            }
+        };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [open]);
+
+    const panelIdx = PANEL_INDEX[panel];
 
     return (
         <>
@@ -92,11 +105,21 @@ export const SettingsMenu = () => {
                             className="player-popover absolute bottom-full right-0 z-50 mb-2 w-56 overflow-hidden rounded-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {panel === "root" && (
-                                <div
-                                    key="root"
-                                    className="py-2 duration-200 animate-in fade-in slide-in-from-left-4"
-                                >
+                            {/* Sliding track. Three panels share the same
+                                surface; the wrapper is N times the popover
+                                width and translates by panelIdx * (100/N)%
+                                so the active panel sits in view. cubic-bezier
+                                matches the shadcn ease curve. */}
+                            <div
+                                className={cn(
+                                    "flex motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-[cubic-bezier(0.4,0,0.2,1)]",
+                                )}
+                                style={{
+                                    width: `${PANEL_COUNT * 100}%`,
+                                    transform: `translateX(-${(panelIdx * 100) / PANEL_COUNT}%)`,
+                                }}
+                            >
+                                <div className="shrink-0 py-2" style={{ width: `${100 / PANEL_COUNT}%` }}>
                                     <MenuRow
                                         label="Quality"
                                         value={autoQuality ? "Auto" : quality?.height ? `${quality.height}p` : "Auto"}
@@ -108,13 +131,8 @@ export const SettingsMenu = () => {
                                         onClick={() => setPanel("speed")}
                                     />
                                 </div>
-                            )}
 
-                            {panel === "quality" && (
-                                <div
-                                    key="quality"
-                                    className="py-2 duration-200 animate-in fade-in slide-in-from-right-4"
-                                >
+                                <div className="shrink-0 py-2" style={{ width: `${100 / PANEL_COUNT}%` }}>
                                     <PanelHeader label="Quality" onBack={() => setPanel("root")} />
                                     <button
                                         className={cn(
@@ -150,13 +168,8 @@ export const SettingsMenu = () => {
                                         </button>
                                     ))}
                                 </div>
-                            )}
 
-                            {panel === "speed" && (
-                                <div
-                                    key="speed"
-                                    className="py-2 duration-200 animate-in fade-in slide-in-from-right-4"
-                                >
+                                <div className="shrink-0 py-2" style={{ width: `${100 / PANEL_COUNT}%` }}>
                                     <PanelHeader label="Playback Speed" onBack={() => setPanel("root")} />
                                     {SPEEDS.map((s) => (
                                         <button
@@ -176,7 +189,7 @@ export const SettingsMenu = () => {
                                         </button>
                                     ))}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </>
                 )}
@@ -209,43 +222,6 @@ const PanelHeader = ({ label, onBack }: { label: string; onBack: () => void }) =
         </button>
         <span className="text-sm font-medium text-white">{label}</span>
     </div>
-);
-
-const QuickStats = ({
-    bufferedEnd,
-    duration,
-    quality,
-}: {
-    bufferedEnd: number;
-    duration: number;
-    quality: { height?: number } | null;
-}) => (
-    <div className="px-4 py-2">
-        <p className="mb-1 text-xs font-medium uppercase tracking-wider text-white/50">Stats for nerds</p>
-        <div className="space-y-1 text-xs text-white/60">
-            <div className="flex justify-between">
-                <span>Quality</span>
-                <span>{quality?.height ? `${quality.height}p` : "auto"}</span>
-            </div>
-            <div className="flex justify-between">
-                <span>Buffered</span>
-                <span>
-                    {Math.round(bufferedEnd)}s / {Math.round(duration)}s
-                </span>
-            </div>
-        </div>
-    </div>
-);
-
-const ToggleIndicator = ({ on }: { on: boolean }) => (
-    <span
-        className={cn(
-            "inline-flex h-4 w-7 items-center rounded-full transition-colors",
-            on ? "bg-white/80" : "bg-white/20",
-        )}
-    >
-        <span className={cn("ml-0.5 h-3 w-3 rounded-full bg-black transition-transform", on && "translate-x-3")} />
-    </span>
 );
 
 const Check = () => (
