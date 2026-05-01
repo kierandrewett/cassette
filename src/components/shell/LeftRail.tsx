@@ -15,9 +15,8 @@ import {
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
-import { getAvatarColor, getInitials } from "@/lib/initials";
+import { InitialsAvatar } from "@/components/shared/InitialsAvatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 export interface UserChannel {
     id: string;
@@ -115,19 +114,21 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
 const Divider = () => <div className="mx-3 my-2 h-px bg-border/50" aria-hidden="true" />;
 
 // Channel avatar inside a rail row. Used for both Your channels and
-// Subscriptions sections. Initials come from the display name; the
-// gradient is keyed on the channel handle so it stays stable even if the
-// channel renames.
+// Subscriptions sections. The InitialsAvatar SVG is the fallback; an
+// uploaded avatar overlays it via plain <img>.
 const ChannelAvatar = ({ channel }: { channel: UserChannel }) => {
-    const initials = getInitials(channel.name);
-    const palette = getAvatarColor(channel.handle);
     return (
-        <Avatar className="h-6 w-6" style={{ background: palette.background, color: palette.foreground }}>
+        <span className="relative inline-block h-6 w-6 overflow-hidden rounded-full">
+            <InitialsAvatar name={channel.name} seed={channel.handle} size={24} />
             {channel.avatarPath && (
-                <AvatarImage src={`/api/channel/${channel.id}/asset/avatar`} alt={channel.name} />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={`/api/channel/${channel.id}/asset/avatar`}
+                    alt={channel.name}
+                    className="absolute inset-0 h-full w-full object-cover"
+                />
             )}
-            <span className="text-[10px] font-bold tracking-wider">{initials}</span>
-        </Avatar>
+        </span>
     );
 };
 

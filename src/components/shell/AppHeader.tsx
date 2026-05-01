@@ -262,7 +262,9 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                 {/* Notifications bell — disabled when signed out so we do not poll. */}
                 <NotificationBell enabled={!!user} />
 
-                {/* Account dropdown */}
+                {/* Account dropdown — extra ml separates the avatar from the
+                    icon-button cluster to its left so they read as distinct
+                    groups (actions vs identity). */}
                 {user ? (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -270,7 +272,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                                 variant="ghost"
                                 size="icon"
                                 aria-label="Account menu"
-                                className="h-8 w-8 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-ring"
+                                className="ml-2 h-8 w-8 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <UserAvatar user={user} size={32} />
                             </Button>

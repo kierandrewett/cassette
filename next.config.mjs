@@ -99,6 +99,27 @@ const nextConfig = {
     // loader rules.
     turbopack: {},
 
+    // /@<handle>/<rest> is the canonical user-facing channel URL. Next.js
+    // doesn't allow a route directory starting with `@` (the symbol is
+    // reserved for parallel-route slots), so the actual route lives at
+    // /channel/<handle>/<rest> and we rewrite the @-prefixed URL to it on
+    // the way in. The opposite direction (canonicalisation) is handled by
+    // the redirects() entry below — visiting /channel/<handle> 308s to
+    // /@<handle> so the URL bar always shows the @-form.
+    async rewrites() {
+        return [
+            { source: "/@:handle", destination: "/channel/:handle" },
+            { source: "/@:handle/:rest*", destination: "/channel/:handle/:rest*" },
+        ];
+    },
+
+    async redirects() {
+        return [
+            { source: "/channel/:handle", destination: "/@:handle", permanent: true },
+            { source: "/channel/:handle/:rest*", destination: "/@:handle/:rest*", permanent: true },
+        ];
+    },
+
     async headers() {
         return [
             {

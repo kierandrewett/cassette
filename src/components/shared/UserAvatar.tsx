@@ -3,8 +3,9 @@
 import { useState } from "react";
 
 import { gravatarUrl, gravatarUrlFromHash } from "@/lib/gravatar";
-import { getAvatarColor, getInitials } from "@/lib/initials";
 import { cn } from "@/lib/utils";
+
+import { InitialsAvatar } from "./InitialsAvatar";
 
 interface UserAvatarProps {
     user: {
@@ -19,49 +20,36 @@ interface UserAvatarProps {
     className?: string;
 }
 
-// Site-wide user avatar with libravatar/gravatar fallback.
+// Site-wide user avatar.
 //
 // Resolution order:
 //   1. user.image (explicit upload)
 //   2. libravatar/gravatar URL keyed on hash (or email)
-//   3. initials roundel — first letter of first + last word, on a deterministic
-//      hue gradient derived from the name so each user/channel reads as a
-//      distinct colour at a glance.
+//   3. <InitialsAvatar /> — SVG roundel with deterministic gradient.
 //
-// We use a plain <img> with onError so a 404 from libravatar (which the
-// helper requests via ?d=404 — see lib/gravatar.ts) collapses to the
-// initials view instead of leaving a broken-image placeholder. Initials
-// are always rendered behind the image so they show through on load
-// failure with no extra paint.
+// The SVG fallback is rendered behind the <img>, so when libravatar 404s
+// (we ask for ?d=404) the image's onError just hides itself and the SVG
+// shows through. Single source of truth for the gradient + initials —
+// LeftRail, ChannelHeader, comments, etc. all share the same look via
+// InitialsAvatar.
 export const UserAvatar = ({ user, size = 32, className }: UserAvatarProps) => {
     const px = Math.max(80, size * 2);
     const src =
         user.image ??
         (user.gravatarHash ? gravatarUrlFromHash(user.gravatarHash, px) : null) ??
         (user.email ? gravatarUrl(user.email, px) : null);
-    const initials = getInitials(user.name);
-    // Hash the stable identifier (gravatarHash > email > name) so the
-    // gradient is tied to *who* the user is, not their display name —
-    // changing your name shouldn't change your colour.
-    const palette = getAvatarColor(user.gravatarHash ?? user.email ?? user.name ?? "");
     const [failed, setFailed] = useState(false);
+    // Stable seed for the gradient: prefer the gravatar hash (per-user
+    // unique + immutable), fall back to email, then name.
+    const seed = user.gravatarHash ?? user.email ?? user.name ?? "anon";
 
     return (
         <span
-            className={cn(
-                "relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-border/40",
-                className,
-            )}
-            style={{
-                width: size,
-                height: size,
-                fontSize: Math.max(10, size * 0.42),
-                background: palette.background,
-                color: palette.foreground,
-            }}
+            className={cn("relative inline-flex flex-shrink-0 overflow-hidden rounded-full", className)}
+            style={{ width: size, height: size }}
             aria-hidden="true"
         >
-            <span className="font-bold tracking-wider">{initials}</span>
+            <InitialsAvatar name={user.name} seed={seed} size={size} />
             {src && !failed && (
                 <img
                     src={src}
