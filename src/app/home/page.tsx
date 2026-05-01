@@ -1,7 +1,10 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 
 import AppShell from "@/components/shell/AppShell";
+import { TrendingTagsRow } from "@/components/home/TrendingTagsRow";
+import { RandomVideoButton } from "@/components/home/RandomVideoButton";
 import { VideoGrid } from "@/components/video/VideoGrid";
 import { auth } from "@/lib/auth";
 import { db } from "@/server/db/client";
@@ -13,6 +16,28 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 const RECENT_LIMIT = 24;
 const SUBS_LIMIT = 12;
 const TRENDING_LIMIT = 12;
+const TAG_LIMIT = 12;
+
+// Cache the trending-tags aggregate for 5 minutes — the home page renders it
+// on every request and the underlying query is an UNNEST + GROUP BY across
+// the entire videos table. Per the brief, a 5-minute TTL is enough freshness.
+const getTrendingTags = unstable_cache(
+    async () => {
+        const rows = await db.execute<{ tag: string; uses: number }>(sql`
+            SELECT tag, count(*)::int AS uses
+            FROM videos v, unnest(v.tags) AS tag
+            WHERE v.privacy = 'public'
+              AND v.status = 'ready'
+              AND v.is_draft = false
+            GROUP BY tag
+            ORDER BY uses DESC, tag ASC
+            LIMIT ${TAG_LIMIT}
+        `);
+        return rows.map((r) => ({ tag: r.tag, uses: Number(r.uses) }));
+    },
+    ["home:trending-tags"],
+    { revalidate: 300 },
+);
 
 // /home is the landing surface for signed-in viewers, but anonymous viewers
 // also reach it from /; /'s redirect to /home only fires for authenticated
@@ -42,18 +67,19 @@ const HomePage = async () => {
                       inArray(videos.channelId, subChannelIds),
                       eq(videos.privacy, "public"),
                       eq(videos.status, "ready"),
+                      eq(videos.isDraft, false),
                   ),
               )
               .orderBy(desc(videos.publishedAt))
               .limit(SUBS_LIMIT)
         : [];
 
-    const [recent, trending] = await Promise.all([
+    const [recent, trending, trendingTags] = await Promise.all([
         db
             .select({ video: videos, channel: channels })
             .from(videos)
             .innerJoin(channels, eq(videos.channelId, channels.id))
-            .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready")))
+            .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready"), eq(videos.isDraft, false)))
             .orderBy(desc(videos.publishedAt))
             .limit(RECENT_LIMIT),
         // HN-style gravity decay so freshly uploaded videos with strong
@@ -62,12 +88,13 @@ const HomePage = async () => {
             .select({ video: videos, channel: channels })
             .from(videos)
             .innerJoin(channels, eq(videos.channelId, channels.id))
-            .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready")))
+            .where(and(eq(videos.privacy, "public"), eq(videos.status, "ready"), eq(videos.isDraft, false)))
             .orderBy(
                 sql`(videos.view_count::float / power(extract(epoch from now() - coalesce(videos.published_at, videos.created_at)) / 3600.0 + 2.0, 1.5)) DESC`,
                 desc(videos.publishedAt),
             )
             .limit(TRENDING_LIMIT),
+        getTrendingTags(),
     ]);
 
     return (
@@ -77,6 +104,15 @@ const HomePage = async () => {
                 rail offset is handled by AppShell; we only add a small px
                 gutter so cards do not touch the right edge. */}
             <div className="space-y-12 px-4 py-8 md:px-6 lg:px-8">
+                <div className="flex items-center justify-between gap-3">
+                    {trendingTags.length > 0 ? (
+                        <TrendingTagsRow tags={trendingTags} className="flex-1" />
+                    ) : (
+                        <div className="flex-1" />
+                    )}
+                    <RandomVideoButton />
+                </div>
+
                 {subFeed.length > 0 ? (
                     <section className="space-y-4">
                         <div className="flex items-baseline justify-between">
