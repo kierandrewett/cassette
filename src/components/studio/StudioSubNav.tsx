@@ -15,6 +15,7 @@ import {
     UserMultipleIcon,
     ArrowDown01Icon,
     Settings02Icon,
+    ShieldUserIcon,
 } from "hugeicons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,6 +54,7 @@ const channelItems = (handle: string): SubNavItem[] => [
     { href: `/studio/c/${handle}/api-keys`, label: "API Keys", icon: Key01Icon },
     { href: `/studio/c/${handle}/webhooks`, label: "Webhooks", icon: WebhookIcon },
     { href: `/studio/c/${handle}/customise`, label: "Customise", icon: PaintBoardIcon },
+    { href: `/studio/c/${handle}/moderation`, label: "Moderation", icon: ShieldUserIcon },
 ];
 
 // Top-level /studio (multi-channel overview). Single tab so the surface still
