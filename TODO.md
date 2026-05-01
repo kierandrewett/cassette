@@ -209,13 +209,16 @@ item means shippable; the smoke runner (`scripts/smoke.sh`) is the contract.
 - [x] `scripts/backup.sh` + `scripts/restore.sh` (`just backup`, `just restore <dir>`)
 - [x] Operator API doc updated with webhooks / RSS / tags / rate limits
 
-## Post-M9 QoL Wave 3 (in flight)
+## Post-M9 QoL Wave 3 (shipped)
 
-- [ ] Email password reset (Better-Auth, with stdout fallback when SMTP missing)
-- [ ] Change-password form on `/settings`
-- [ ] Active sessions panel on `/settings` with revoke per-device + revoke-all-others
-- [ ] Passkeys / WebAuthn via Better-Auth plugin (optional)
-- [ ] Playwright e2e for the watch + upload + comment flows
+- [x] Email password reset with `lib/mail.ts` helper (nodemailer when `SMTP_URL`, stdout fallback otherwise)
+- [x] `/forgot-password` and `/reset-password` pages
+- [x] Change-password form on `/settings` (revokes other sessions on success)
+- [x] Active sessions panel on `/settings` with per-row revoke + revoke-all-others
+- [x] `accountRouter` with `listSessions` / `revokeSession` / `revokeAllOtherSessions`
+- [x] Playwright e2e: 8 specs across health, search, auth (`yarn e2e`, `just e2e`)
+- [ ] Passkeys / WebAuthn — DEFERRED. Better-Auth 1.6 has no passkey plugin and `@better-auth/passkey` is not on npm. Revisit when upstream lands it.
+- [ ] Watch + upload Playwright spec — DEFERRED. Bash smoke covers the path; Playwright upload spec lands when there's a clear UX regression budget for it.
 
 ## Codex review
 
