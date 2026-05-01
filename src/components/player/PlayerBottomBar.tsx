@@ -13,7 +13,6 @@ import {
     Volume2,
     VolumeX,
 } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -234,8 +233,15 @@ const IconButton = ({ children, className, ...props }: React.ButtonHTMLAttribute
 );
 
 // Preview content rendered inside TimeSlider.Preview.
-// The thumbnail itself is sourced from the sprite; chapter title (if any)
-// is supplied via TimeSlider.ChapterTitle.  We let Vidstack drive position.
+//
+// Uses Vidstack's <Thumbnail> primitive bound to the sprite VTT so the
+// preview crops to the right tile at the cursor's pointer time. The
+// previous implementation rendered the whole sprite-sheet jpg with
+// object-cover, which paint the entire 10x10 tile montage rather than a
+// single frame. Thumbnail.Root reads the WebVTT cues (`#xywh=...`) that
+// the worker writes and applies them as background-position/-size so the
+// resulting `<img>` element shows just the tile that matches the
+// pointer time.
 const PreviewContent = ({ videoId, chapters: _chapters }: { videoId: string; chapters: VideoChapter[] }) => (
     <div className="flex flex-col items-center gap-1">
         <TimeSlider.Value
@@ -244,7 +250,12 @@ const PreviewContent = ({ videoId, chapters: _chapters }: { videoId: string; cha
             format="time"
         />
         <div className="player-popover relative overflow-hidden rounded-lg" style={{ width: 160, height: 90 }}>
-            <Image src={`/api/hls/${videoId}/thumb/sprite.jpg`} alt="" fill unoptimized className="object-cover" />
+            <TimeSlider.Thumbnail.Root
+                src={`/api/hls/${videoId}/thumb/sprite.vtt`}
+                className="block h-full w-full"
+            >
+                <TimeSlider.Thumbnail.Img />
+            </TimeSlider.Thumbnail.Root>
         </div>
     </div>
 );
