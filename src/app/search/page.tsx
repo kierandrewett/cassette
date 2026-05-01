@@ -5,6 +5,9 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResultCard, type SearchResultVideo } from "@/components/search/SearchResultCard";
+import { SearchTabs, type SearchTabValue } from "@/components/search/SearchTabs";
+import { SearchChannelCard, type SearchChannelResult } from "@/components/search/SearchChannelCard";
+import { SearchPlaylistCard, type SearchPlaylistResult } from "@/components/search/SearchPlaylistCard";
 import { parseSearchFilters } from "@/components/search/filterParams";
 import { createTRPCContext } from "@/server/api/trpc";
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
@@ -14,8 +17,8 @@ interface SearchPageProps {
     searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-// Inline caller for the search sub-router so this page is independent of
-// whether root.ts has `search: searchRouter` wired yet (orchestrator step).
+// Inline caller for the search sub-router. Independent of whether root.ts
+// has `search: searchRouter` wired (it does after Phase C integration).
 const createSearchCaller = createCallerFactory(createTRPCRouter({ search: searchRouter }));
 
 export const generateMetadata = async ({ searchParams }: SearchPageProps): Promise<Metadata> => {
@@ -26,7 +29,6 @@ export const generateMetadata = async ({ searchParams }: SearchPageProps): Promi
     };
 };
 
-// Flatten potential array values from searchParams into strings.
 const flattenParams = (params: Record<string, string | string[] | undefined>): Record<string, string> => {
     const out: Record<string, string> = {};
     for (const [k, v] of Object.entries(params)) {
@@ -36,57 +38,94 @@ const flattenParams = (params: Record<string, string | string[] | undefined>): R
     return out;
 };
 
+const isTab = (s: string | undefined): s is SearchTabValue =>
+    s === "videos" || s === "channels" || s === "playlists";
+
 const SearchPage = async ({ searchParams }: SearchPageProps) => {
     const resolved = await searchParams;
     const flat = flattenParams(resolved);
     const filters = parseSearchFilters(flat);
+    const tab: SearchTabValue = isTab(flat["tab"]) ? flat["tab"] : "videos";
 
     const { q, uploadedWithin, duration, hasCaptions } = filters;
+    const trimmed = q.trim();
 
-    // Build a one-shot caller bound to this request's context.
     const ctx = await createTRPCContext({ headers: await headers() });
     const caller = createSearchCaller(() => Promise.resolve(ctx));
 
-    const result =
-        q.trim().length > 0
-            ? await caller.search.videos({
-                  q: q.trim(),
-                  uploadedWithin,
-                  duration,
-                  hasCaptions,
-                  limit: 20,
-              })
-            : null;
+    let videoItems: SearchResultVideo[] = [];
+    let channelItems: SearchChannelResult[] = [];
+    let playlistItems: SearchPlaylistResult[] = [];
 
-    const items: SearchResultVideo[] = result?.items ?? [];
+    if (trimmed.length > 0) {
+        if (tab === "videos") {
+            const r = await caller.search.videos({
+                q: trimmed,
+                uploadedWithin,
+                duration,
+                hasCaptions,
+                limit: 20,
+            });
+            videoItems = r.items;
+        } else if (tab === "channels") {
+            const r = await caller.search.channels({ q: trimmed, limit: 20 });
+            channelItems = r.items;
+        } else {
+            const r = await caller.search.playlists({ q: trimmed, limit: 20 });
+            playlistItems = r.items;
+        }
+    }
+
+    const empty =
+        (tab === "videos" && videoItems.length === 0) ||
+        (tab === "channels" && channelItems.length === 0) ||
+        (tab === "playlists" && playlistItems.length === 0);
 
     return (
         <AppShell>
-            <div className="container mx-auto max-w-4xl px-4 py-8">
-                {/* Filter chips — client component; reads URL params itself */}
+            <div className="container mx-auto max-w-4xl space-y-6 px-4 py-8">
                 <Suspense fallback={null}>
-                    <div className="mb-6">
-                        <SearchFilters />
-                    </div>
+                    <SearchTabs active={tab} />
                 </Suspense>
 
-                {/* Result list */}
-                {q.trim().length === 0 ? (
+                {tab === "videos" ? (
+                    <Suspense fallback={null}>
+                        <SearchFilters />
+                    </Suspense>
+                ) : null}
+
+                {trimmed.length === 0 ? (
                     <p className="text-muted-foreground">Enter a search query above.</p>
-                ) : items.length === 0 ? (
+                ) : empty ? (
                     <div className="py-16 text-center">
                         <p className="text-lg font-medium text-foreground">
-                            No results for &ldquo;{q}&rdquo;.
+                            No {tab} results for &ldquo;{q}&rdquo;.
                         </p>
                         <p className="mt-2 text-sm text-muted-foreground">
-                            Try different keywords or broaden your filters.
+                            Try different keywords{tab === "videos" ? " or broaden your filters" : ""}.
                         </p>
                     </div>
-                ) : (
+                ) : tab === "videos" ? (
                     <ol className="flex flex-col gap-6">
-                        {items.map((video) => (
+                        {videoItems.map((video) => (
                             <li key={video.id}>
                                 <SearchResultCard video={video} />
+                            </li>
+                        ))}
+                    </ol>
+                ) : tab === "channels" ? (
+                    <ol className="flex flex-col gap-2">
+                        {channelItems.map((channel) => (
+                            <li key={channel.id}>
+                                <SearchChannelCard channel={channel} />
+                            </li>
+                        ))}
+                    </ol>
+                ) : (
+                    <ol className="flex flex-col gap-2">
+                        {playlistItems.map((playlist) => (
+                            <li key={playlist.id}>
+                                <SearchPlaylistCard playlist={playlist} />
                             </li>
                         ))}
                     </ol>

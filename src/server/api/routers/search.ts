@@ -29,6 +29,18 @@ const allInputSchema = z.object({
     limit: z.number().int().min(1).max(50).default(20),
 });
 
+const channelsInputSchema = z.object({
+    q: z.string().min(1).max(200),
+    cursor: z.number().int().nonnegative().optional(),
+    limit: z.number().int().min(1).max(50).default(20),
+});
+
+const playlistsInputSchema = z.object({
+    q: z.string().min(1).max(200),
+    cursor: z.number().int().nonnegative().optional(),
+    limit: z.number().int().min(1).max(50).default(20),
+});
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -219,9 +231,122 @@ export const searchRouter = createTRPCRouter({
         }),
 
     /**
+     * Channel search via pg_trgm similarity on (name, handle). Returns
+     * subscriber count and ready-public video count for the result card.
+     */
+    channels: publicProcedure
+        .input(channelsInputSchema)
+        .query(async ({ ctx, input }) => {
+            const { q, cursor = 0, limit } = input;
+
+            type Row = {
+                id: string;
+                handle: string;
+                name: string;
+                description: string;
+                avatarPath: string | null;
+                bannerPath: string | null;
+                subscriberCount: number;
+                videoCount: number;
+                sim: number;
+            };
+
+            const rows = await ctx.db.execute<Row>(sql`
+                SELECT
+                    c.id,
+                    c.handle,
+                    c.name,
+                    c.description,
+                    c.avatar_path                                 AS "avatarPath",
+                    c.banner_path                                 AS "bannerPath",
+                    (SELECT count(*) FROM subscriptions s
+                        WHERE s.channel_id = c.id)::int           AS "subscriberCount",
+                    (SELECT count(*) FROM videos v
+                        WHERE v.channel_id = c.id
+                          AND v.privacy = 'public'
+                          AND v.status = 'ready')::int            AS "videoCount",
+                    GREATEST(similarity(c.name, ${q}), similarity(c.handle, ${q})) AS sim
+                FROM channels c
+                WHERE c.name % ${q} OR c.handle % ${q}
+                ORDER BY sim DESC, "subscriberCount" DESC
+                LIMIT ${limit + 1}
+                OFFSET ${cursor}
+            `);
+
+            const items = rows.slice(0, limit);
+            const nextCursor = rows.length > limit ? cursor + limit : null;
+
+            return {
+                items: items.map((r) => ({
+                    id: r.id,
+                    handle: r.handle,
+                    name: r.name,
+                    description: r.description,
+                    avatarPath: r.avatarPath,
+                    bannerPath: r.bannerPath,
+                    subscriberCount: r.subscriberCount,
+                    videoCount: r.videoCount,
+                })),
+                nextCursor,
+            };
+        }),
+
+    /**
+     * Public user-playlist search via pg_trgm similarity on title.
+     * kind='user' AND privacy='public' filter excludes system playlists
+     * (queue, watch_later) and unlisted/private user playlists.
+     */
+    playlists: publicProcedure
+        .input(playlistsInputSchema)
+        .query(async ({ ctx, input }) => {
+            const { q, cursor = 0, limit } = input;
+
+            type Row = {
+                id: string;
+                title: string;
+                description: string;
+                ownerName: string;
+                itemCount: number;
+                sim: number;
+            };
+
+            const rows = await ctx.db.execute<Row>(sql`
+                SELECT
+                    p.id,
+                    p.title,
+                    p.description,
+                    u.name                                                                  AS "ownerName",
+                    (SELECT count(*) FROM playlist_items pi WHERE pi.playlist_id = p.id)::int AS "itemCount",
+                    similarity(p.title, ${q})                                              AS sim
+                FROM playlists p
+                JOIN "user" u ON u.id = p.owner_id
+                WHERE p.title % ${q}
+                  AND p.privacy = 'public'
+                  AND p.kind = 'user'
+                ORDER BY sim DESC, "itemCount" DESC
+                LIMIT ${limit + 1}
+                OFFSET ${cursor}
+            `);
+
+            const items = rows.slice(0, limit);
+            const nextCursor = rows.length > limit ? cursor + limit : null;
+
+            return {
+                items: items.map((r) => ({
+                    id: r.id,
+                    title: r.title,
+                    description: r.description,
+                    ownerName: r.ownerName,
+                    itemCount: r.itemCount,
+                })),
+                nextCursor,
+            };
+        }),
+
+    /**
      * Combined search — for v1 this is a thin wrapper over `videos`.
-     * Channel and playlist tabs land in v2; the procedure exists so the
-     * client router can call `search.all` uniformly.
+     * Channel and playlist tabs are wired to dedicated procedures above;
+     * `all` exists so the client router can call `search.all` uniformly.
      */
     all: publicProcedure
         .input(allInputSchema)
