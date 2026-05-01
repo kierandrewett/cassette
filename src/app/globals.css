@@ -131,11 +131,15 @@
     /* Stronger glass surface for player popovers (Settings / Captions / Sleep
        timer / right-click context menu / Stats overlay).  Sits over moving
        video frames so we lean on a darker tint and more aggressive blur.
-       Drop shadow makes the float convincing on bright frames. */
+       Drop shadow makes the float convincing on bright frames.
+       Lower bg alpha (was 0.78 -> 0.5) so the backdrop-filter actually
+       reads as a glass effect — at high opacity the blur was effectively
+       invisible and the panel just looked solid. */
     .player-popover {
-        background: rgba(10, 10, 12, 0.78);
-        backdrop-filter: blur(24px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(10, 10, 12, 0.5);
+        backdrop-filter: blur(28px) saturate(180%);
+        -webkit-backdrop-filter: blur(28px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow:
             0 16px 32px -8px rgba(0, 0, 0, 0.6),
             0 4px 8px -2px rgba(0, 0, 0, 0.4);
