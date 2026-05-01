@@ -36,6 +36,19 @@ export const hlsSpriteJpgPath = (videoId: string): string => join(hlsRoot, video
 
 export const hlsSpriteVttPath = (videoId: string): string => join(hlsRoot, videoId, "sprite.vtt");
 
+// Channel asset helpers — avatar and banner images stored under _assets/<channelId>/
+// Paths are relative to hlsRoot when stored in the DB; absolute on disk.
+
+export const channelAssetsDir = (channelId: string): string => join(hlsRoot, "_assets", channelId);
+
+/** Absolute on-disk path for a channel asset file. */
+export const channelAssetPath = (channelId: string, kind: "avatar" | "banner", ext: string): string =>
+    join(hlsRoot, "_assets", channelId, `${kind}${ext.startsWith(".") ? ext : `.${ext}`}`);
+
+/** Relative path stored in the DB (relative to hlsRoot). */
+export const channelAssetRelative = (channelId: string, kind: "avatar" | "banner", ext: string): string =>
+    join("_assets", channelId, `${kind}${ext.startsWith(".") ? ext : `.${ext}`}`);
+
 export const ensureDir = async (dir: string): Promise<void> => {
     await mkdir(dir, { recursive: true });
 };

@@ -68,8 +68,16 @@ const StudioChannelPage = async ({ params, searchParams }: Props) => {
 
             {/* Tab content */}
             {tab === "overview" && (
-                <div className="py-8 text-center text-muted-foreground">
-                    <p>Channel overview — coming soon.</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <Link
+                        href={`/studio/c/${handle}/customise`}
+                        className="flex flex-col gap-2 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-card/80"
+                    >
+                        <span className="text-base font-semibold">Customise channel</span>
+                        <span className="text-sm text-muted-foreground">
+                            Update your avatar, banner image, name, and description.
+                        </span>
+                    </Link>
                 </div>
             )}
 

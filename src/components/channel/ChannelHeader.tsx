@@ -29,8 +29,8 @@ export const ChannelHeader = ({
     isOwner,
     isSubscribed = false,
 }: ChannelHeaderProps) => {
-    const avatarSrc = avatarPath ? `/api/hls/${id}/avatar` : null;
-    const bannerSrc = bannerPath ? `/api/hls/${id}/banner` : null;
+    const avatarSrc = avatarPath ? `/api/channel/${id}/asset/avatar` : null;
+    const bannerSrc = bannerPath ? `/api/channel/${id}/asset/banner` : null;
 
     return (
         <div>
@@ -85,7 +85,7 @@ export const ChannelHeader = ({
                         <div className="flex-shrink-0">
                             {isOwner ? (
                                 <Link
-                                    href={`/studio/c/${handle}`}
+                                    href={`/studio/c/${handle}/customise`}
                                     className="inline-flex h-9 items-center rounded-full border border-border px-5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                                 >
                                     Customise channel
