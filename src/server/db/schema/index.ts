@@ -4,6 +4,7 @@
 
 export * from "./_types";
 export * from "./auth";
+export * from "./admin";
 export * from "./channels";
 export * from "./videos";
 export * from "./social";
@@ -11,3 +12,4 @@ export * from "./playlists";
 export * from "./history";
 export * from "./notifications";
 export * from "./jobs";
+export * from "./webhooks";

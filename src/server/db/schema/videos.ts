@@ -53,6 +53,9 @@ export const videos = pgTable(
         spriteVttPath: text("sprite_vtt_path"),
         sourceBytes: bigint("source_bytes", { mode: "number" }),
         sourceSha256: text("source_sha256"),
+        // tags are free-form strings the uploader can attach. GIN-indexed
+        // so searches can use the array containment operator efficiently.
+        tags: text("tags").array().notNull().default([]),
         viewCount: bigint("view_count", { mode: "number" }).notNull().default(0),
         likeCount: integer("like_count").notNull().default(0),
         dislikeCount: integer("dislike_count").notNull().default(0),
@@ -68,6 +71,7 @@ export const videos = pgTable(
         unlistedIdx: uniqueIndex("videos_unlisted_slug_idx").on(t.unlistedSlug),
         searchGin: index("videos_search_gin").using("gin", t.searchVector),
         trgmTitle: index("videos_title_trgm").using("gin", sql`title gin_trgm_ops`),
+        tagsGin: index("videos_tags_gin").using("gin", t.tags),
     }),
 );
 
