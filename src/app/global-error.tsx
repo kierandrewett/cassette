@@ -3,7 +3,21 @@
 // global-error.tsx is rendered when the root layout itself throws. It must
 // own the html/body tags. Keep it minimal so it has no chance of itself
 // crashing.
-const GlobalErrorPage = ({ reset }: { error: Error & { digest?: string }; reset: () => void }) => {
+//
+// Next does not always provide `reset` — for example when the boundary is
+// invoked from a server-rendered error path where the client-side recovery
+// machinery is unavailable. Type it as optional and fall back to a hard
+// reload so the button never throws "reset is not a function".
+const GlobalErrorPage = ({ reset }: { error: Error & { digest?: string }; reset?: () => void }) => {
+    const handleRetry = () => {
+        if (typeof reset === "function") {
+            reset();
+            return;
+        }
+        if (typeof window !== "undefined") {
+            window.location.reload();
+        }
+    };
     return (
         <html lang="en">
             <body
@@ -28,7 +42,7 @@ const GlobalErrorPage = ({ reset }: { error: Error & { digest?: string }; reset:
                     </p>
                     <button
                         type="button"
-                        onClick={() => reset()}
+                        onClick={handleRetry}
                         style={{
                             padding: "0.5rem 1.25rem",
                             borderRadius: 9999,
