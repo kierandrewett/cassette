@@ -35,5 +35,10 @@ source-cache/
 coverage
 .nyc_output
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
 .vscode
 .idea

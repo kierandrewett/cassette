@@ -22,7 +22,9 @@
         "db:studio": "drizzle-kit studio",
         "db:migrate": "tsx scripts/migrate.ts",
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "e2e": "playwright test",
+        "e2e:ui": "playwright test --ui"
     },
     "dependencies": {
         "@hookform/resolvers": "^3.9.1",
@@ -70,6 +72,7 @@
         "zustand": "^5.0.2"
     },
     "devDependencies": {
+        "@playwright/test": "^1.59.1",
         "@types/busboy": "^1.5.4",
         "@types/node": "^22.10.5",
         "@types/nodemailer": "^8",

@@ -99,6 +99,15 @@ stack-logs:
 smoke:
     bash scripts/smoke.sh
 
+# Run the Playwright e2e suite. Assumes a running cassette stack at
+# E2E_BASE_URL (default http://localhost:3000). Use `just stack-up` first.
+e2e:
+    yarn e2e
+
+# Open the Playwright UI runner.
+e2e-ui:
+    yarn e2e:ui
+
 # ---------------------------------------------------------------------------
 # Maintenance
 # ---------------------------------------------------------------------------
