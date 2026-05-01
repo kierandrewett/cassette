@@ -97,11 +97,13 @@ export const historyRouter = createTRPCRouter({
         return { ok: true };
     }),
 
-    /** Delete a single watch history entry for a given video. */
-    remove: protectedProcedure.input(z.object({ videoId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    /** Delete a single watch history entry by row id. Each watch creates a
+     *  separate row; deleting by videoId would nuke the entire rewatch chain
+     *  for one click, so we scope to the row primary key instead. */
+    remove: protectedProcedure.input(z.object({ historyId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
         await ctx.db
             .delete(watchHistory)
-            .where(and(eq(watchHistory.userId, ctx.user.id), eq(watchHistory.videoId, input.videoId)));
+            .where(and(eq(watchHistory.userId, ctx.user.id), eq(watchHistory.id, input.historyId)));
         return { ok: true };
     }),
 });

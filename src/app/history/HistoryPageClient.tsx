@@ -83,11 +83,11 @@ export const HistoryPageClient = ({ initialItems }: HistoryPageClientProps) => {
         });
     };
 
-    const handleRemove = (videoId: string) => {
+    const handleRemove = (historyId: string) => {
         startTransition(async () => {
-            const result = await removeHistoryItem(videoId);
+            const result = await removeHistoryItem(historyId);
             if (result.ok) {
-                setLocalItems((prev) => prev.filter((it) => it.video.id !== videoId));
+                setLocalItems((prev) => prev.filter((it) => it.historyId !== historyId));
             } else {
                 toast.error(result.error ?? "Failed to remove item.");
             }

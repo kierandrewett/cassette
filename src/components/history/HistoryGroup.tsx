@@ -23,8 +23,10 @@ interface HistoryItem {
 interface HistoryGroupProps {
     label: string;
     items: HistoryItem[];
-    /** Called when the parent wants to remove a single item (client-side trigger). */
-    onRemove?: (videoId: string) => void;
+    /** Called when the parent wants to remove a single item. The argument is
+     *  the watch_history row id, NOT the videoId — the same video may appear
+     *  multiple times in history (one row per watch session). */
+    onRemove?: (historyId: string) => void;
 }
 
 // A per-day group of watch history items.
@@ -86,7 +88,7 @@ export const HistoryGroup = ({ label, items, onRemove }: HistoryGroupProps) => {
                             {onRemove && (
                                 <button
                                     type="button"
-                                    onClick={() => onRemove(item.video.id)}
+                                    onClick={() => onRemove(item.historyId)}
                                     className="mt-0.5 flex-shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
                                     title="Remove from history"
                                 >

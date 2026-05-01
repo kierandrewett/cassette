@@ -15,12 +15,16 @@ export async function clearHistory(): Promise<{ ok: boolean; error?: string }> {
     return { ok: true };
 }
 
-export async function removeHistoryItem(videoId: string): Promise<{ ok: boolean; error?: string }> {
+// Removes a single watch_history row by primary key. The previous
+// signature took videoId, which deleted *every* row for that video — a
+// rewatch left no way to remove just one entry. Keying on the row id
+// scopes the delete to the single click the user made.
+export async function removeHistoryItem(historyId: string): Promise<{ ok: boolean; error?: string }> {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user) return { ok: false, error: "Not authenticated." };
 
     await db
         .delete(watchHistory)
-        .where(and(eq(watchHistory.userId, session.user.id), eq(watchHistory.videoId, videoId)));
+        .where(and(eq(watchHistory.userId, session.user.id), eq(watchHistory.id, historyId)));
     return { ok: true };
 }
