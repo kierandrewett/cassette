@@ -23,7 +23,6 @@ import {
 import { DEFAULT_LOCALE, LOCALE_COOKIE, type Locale } from "@/i18n/config";
 
 import { authClient } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
 import { pushRecentSearch } from "@/lib/recent-searches";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,9 +170,16 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
     };
 
     return (
-        <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 bg-background/90 px-3 backdrop-blur-sm">
+        <header
+            // Three equal-width columns so the search bar sits in the
+            // middle of the *page*, not in the middle of whatever space is
+            // left between the asymmetric left (hamburger + wordmark) and
+            // right (create + bell + avatar) clusters. items-center
+            // vertical-aligns each cluster.
+            className="fixed inset-x-0 top-0 z-50 grid h-14 grid-cols-[1fr_minmax(0,640px)_1fr] items-center gap-2 bg-background/90 px-3 backdrop-blur-sm"
+        >
             {/* Left: hamburger + wordmark */}
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1 justify-self-start">
                 <Button
                     variant="ghost"
                     size="icon"
@@ -189,15 +195,12 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
             </div>
 
             {/* Centre: search bar with autocomplete popover */}
-            <div className="flex flex-1 justify-center px-4">
+            <div className="flex justify-center px-4">
                 <Popover open={searchOpen} onOpenChange={setSearchOpen}>
                     <PopoverAnchor asChild>
                         <form
                             onSubmit={handleSearchSubmit}
-                            className={cn(
-                                "relative flex w-full max-w-xl items-center transition-all duration-200",
-                                searchOpen ? "max-w-2xl" : "max-w-xl",
-                            )}
+                            className="relative flex w-full max-w-xl items-center"
                         >
                             <Search01Icon
                                 size={16}
@@ -231,7 +234,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
             </div>
 
             {/* Right: create dropdown, notifications, avatar */}
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1 justify-self-end">
                 {/* Create dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
