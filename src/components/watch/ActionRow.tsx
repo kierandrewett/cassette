@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { MoreVerticalIcon, Note01Icon, Playlist01Icon, Share01Icon } from "hugeicons-react";
 
 import {
@@ -53,6 +54,7 @@ export const ActionRow = ({
     captions,
     signedToken,
 }: ActionRowProps) => {
+    const t = useTranslations("actions");
     const [shareOpen, setShareOpen] = useState(false);
     const [transcriptOpen, setTranscriptOpen] = useState(false);
     const [playlistOpen, setPlaylistOpen] = useState(false);
@@ -64,7 +66,7 @@ export const ActionRow = ({
             {/* Like / Dislike — pill group */}
             <div className="flex items-center overflow-hidden rounded-full bg-secondary/60 transition-colors hover:bg-secondary/80">
                 <ActionPillButton
-                    aria-label={isLikedByMe === "like" ? "Unlike" : "Like"}
+                    aria-label={isLikedByMe === "like" ? t("unlike") : t("like")}
                     aria-pressed={isLikedByMe === "like"}
                 >
                     <ThumbUpIcon active={isLikedByMe === "like"} />
@@ -72,7 +74,7 @@ export const ActionRow = ({
                 </ActionPillButton>
                 <span className="h-5 w-px bg-border/60" aria-hidden="true" />
                 <ActionPillButton
-                    aria-label={isLikedByMe === "dislike" ? "Remove dislike" : "Dislike"}
+                    aria-label={isLikedByMe === "dislike" ? t("removeDislike") : t("dislike")}
                     aria-pressed={isLikedByMe === "dislike"}
                 >
                     <ThumbDownIcon active={isLikedByMe === "dislike"} />
@@ -86,7 +88,7 @@ export const ActionRow = ({
                 <DropdownMenuTrigger asChild>
                     <button
                         type="button"
-                        aria-label="More actions"
+                        aria-label={t("moreActions")}
                         className={cn(
                             "inline-flex h-9 w-9 items-center justify-center rounded-full",
                             "bg-secondary/60 text-foreground/80 transition-colors",
@@ -105,7 +107,7 @@ export const ActionRow = ({
                         }}
                     >
                         <Share01Icon className="mr-2 h-4 w-4" aria-hidden="true" />
-                        Share
+                        {t("share")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         disabled={transcriptDisabled}
@@ -115,7 +117,7 @@ export const ActionRow = ({
                         }}
                     >
                         <Note01Icon className="mr-2 h-4 w-4" aria-hidden="true" />
-                        Transcript
+                        {t("transcript")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={(e) => {
@@ -124,7 +126,7 @@ export const ActionRow = ({
                         }}
                     >
                         <Playlist01Icon className="mr-2 h-4 w-4" aria-hidden="true" />
-                        Add to playlist…
+                        {t("addToPlaylist")}
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

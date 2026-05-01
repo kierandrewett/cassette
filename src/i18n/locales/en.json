@@ -1,0 +1,110 @@
+{
+    "nav": {
+        "home": "Home",
+        "subscriptions": "Subscriptions",
+        "library": "Library",
+        "history": "History",
+        "playlists": "Playlists",
+        "studio": "Studio",
+        "admin": "Admin",
+        "newChannel": "New channel",
+        "createChannel": "Create channel",
+        "yourChannels": "Your channels",
+        "manage": "Manage",
+        "you": "You"
+    },
+    "actions": {
+        "like": "Like",
+        "unlike": "Unlike",
+        "dislike": "Dislike",
+        "removeDislike": "Remove dislike",
+        "share": "Share",
+        "watchLater": "Watch later",
+        "addToPlaylist": "Add to playlist…",
+        "transcript": "Transcript",
+        "moreActions": "More actions",
+        "subscribe": "Subscribe",
+        "subscribed": "Subscribed",
+        "save": "Save",
+        "cancel": "Cancel",
+        "remove": "Remove",
+        "edit": "Edit",
+        "delete": "Delete",
+        "loadMore": "Load more",
+        "loading": "Loading…"
+    },
+    "comments": {
+        "addComment": "Add a comment…",
+        "comment": "Comment",
+        "reply": "Reply",
+        "replies": "replies",
+        "posting": "Posting…",
+        "loadMore": "Load more comments",
+        "empty": "No comments yet. Be the first!",
+        "signInPrompt": "Sign in",
+        "signInToComment": "to leave a comment.",
+        "newBadge": "New"
+    },
+    "library": {
+        "upNext": "Up Next",
+        "continueWatching": "Continue Watching",
+        "watchLater": "Watch Later",
+        "yourPlaylists": "Your Playlists",
+        "recent": "Recent",
+        "subscriptions": "Subscriptions",
+        "history": "History",
+        "liked": "Liked videos"
+    },
+    "channel": {
+        "videos": "Videos",
+        "playlists": "Playlists",
+        "about": "About",
+        "subscribers": "subscribers",
+        "joined": "Joined"
+    },
+    "search": {
+        "placeholder": "Search",
+        "ariaLabel": "Search cassette",
+        "recent": "Recent",
+        "clear": "Clear"
+    },
+    "empty": {
+        "noVideos": "No videos yet",
+        "noComments": "No comments yet",
+        "noResults": "No results",
+        "noPlaylists": "No playlists yet",
+        "noSubscriptions": "You're not subscribed to anything yet",
+        "noHistory": "No watch history yet"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "theme": "Theme",
+        "themeLight": "Light",
+        "themeDark": "Dark",
+        "themeSystem": "System",
+        "account": "Your account",
+        "signOut": "Sign out",
+        "signIn": "Sign in",
+        "comingSoon": "(more languages coming soon)"
+    },
+    "errors": {
+        "generic": "Something went wrong.",
+        "networkError": "Network error.",
+        "tryAgain": "Try again",
+        "notFound": "Not found",
+        "unauthorized": "Sign in required"
+    },
+    "studio": {
+        "upload": "Upload",
+        "uploading": "Uploading…",
+        "videoTitle": "Title",
+        "videoDescription": "Description",
+        "tags": "Tags",
+        "visibility": "Visibility",
+        "visibilityPublic": "Public",
+        "visibilityUnlisted": "Unlisted",
+        "visibilityPrivate": "Private",
+        "saveAsDraft": "Save as draft"
+    }
+}

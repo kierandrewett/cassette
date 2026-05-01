@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
     Home01Icon,
     Notification03Icon,
@@ -35,15 +36,20 @@ interface NavItem {
     matchPrefix?: boolean;
 }
 
-const PRIMARY_ITEMS: NavItem[] = [
-    { href: "/", label: "Home", icon: Home01Icon },
-    { href: "/subscriptions", label: "Subscriptions", icon: Notification03Icon, matchPrefix: true },
+// `labelKey` indexes into the `nav.*` namespace of the active locale file.
+// We build the actual label string at render time via useTranslations so the
+// nav re-localises without remounting.
+type NavItemDef = Omit<NavItem, "label"> & { labelKey: string };
+
+const PRIMARY_ITEMS: NavItemDef[] = [
+    { href: "/", labelKey: "home", icon: Home01Icon },
+    { href: "/subscriptions", labelKey: "subscriptions", icon: Notification03Icon, matchPrefix: true },
 ];
 
-const LIBRARY_ITEMS: NavItem[] = [
-    { href: "/library", label: "Library", icon: LibraryIcon, matchPrefix: true },
-    { href: "/history", label: "History", icon: Time04Icon, matchPrefix: true },
-    { href: "/playlist", label: "Playlists", icon: PlaySquareIcon, matchPrefix: true },
+const LIBRARY_ITEMS: NavItemDef[] = [
+    { href: "/library", labelKey: "library", icon: LibraryIcon, matchPrefix: true },
+    { href: "/history", labelKey: "history", icon: Time04Icon, matchPrefix: true },
+    { href: "/playlist", labelKey: "playlists", icon: PlaySquareIcon, matchPrefix: true },
 ];
 
 interface LeftRailProps {
@@ -54,7 +60,7 @@ interface LeftRailProps {
     isAuthenticated?: boolean;
 }
 
-const isActive = (pathname: string, item: NavItem): boolean => {
+const isActive = (pathname: string, item: { href: string; matchPrefix?: boolean }): boolean => {
     if (item.matchPrefix) {
         if (item.href === "/") return pathname === "/";
         return pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -118,6 +124,7 @@ const Divider = () => <div className="mx-3 my-3 h-px bg-border/60" aria-hidden="
 
 export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }: LeftRailProps) => {
     const pathname = usePathname();
+    const t = useTranslations("nav");
     const ownsChannel = channels.length > 0;
 
     return (
@@ -137,7 +144,7 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                             <li key={item.href}>
                                 <RailLink
                                     href={item.href}
-                                    label={item.label}
+                                    label={t(item.labelKey)}
                                     Icon={item.icon}
                                     active={isActive(pathname, item)}
                                 />
@@ -148,13 +155,13 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                     {isAuthenticated && (
                         <>
                             <Divider />
-                            <SectionHeader>You</SectionHeader>
+                            <SectionHeader>{t("you")}</SectionHeader>
                             <ul className="space-y-0.5">
                                 {LIBRARY_ITEMS.map((item) => (
                                     <li key={item.href}>
                                         <RailLink
                                             href={item.href}
-                                            label={item.label}
+                                            label={t(item.labelKey)}
                                             Icon={item.icon}
                                             active={isActive(pathname, item)}
                                         />
@@ -169,13 +176,13 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                     {(ownsChannel || isAdmin) && (
                         <>
                             <Divider />
-                            <SectionHeader>Manage</SectionHeader>
+                            <SectionHeader>{t("manage")}</SectionHeader>
                             <ul className="space-y-0.5">
                                 {ownsChannel && (
                                     <li>
                                         <RailLink
                                             href="/studio"
-                                            label="Studio"
+                                            label={t("studio")}
                                             Icon={DashboardSquare01Icon}
                                             active={pathname === "/studio" || pathname.startsWith("/studio/")}
                                         />
@@ -185,7 +192,7 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                                     <li>
                                         <RailLink
                                             href="/admin"
-                                            label="Admin"
+                                            label={t("admin")}
                                             Icon={Crown02Icon}
                                             active={pathname === "/admin" || pathname.startsWith("/admin/")}
                                         />
@@ -200,7 +207,7 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                     {channels.length > 0 && (
                         <>
                             <Divider />
-                            <SectionHeader>Your channels</SectionHeader>
+                            <SectionHeader>{t("yourChannels")}</SectionHeader>
                             <ul className="space-y-0.5">
                                 {channels.map((channel) => {
                                     const href = `/c/${channel.handle}`;
@@ -251,7 +258,7 @@ export const LeftRail = ({ channels, isAdmin = false, isAuthenticated = false }:
                                         <PlusSignIcon size={20} strokeWidth={1.6} />
                                     </span>
                                     <span className="flex-1 truncate">
-                                        {channels.length > 0 ? "New channel" : "Create channel"}
+                                        {channels.length > 0 ? t("newChannel") : t("createChannel")}
                                     </span>
                                 </Link>
                             </li>

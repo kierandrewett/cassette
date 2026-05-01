@@ -1,5 +1,12 @@
 // @ts-check
 
+import createNextIntlPlugin from "next-intl/plugin";
+
+// next-intl wraps the Next config so the request-config loader resolves at
+// build time. We point it at our shared request module rather than the
+// default `./i18n/request.ts` because our path uses the `src/` root.
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
 // ------------------------------------------------------------------
 // Security headers
 // ------------------------------------------------------------------
@@ -123,4 +130,8 @@ const nextConfig = {
     },
 };
 
-export default nextConfig;
+// withNextIntl preserves every option above (including the security headers
+// and the webpack tweaks for pg/pg-boss). It only injects the message-loader
+// alias so server components can call `getTranslations()` without further
+// boilerplate.
+export default withNextIntl(nextConfig);

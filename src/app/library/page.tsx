@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
     PlaySquareIcon,
     BookmarkAdd02Icon,
@@ -34,6 +35,12 @@ const LibraryPage = async () => {
         redirect("/login");
     }
     const userId = session.user.id;
+
+    // Section headings + the page title come from the i18n bundle so a future
+    // locale doesn't need to fork the layout. Body copy on the empty cards
+    // stays inline for now — translating them is a follow-up pass.
+    const tLibrary = await getTranslations("library");
+    const tNav = await getTranslations("nav");
 
     // Resolve (or skip) system playlists without creating them — they're
     // created on first use by the tRPC mutation procedures.
@@ -193,7 +200,7 @@ const LibraryPage = async () => {
                 gives a little air at the top and bottom of the page. */}
             <div className="space-y-12 py-8">
                 <div className="px-4 md:px-6">
-                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">Library</h1>
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">{tNav("library")}</h1>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Everything you&rsquo;ve saved, started, or subscribed to.
                     </p>
@@ -217,7 +224,7 @@ const LibraryPage = async () => {
                         }))}
                     />
                 ) : (
-                    <LibraryRow heading="Up Next" caption="Your cross-device queue">
+                    <LibraryRow heading={tLibrary("upNext")} caption="Your cross-device queue">
                         <EmptyShelfCard
                             Icon={PlaySquareIcon}
                             title="Nothing queued"
@@ -228,7 +235,7 @@ const LibraryPage = async () => {
                 )}
 
                 {/* Continue watching — incomplete watchProgress only */}
-                <LibraryRow heading="Continue watching">
+                <LibraryRow heading={tLibrary("continueWatching")}>
                     {continueRows.length > 0 ? (
                         continueRows.map((item) => (
                             <div key={item.historyId} className="w-80 flex-shrink-0">
@@ -246,7 +253,7 @@ const LibraryPage = async () => {
                 </LibraryRow>
 
                 {/* Watch Later */}
-                <LibraryRow heading="Watch Later">
+                <LibraryRow heading={tLibrary("watchLater")}>
                     {watchLaterItems.length > 0 ? (
                         watchLaterItems.map((item) => (
                             <div key={item.itemId} className="w-80 flex-shrink-0">
@@ -265,7 +272,7 @@ const LibraryPage = async () => {
 
                 {/* Your Playlists — playlists are now rendered via PlaylistTile so
                     the create tile shares its dimensions and hover treatment. */}
-                <LibraryRow heading="Your playlists">
+                <LibraryRow heading={tLibrary("yourPlaylists")}>
                     {userPlaylists.length === 0 && (
                         <EmptyShelfCard
                             Icon={LibraryIcon}
@@ -282,7 +289,7 @@ const LibraryPage = async () => {
                 </LibraryRow>
 
                 {/* Recent history — unfiltered */}
-                <LibraryRow heading="Recent" seeAllHref="/history">
+                <LibraryRow heading={tLibrary("recent")} seeAllHref="/history">
                     {recentRows.length > 0 ? (
                         recentRows.map((item) => (
                             <div key={item.historyId} className="w-80 flex-shrink-0">
@@ -299,7 +306,7 @@ const LibraryPage = async () => {
                 </LibraryRow>
 
                 {/* Subscriptions feed */}
-                <LibraryRow heading="From your subscriptions" seeAllHref="/subscriptions">
+                <LibraryRow heading={tLibrary("subscriptions")} seeAllHref="/subscriptions">
                     {subVideos.length > 0 ? (
                         subVideos.map((video) => (
                             <div key={video.id} className="w-80 flex-shrink-0">

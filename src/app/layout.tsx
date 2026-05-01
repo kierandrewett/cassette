@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 
 import { TRPCProvider } from "@/lib/trpc/client";
@@ -70,9 +72,15 @@ export const viewport: Viewport = {
     initialScale: 1,
 };
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => {
+const RootLayout = async ({ children }: { children: React.ReactNode }) => {
+    // Resolve the active locale + messages server-side so SSR + the first
+    // client paint use the same strings. NextIntlClientProvider hydrates
+    // these into the browser bundle for `useTranslations()`.
+    const locale = await getLocale();
+    const messages = await getMessages();
+
     return (
-        <html lang="en" className="dark" suppressHydrationWarning>
+        <html lang={locale} className="dark" suppressHydrationWarning>
             <head>
                 {/* Apply persisted theme before first paint to avoid flash. */}
                 {/* eslint-disable-next-line react/no-danger */}
@@ -86,9 +94,11 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             </head>
             <body className="min-h-full bg-background text-foreground antialiased">
                 {/* Providers is the outermost client boundary; TRPCProvider sits inside it. */}
-                <Providers>
-                    <TRPCProvider>{children}</TRPCProvider>
-                </Providers>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                    <Providers>
+                        <TRPCProvider>{children}</TRPCProvider>
+                    </Providers>
+                </NextIntlClientProvider>
             </body>
         </html>
     );

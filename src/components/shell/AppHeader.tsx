@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
     Menu01Icon,
     Search01Icon,
@@ -16,14 +17,17 @@ import {
     Moon02Icon,
     ComputerIcon,
     PaintBoardIcon,
+    Globe02Icon,
 } from "hugeicons-react";
+
+import { DEFAULT_LOCALE, LOCALE_COOKIE, type Locale } from "@/i18n/config";
 
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { pushRecentSearch } from "@/lib/recent-searches";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/UserAvatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -82,8 +86,28 @@ const readStoredTheme = (): ThemeChoice => {
     return "system";
 };
 
+// Read the persisted locale cookie on the client. The submenu writes back via
+// document.cookie + a router.refresh() so the next render picks up the new
+// messages bundle. Today there's only "en" so this is mostly scaffolding.
+const readStoredLocale = (): Locale => {
+    if (typeof document === "undefined") return DEFAULT_LOCALE;
+    const m = document.cookie.match(new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]+)`));
+    if (!m) return DEFAULT_LOCALE;
+    return decodeURIComponent(m[1]!) as Locale;
+};
+
+const writeStoredLocale = (locale: Locale): void => {
+    if (typeof document === "undefined") return;
+    // 1-year expiry; SameSite=Lax keeps it scoped to first-party navigations.
+    const oneYear = 60 * 60 * 24 * 365;
+    document.cookie = `${LOCALE_COOKIE}=${encodeURIComponent(locale)}; Path=/; Max-Age=${oneYear}; SameSite=Lax`;
+};
+
 export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProps) => {
     const router = useRouter();
+    const tNav = useTranslations("nav");
+    const tSearch = useTranslations("search");
+    const tSettings = useTranslations("settings");
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +139,22 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
         applyThemeChoice(next);
     };
 
+    // Locale state — drives the language submenu inside the avatar dropdown.
+    // We persist via a non-HTTP-only cookie so server components can read it
+    // back on the next render. The list is "english only" today; the
+    // disabled placeholder is here to set user expectations.
+    const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+    useEffect(() => {
+        setLocale(readStoredLocale());
+    }, []);
+    const handleLocaleSelect = (next: string) => {
+        if (next !== "en") return;
+        setLocale(next);
+        writeStoredLocale(next);
+        // Force a server re-render so getRequestConfig picks up the cookie.
+        router.refresh();
+    };
+
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const trimmed = searchValue.trim();
@@ -129,15 +169,6 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
         router.push("/");
         router.refresh();
     };
-
-    const userInitials = user?.name
-        ? user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()
-        : "?";
 
     return (
         <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 border-b border-border bg-background/90 px-3 backdrop-blur-sm">
@@ -176,12 +207,12 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                             <Input
                                 ref={inputRef}
                                 type="search"
-                                placeholder="Search"
+                                placeholder={tSearch("placeholder")}
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
                                 onFocus={() => setSearchOpen(true)}
                                 className="rounded-full border-secondary bg-secondary/40 pl-9 pr-4 focus-visible:bg-background"
-                                aria-label="Search cassette"
+                                aria-label={tSearch("ariaLabel")}
                             />
                         </form>
                     </PopoverAnchor>
@@ -236,12 +267,9 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                                 variant="ghost"
                                 size="icon"
                                 aria-label="Account menu"
-                                className="h-8 w-8 rounded-full p-0"
+                                className="h-8 w-8 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                                <Avatar className="h-8 w-8">
-                                    {user.image && <AvatarImage src={user.image} alt={user.name} />}
-                                    <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
-                                </Avatar>
+                                <UserAvatar user={user} size={32} />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-60">
@@ -255,20 +283,20 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                             <DropdownMenuItem asChild>
                                 <Link href="/account" className="cursor-pointer">
                                     <UserCircleIcon size={16} strokeWidth={1.6} />
-                                    Your account
+                                    {tSettings("account")}
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                                 <Link href="/studio" className="cursor-pointer">
                                     <DashboardSquare01Icon size={16} strokeWidth={1.6} />
-                                    Studio
+                                    {tNav("studio")}
                                 </Link>
                             </DropdownMenuItem>
                             {isAdmin && (
                                 <DropdownMenuItem asChild>
                                     <Link href="/admin" className="cursor-pointer">
                                         <Crown02Icon size={16} strokeWidth={1.6} />
-                                        Admin
+                                        {tNav("admin")}
                                     </Link>
                                 </DropdownMenuItem>
                             )}
@@ -280,7 +308,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>
                                     <PaintBoardIcon size={16} strokeWidth={1.6} />
-                                    Theme
+                                    {tSettings("theme")}
                                     <span className="ml-auto text-xs capitalize text-muted-foreground">{theme}</span>
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent className="w-44">
@@ -288,29 +316,51 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                                         <DropdownMenuRadioItem value="light">
                                             <span className="ml-6 flex items-center gap-2">
                                                 <Sun03Icon size={16} strokeWidth={1.6} />
-                                                Light
+                                                {tSettings("themeLight")}
                                             </span>
                                         </DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="dark">
                                             <span className="ml-6 flex items-center gap-2">
                                                 <Moon02Icon size={16} strokeWidth={1.6} />
-                                                Dark
+                                                {tSettings("themeDark")}
                                             </span>
                                         </DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="system">
                                             <span className="ml-6 flex items-center gap-2">
                                                 <ComputerIcon size={16} strokeWidth={1.6} />
-                                                System
+                                                {tSettings("themeSystem")}
                                             </span>
                                         </DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuSubContent>
                             </DropdownMenuSub>
 
+                            {/* Language submenu — sibling of Theme. Today only
+                                English is wired up; the disabled placeholder
+                                row sets expectations for future locales. */}
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <Globe02Icon size={16} strokeWidth={1.6} />
+                                    {tSettings("language")}
+                                    <span className="ml-auto text-xs uppercase text-muted-foreground">{locale}</span>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent className="w-56">
+                                    <DropdownMenuRadioGroup value={locale} onValueChange={handleLocaleSelect}>
+                                        <DropdownMenuRadioItem value="en">
+                                            <span className="ml-6">English</span>
+                                        </DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem disabled className="text-xs">
+                                        {tSettings("comingSoon")}
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+
                             <DropdownMenuItem asChild>
                                 <Link href="/settings" className="cursor-pointer">
                                     <Settings02Icon size={16} strokeWidth={1.6} />
-                                    Settings
+                                    {tSettings("title")}
                                 </Link>
                             </DropdownMenuItem>
 
@@ -325,7 +375,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                                 onSelect={() => void handleSignOut()}
                             >
                                 <Logout03Icon size={16} strokeWidth={1.6} />
-                                Sign out
+                                {tSettings("signOut")}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -333,7 +383,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                     <Button variant="default" size="sm" asChild>
                         <Link href="/login">
                             <UserCircleIcon size={16} strokeWidth={1.6} />
-                            Sign in
+                            {tSettings("signIn")}
                         </Link>
                     </Button>
                 )}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useTranslations } from "next-intl";
+
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,16 +37,20 @@ interface CommentComposerProps {
 }
 
 export const CommentComposer = ({
-    placeholder = "Add a comment…",
+    placeholder,
     onSubmit,
     onCancel,
     cancelable = true,
     initialValue = "",
     isPending = false,
-    submitLabel = "Comment",
+    submitLabel,
     me = null,
     className,
 }: CommentComposerProps) => {
+    const t = useTranslations("comments");
+    const tActions = useTranslations("actions");
+    const resolvedPlaceholder = placeholder ?? t("addComment");
+    const resolvedSubmitLabel = submitLabel ?? t("comment");
     const [body, setBody] = useState(initialValue);
     const [focused, setFocused] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -81,7 +87,7 @@ export const CommentComposer = ({
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 onFocus={() => setFocused(true)}
-                placeholder={placeholder}
+                placeholder={resolvedPlaceholder}
                 rows={focused ? 4 : 1}
                 disabled={busy}
                 className={cn(
@@ -124,11 +130,11 @@ export const CommentComposer = ({
                 <div className="flex items-center justify-end gap-2">
                     {cancelable && (
                         <Button type="button" variant="ghost" size="sm" onClick={handleCancel} disabled={busy}>
-                            Cancel
+                            {tActions("cancel")}
                         </Button>
                     )}
                     <Button type="submit" size="sm" disabled={!canSubmit}>
-                        {busy ? "Posting…" : submitLabel}
+                        {busy ? t("posting") : resolvedSubmitLabel}
                     </Button>
                 </div>
             )}
