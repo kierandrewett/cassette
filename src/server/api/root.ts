@@ -1,5 +1,6 @@
 import { createCallerFactory, createTRPCRouter, publicProcedure } from "./trpc";
 import {
+    adminRouter,
     channelRouter,
     commentRouter,
     historyRouter,
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
     health: createTRPCRouter({
         ping: publicProcedure.query(() => ({ ok: true, ts: new Date().toISOString() })),
     }),
+    admin: adminRouter,
     channel: channelRouter,
     video: videoRouter,
     comment: commentRouter,

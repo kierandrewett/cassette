@@ -36,16 +36,36 @@ export const SubscribeButton = ({
     const [subscribed, setSubscribed] = useState(initialSubscribed);
     const [notify, setNotify] = useState(initialNotify);
 
+    const utils = api.useUtils();
+
     const subscribeMutation = api.subscription.subscribe.useMutation({
-        onSuccess: () => {
+        onMutate: () => {
             setSubscribed(true);
             setNotify(true);
+        },
+        onError: () => {
+            setSubscribed(false);
+        },
+        onSettled: async () => {
+            await Promise.all([
+                utils.subscription.isSubscribed.invalidate({ channelId }),
+                utils.channel.byHandle.invalidate(),
+            ]);
         },
     });
 
     const unsubscribeMutation = api.subscription.unsubscribe.useMutation({
-        onSuccess: () => {
+        onMutate: () => {
             setSubscribed(false);
+        },
+        onError: () => {
+            setSubscribed(true);
+        },
+        onSettled: async () => {
+            await Promise.all([
+                utils.subscription.isSubscribed.invalidate({ channelId }),
+                utils.channel.byHandle.invalidate(),
+            ]);
         },
     });
 

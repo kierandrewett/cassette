@@ -25,6 +25,14 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
     const origin = typeof window !== "undefined" ? window.location.origin : "";
 
     const url = `${origin}/watch/${videoId}${slug ? `?slug=${slug}` : ""}`;
+
+    // Feature-detect Web Share API. On mobile (viewport <= 768 px) we hand off
+    // to the OS share sheet directly instead of opening the Popover.
+    const canNativeShare =
+        typeof navigator !== "undefined" &&
+        typeof navigator.share === "function" &&
+        typeof window !== "undefined" &&
+        window.matchMedia("(max-width: 768px)").matches;
     const embedSrc = `${origin}/embed/${videoId}${slug ? `?slug=${slug}` : ""}`;
     const embedSnippet = useMemo(
         () =>
@@ -58,7 +66,31 @@ export const ShareButton = ({ videoId, slug, isPrivate = false }: ShareButtonPro
         }
     };
 
+    const handleNativeShare = () => {
+        if (!canNativeShare) return;
+        void navigator.share({ title: document.title, url });
+    };
+
     useEffect(() => () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current); }, []);
+
+    // On mobile with Web Share API: bypass the Popover entirely.
+    if (canNativeShare) {
+        return (
+            <button
+                type="button"
+                onClick={handleNativeShare}
+                className={cn(
+                    "flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-foreground/80",
+                    "hover:text-foreground hover:bg-white/5 transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                )}
+                aria-label="Share this video"
+            >
+                <ShareIcon />
+                <span>Share</span>
+            </button>
+        );
+    }
 
     return (
         <Popover open={open} onOpenChange={setOpen}>

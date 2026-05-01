@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ThumbnailPicker } from "@/components/studio/ThumbnailPicker";
 import { api } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
 
@@ -76,74 +78,103 @@ export const EditVideoDialog = ({ open, onOpenChange, channelId, video }: EditVi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Edit video</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-                    {/* Title */}
-                    <div className="space-y-1.5">
-                        <label htmlFor="edit-title" className="text-sm font-medium leading-none">
-                            Title <span className="text-destructive">*</span>
-                        </label>
-                        <input
-                            id="edit-title"
-                            type="text"
-                            {...register("title")}
-                            className={cn(
-                                "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
-                                "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                                errors.title && "border-destructive focus-visible:ring-destructive",
-                            )}
-                        />
-                        {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
-                    </div>
+                <Tabs defaultValue="metadata">
+                    <TabsList>
+                        <TabsTrigger value="metadata">Metadata</TabsTrigger>
+                        <TabsTrigger value="thumbnail">Thumbnail</TabsTrigger>
+                    </TabsList>
 
-                    {/* Description */}
-                    <div className="space-y-1.5">
-                        <label htmlFor="edit-description" className="text-sm font-medium leading-none">
-                            Description
-                        </label>
-                        <textarea
-                            id="edit-description"
-                            rows={6}
-                            {...register("description")}
-                            className={cn(
-                                "flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm resize-none",
-                                "placeholder:text-muted-foreground",
-                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                                "disabled:cursor-not-allowed disabled:opacity-50",
-                                errors.description && "border-destructive",
-                            )}
-                        />
-                        {errors.description && (
-                            <p className="text-xs text-destructive">{errors.description.message}</p>
-                        )}
-                    </div>
+                    {/* ---- Metadata tab ---- */}
+                    <TabsContent value="metadata">
+                        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 pt-2">
+                            {/* Title */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="edit-title" className="text-sm font-medium leading-none">
+                                    Title <span className="text-destructive">*</span>
+                                </label>
+                                <input
+                                    id="edit-title"
+                                    type="text"
+                                    {...register("title")}
+                                    className={cn(
+                                        "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+                                        "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                        errors.title && "border-destructive focus-visible:ring-destructive",
+                                    )}
+                                />
+                                {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
+                            </div>
 
-                    <DialogFooter>
-                        <button
-                            type="button"
-                            onClick={() => onOpenChange(false)}
-                            className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-transparent px-4 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting || updateMetadata.isPending}
-                            className={cn(
-                                "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4",
-                                "text-sm font-medium text-primary-foreground shadow transition-colors",
-                                "hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                                "disabled:pointer-events-none disabled:opacity-50",
-                            )}
-                        >
-                            {updateMetadata.isPending ? "Saving…" : "Save changes"}
-                        </button>
-                    </DialogFooter>
-                </form>
+                            {/* Description */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="edit-description" className="text-sm font-medium leading-none">
+                                    Description
+                                </label>
+                                <textarea
+                                    id="edit-description"
+                                    rows={6}
+                                    {...register("description")}
+                                    className={cn(
+                                        "flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm resize-none",
+                                        "placeholder:text-muted-foreground",
+                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                                        "disabled:cursor-not-allowed disabled:opacity-50",
+                                        errors.description && "border-destructive",
+                                    )}
+                                />
+                                {errors.description && (
+                                    <p className="text-xs text-destructive">{errors.description.message}</p>
+                                )}
+                            </div>
+
+                            <DialogFooter>
+                                <button
+                                    type="button"
+                                    onClick={() => onOpenChange(false)}
+                                    className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-transparent px-4 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || updateMetadata.isPending}
+                                    className={cn(
+                                        "inline-flex h-9 items-center justify-center rounded-md bg-primary px-4",
+                                        "text-sm font-medium text-primary-foreground shadow transition-colors",
+                                        "hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                        "disabled:pointer-events-none disabled:opacity-50",
+                                    )}
+                                >
+                                    {updateMetadata.isPending ? "Saving…" : "Save changes"}
+                                </button>
+                            </DialogFooter>
+                        </form>
+                    </TabsContent>
+
+                    {/* ---- Thumbnail tab ---- */}
+                    <TabsContent value="thumbnail" className="pt-2">
+                        <ThumbnailPicker
+                            videoId={video.id}
+                            onSaved={async () => {
+                                await utils.video.listForChannel.invalidate({ channelId });
+                            }}
+                        />
+                        <div className="mt-4 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => onOpenChange(false)}
+                                className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-transparent px-4 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </TabsContent>
+                </Tabs>
             </DialogContent>
         </Dialog>
     );

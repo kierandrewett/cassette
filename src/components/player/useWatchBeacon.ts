@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { api } from "@/lib/trpc/client";
+import { useSession } from "@/lib/auth-client";
 import { formatDuration } from "@/lib/utils";
 
 const BEACON_INTERVAL_MS = 5000;
@@ -17,8 +18,13 @@ interface UseWatchBeaconOptions {
 /**
  * Sends watch progress beacons every 5 s, on pause, and on unmount.
  * On mount, loads saved progress and offers a resume toast.
+ *
+ * Skips all beacon logic when the viewer is not signed in — the server
+ * would reject the request anyway, and we avoid unnecessary network chatter.
  */
 export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeaconOptions): void => {
+    const { data: session } = useSession();
+    const isSignedIn = !!session?.user;
     const utils = api.useUtils();
     const recordProgress = api.video.recordProgress.useMutation();
     const hasOfferedResume = useRef(false);
@@ -42,8 +48,9 @@ export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeacon
         }
     };
 
-    // On mount: load saved progress and offer resume.
+    // On mount: load saved progress and offer resume (signed-in only).
     useEffect(() => {
+        if (!isSignedIn) return;
         if (hasOfferedResume.current) return;
         hasOfferedResume.current = true;
 
@@ -68,10 +75,12 @@ export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeacon
             .catch(() => {
                 // Not authenticated or no progress — ignore.
             });
-    }, [videoId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [videoId, isSignedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Periodic beacon + on-unmount beacon.
+    // Periodic beacon + on-unmount beacon (signed-in only).
     useEffect(() => {
+        if (!isSignedIn) return;
+
         const interval = setInterval(() => {
             sendBeacon(getPositionSec());
         }, BEACON_INTERVAL_MS);
@@ -81,7 +90,7 @@ export const useWatchBeacon = ({ videoId, getPositionSec, seek }: UseWatchBeacon
             clearInterval(interval);
             sendBeacon(getPositionSec());
         };
-    }, [videoId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [videoId, isSignedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Pause beacon is wired separately in Player.tsx via onPause.
 };

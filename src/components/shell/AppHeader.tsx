@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
-import { Menu, Search, Upload, Settings, Clapperboard, LogOut, User } from "lucide-react";
+import { Menu, Search, Upload, Settings, Clapperboard, LogOut, User, ShieldCheck } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -31,11 +31,13 @@ export interface AppHeaderUser {
 
 interface AppHeaderProps {
     user: AppHeaderUser | null;
+    /** Whether the signed-in user is an admin. Controls the Admin link in the avatar dropdown. */
+    isAdmin?: boolean;
     /** Callback to toggle the left rail collapsed state. */
     onMenuToggle?: () => void;
 }
 
-export const AppHeader = ({ user, onMenuToggle }: AppHeaderProps) => {
+export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProps) => {
     const router = useRouter();
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
@@ -173,6 +175,14 @@ export const AppHeader = ({ user, onMenuToggle }: AppHeaderProps) => {
                                     Studio
                                 </Link>
                             </DropdownMenuItem>
+                            {isAdmin && (
+                                <DropdownMenuItem asChild>
+                                    <Link href="/admin" className="cursor-pointer">
+                                        <ShieldCheck className="h-4 w-4" />
+                                        Admin
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem asChild>
                                 <Link href="/settings" className="cursor-pointer">
                                     <Settings className="h-4 w-4" />

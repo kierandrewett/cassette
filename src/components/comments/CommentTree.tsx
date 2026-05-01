@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useSession } from "@/lib/auth-client";
 import { api } from "@/lib/trpc/client";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CommentComposer } from "./CommentComposer";
 import { CommentItem } from "./CommentItem";
 import { CommentReplies } from "./CommentReplies";
@@ -36,6 +37,7 @@ export const CommentTree = ({ videoId, isChannelManager = false }: CommentTreePr
     });
 
     const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+    const sectionRef = useRef<HTMLElement | null>(null);
 
     const toggleReplies = (commentId: string) => {
         setExpandedReplies((prev) => {
@@ -51,8 +53,19 @@ export const CommentTree = ({ videoId, isChannelManager = false }: CommentTreePr
 
     const comments = data?.pages.flatMap((p) => p.items) ?? [];
 
+    // If the URL hash is #comments and there is a pinned comment, scroll the
+    // section into view smoothly once the first page of comments loads.
+    useEffect(() => {
+        if (isLoading || comments.length === 0) return;
+        const hasPinned = comments.some((c) => c.isPinned);
+        if (!hasPinned) return;
+        if (typeof window === "undefined") return;
+        if (window.location.hash !== "#comments") return;
+        sectionRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
     return (
-        <section aria-label="Comments" className="flex flex-col gap-4">
+        <section ref={sectionRef} aria-label="Comments" className="flex flex-col gap-4">
             {/* Top-level composer */}
             {userId ? (
                 <CommentComposer
@@ -76,12 +89,12 @@ export const CommentTree = ({ videoId, isChannelManager = false }: CommentTreePr
             {isLoading ? (
                 <div className="space-y-4">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="flex gap-3">
-                            <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-muted" />
+                        <div key={i} className="flex gap-3 py-1">
+                            <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
                             <div className="flex-1 space-y-2">
-                                <div className="h-4 w-32 animate-pulse rounded bg-muted" />
-                                <div className="h-3 w-full animate-pulse rounded bg-muted" />
-                                <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                                <Skeleton className="h-4 w-32" />
+                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-3 w-3/4" />
                             </div>
                         </div>
                     ))}

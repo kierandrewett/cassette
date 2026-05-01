@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 
@@ -33,26 +33,55 @@ export const LikeDislikeBar = ({
     const [likeDelta, setLikeDelta] = useState(0);
     const [dislikeDelta, setDislikeDelta] = useState(0);
 
-    const toggleMutation = api.like.toggleVideo.useMutation({
-        onSuccess: (data, variables) => {
-            const prev = reaction;
-            const next = data.reactionByMe;
-            setReaction(next);
+    const utils = api.useUtils();
 
-            // Update deltas so the UI reflects the change immediately.
+    // Capture a snapshot of the optimistic state so we can roll back on error.
+    type OptimisticSnapshot = { reaction: "like" | "dislike" | null; likeDelta: number; dislikeDelta: number };
+    const optimisticSnapshot = useRef<OptimisticSnapshot | null>(null);
+
+    const toggleMutation = api.like.toggleVideo.useMutation({
+        onMutate: (variables) => {
+            // Capture current state for potential rollback.
+            optimisticSnapshot.current = {
+                reaction,
+                likeDelta,
+                dislikeDelta,
+            };
+
+            // Apply optimistic update immediately.
+            const prev = reaction;
             if (variables.kind === "like") {
-                if (prev === "like" && next === null) setLikeDelta((d) => d - 1);
-                else if (prev !== "like" && next === "like") {
+                if (prev === "like") {
+                    setReaction(null);
+                    setLikeDelta((d) => d - 1);
+                } else {
+                    setReaction("like");
                     setLikeDelta((d) => d + 1);
                     if (prev === "dislike") setDislikeDelta((d) => d - 1);
                 }
             } else {
-                if (prev === "dislike" && next === null) setDislikeDelta((d) => d - 1);
-                else if (prev !== "dislike" && next === "dislike") {
+                if (prev === "dislike") {
+                    setReaction(null);
+                    setDislikeDelta((d) => d - 1);
+                } else {
+                    setReaction("dislike");
                     setDislikeDelta((d) => d + 1);
                     if (prev === "like") setLikeDelta((d) => d - 1);
                 }
             }
+        },
+        onError: () => {
+            // Roll back to the pre-mutation state.
+            if (optimisticSnapshot.current) {
+                setReaction(optimisticSnapshot.current.reaction);
+                setLikeDelta(optimisticSnapshot.current.likeDelta);
+                setDislikeDelta(optimisticSnapshot.current.dislikeDelta);
+                optimisticSnapshot.current = null;
+            }
+        },
+        onSettled: () => {
+            optimisticSnapshot.current = null;
+            void utils.video.byId.invalidate({ id: videoId });
         },
     });
 

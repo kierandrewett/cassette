@@ -120,6 +120,8 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
     const { data: session } = useSession();
     const [open, setOpen] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
+    const [queueAdded, setQueueAdded] = useState(false);
+    const [watchLaterAdded, setWatchLaterAdded] = useState(false);
 
     const { data: playlists } = api.playlist.list.useQuery(
         {},
@@ -127,13 +129,15 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
     );
 
     const addToQueue = api.playlist.queue.add.useMutation({
+        onMutate: () => setQueueAdded(true),
+        onError: () => { setQueueAdded(false); toast.error("Failed to add to queue"); },
         onSuccess: () => toast.success("Added to queue"),
-        onError: () => toast.error("Failed to add to queue"),
     });
 
     const addToWatchLater = api.playlist.watchLater.add.useMutation({
+        onMutate: () => setWatchLaterAdded(true),
+        onError: () => { setWatchLaterAdded(false); toast.error("Failed to save to Watch Later"); },
         onSuccess: () => toast.success("Saved to Watch Later"),
-        onError: () => toast.error("Failed to save to Watch Later"),
     });
 
     const addItem = api.playlist.addItem.useMutation({
@@ -181,18 +185,32 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
             >
                 {/* System actions */}
                 <DropdownMenuItem
-                    onSelect={(e) => { e.preventDefault(); addToQueue.mutate({ videoId }); setOpen(false); }}
+                    onSelect={(e) => {
+                        e.preventDefault();
+                        if (!queueAdded) addToQueue.mutate({ videoId });
+                        setOpen(false);
+                    }}
                     disabled={addToQueue.isPending}
                 >
-                    <List className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Add to queue
+                    {queueAdded
+                        ? <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
+                        : <List className="mr-2 h-4 w-4" aria-hidden="true" />
+                    }
+                    {queueAdded ? "Added to queue" : "Add to queue"}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                    onSelect={(e) => { e.preventDefault(); addToWatchLater.mutate({ videoId }); setOpen(false); }}
+                    onSelect={(e) => {
+                        e.preventDefault();
+                        if (!watchLaterAdded) addToWatchLater.mutate({ videoId });
+                        setOpen(false);
+                    }}
                     disabled={addToWatchLater.isPending}
                 >
-                    <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Add to Watch Later
+                    {watchLaterAdded
+                        ? <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
+                        : <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                    }
+                    {watchLaterAdded ? "Saved to Watch Later" : "Add to Watch Later"}
                 </DropdownMenuItem>
 
                 {userPlaylists.length > 0 && <DropdownMenuSeparator />}

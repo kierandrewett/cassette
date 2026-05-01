@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { env } from "@/env";
 import { signToken } from "@/lib/hls/sign";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { channelMembers } from "@/server/db/schema/channels";
@@ -616,6 +617,85 @@ export const videoRouter = createTRPCRouter({
                 publishedAt: r.publishedAt,
                 channel: { name: r.channelName, handle: r.channelHandle },
             }));
+        }),
+
+    // ---------------------------------------------------------------------------
+    // setThumbnailFromSprite — extract a frame from the 10×10 sprite and save it
+    // as thumbnail.jpg. frameIndex is 0-99. Caller must be a channel member.
+    // ---------------------------------------------------------------------------
+    setThumbnailFromSprite: protectedProcedure
+        .input(
+            z.object({
+                videoId: z.string().uuid(),
+                frameIndex: z.number().int().min(0).max(99),
+            }),
+        )
+        .mutation(async ({ ctx, input }) => {
+            // Load video to get channelId, sourcePath, durationSec.
+            const videoRows = await ctx.db
+                .select({
+                    channelId: videos.channelId,
+                    sourcePath: videos.sourcePath,
+                    durationSec: videos.durationSec,
+                })
+                .from(videos)
+                .where(eq(videos.id, input.videoId))
+                .limit(1);
+            const video = videoRows[0];
+            if (!video) throw new TRPCError({ code: "NOT_FOUND" });
+
+            // Auth: must be a channel member.
+            const memberRows = await ctx.db
+                .select({ role: channelMembers.role })
+                .from(channelMembers)
+                .where(
+                    and(
+                        eq(channelMembers.channelId, video.channelId),
+                        eq(channelMembers.userId, ctx.user.id),
+                    ),
+                )
+                .limit(1);
+            if (!memberRows[0]) throw new TRPCError({ code: "FORBIDDEN" });
+
+            if (!video.sourcePath) {
+                throw new TRPCError({ code: "BAD_REQUEST", message: "Source file path is not available." });
+            }
+            const durationSec = video.durationSec ?? 0;
+            if (durationSec <= 0) {
+                throw new TRPCError({ code: "BAD_REQUEST", message: "Video duration is not available." });
+            }
+
+            // Compute timestamp: sprite has 100 evenly-spaced frames.
+            const timestampSec = (input.frameIndex / 100) * durationSec;
+
+            const { hlsThumbnailPath } = await import("@/lib/paths");
+            const { runFfmpeg } = await import("@/lib/transcode/ffmpeg");
+
+            const thumbPath = hlsThumbnailPath(input.videoId);
+
+            // Extract the single frame.
+            await runFfmpeg([
+                "-ss", String(timestampSec),
+                "-i", video.sourcePath,
+                "-frames:v", "1",
+                "-q:v", "3",
+                "-vf", "scale=1280:-1",
+                thumbPath,
+            ]);
+
+            // Compute the relative path stored in the DB (relative to MEDIA_HLS_PATH).
+            const { resolve, relative } = await import("node:path");
+            const hlsRoot = resolve(env.MEDIA_HLS_PATH);
+            const relPath = relative(hlsRoot, thumbPath);
+
+            // Persist the updated thumbnailPath.
+            const [updated] = await ctx.db
+                .update(videos)
+                .set({ thumbnailPath: relPath, updatedAt: new Date() })
+                .where(eq(videos.id, input.videoId))
+                .returning({ thumbnailPath: videos.thumbnailPath });
+
+            return { thumbnailPath: updated?.thumbnailPath ?? relPath };
         }),
 
     delete: protectedProcedure

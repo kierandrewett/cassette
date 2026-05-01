@@ -7,6 +7,7 @@ import { Heart, MoreVertical, Pencil, ThumbsDown, ThumbsUp, Trash2 } from "lucid
 import { useSession } from "@/lib/auth-client";
 import { api } from "@/lib/trpc/client";
 import { cn, formatCount, formatRelativeTime } from "@/lib/utils";
+import { linkifyTimestamps } from "@/lib/timestamps";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -197,7 +198,9 @@ export const CommentItem = ({
                         className="mt-1"
                     />
                 ) : (
-                    <p className="mt-0.5 whitespace-pre-wrap text-sm leading-snug">{localBody}</p>
+                    <p className="mt-0.5 whitespace-pre-wrap text-sm leading-snug">
+                        {linkifyTimestamps(localBody)}
+                    </p>
                 )}
 
                 {/* Hearted indicator */}

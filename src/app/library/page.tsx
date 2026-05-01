@@ -6,6 +6,7 @@ import AppShell from "@/components/shell/AppShell";
 import { LibraryRow } from "@/components/library/LibraryRow";
 import { CreatePlaylistTile } from "@/components/library/CreatePlaylistTile";
 import { VideoCard } from "@/components/video/VideoCard";
+import { QueueRow } from "@/components/library/QueueRow";
 import { auth } from "@/lib/auth";
 import { db } from "@/server/db/client";
 import { channels } from "@/server/db/schema/channels";
@@ -190,18 +191,33 @@ const LibraryPage = async () => {
             <div className="mx-auto max-w-7xl space-y-10 py-8">
                 <h1 className="px-4 text-2xl font-semibold text-foreground md:px-6">Library</h1>
 
-                {/* Up Next (queue) */}
-                <LibraryRow
-                    heading="Up Next"
-                    isEmpty={queueItems.length === 0}
-                    emptyMessage="Add videos to your queue and they'll appear here on every device."
-                >
-                    {queueItems.map((item) => (
-                        <div key={item.itemId} className="w-56 flex-shrink-0">
-                            <VideoCard video={{ ...item.video, channel: item.channel }} />
-                        </div>
-                    ))}
-                </LibraryRow>
+                {/* Up Next (queue). Renders as a horizontal drag-reorderable
+                    strip via QueueRow; if the queue does not yet exist for this
+                    user, fall back to an empty LibraryRow with a CTA. */}
+                {queuePlaylistId ? (
+                    <QueueRow
+                        playlistId={queuePlaylistId}
+                        initialItems={queueItems.map((item, idx) => ({
+                            itemId: item.itemId,
+                            position: idx,
+                            video: {
+                                id: item.video.id,
+                                title: item.video.title,
+                                thumbnailPath: item.video.thumbnailPath,
+                                durationSec: item.video.durationSec,
+                            },
+                            channel: { name: item.channel.name, handle: item.channel.handle },
+                        }))}
+                    />
+                ) : (
+                    <LibraryRow
+                        heading="Up Next"
+                        isEmpty
+                        emptyMessage="Add videos to your queue and they'll appear here on every device."
+                    >
+                        {null}
+                    </LibraryRow>
+                )}
 
                 {/* Continue watching — incomplete watchProgress only */}
                 <LibraryRow

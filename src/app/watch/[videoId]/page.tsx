@@ -7,9 +7,12 @@ import { trpc } from "@/lib/trpc/server";
 import AppShell from "@/components/shell/AppShell";
 import { Player } from "@/components/player/Player";
 import { Description } from "@/components/watch/Description";
+import { DocumentTitle } from "@/components/watch/DocumentTitle";
 import { UpNextSidebar } from "@/components/watch/UpNextSidebar";
 import { CommentTree } from "@/components/comments/CommentTree";
 import { ShareButton } from "@/components/watch/ShareButton";
+import { AddToPlaylistButton } from "@/components/playlist/AddToPlaylistButton";
+import { AddToWatchLaterChip } from "@/components/social/AddToWatchLaterChip";
 import { formatCount, formatRelativeTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +82,9 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
 
     return (
         <AppShell>
+            {/* Update browser tab title to video title while on the watch page. */}
+            <DocumentTitle videoTitle={video.title} title="cassette" />
+
             {/* theatre-mode wrapper: CSS hides the rail + right column when data-theater="true" */}
             <div
                 id="watch-page"
@@ -183,6 +189,9 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
                                             isPrivate={video.privacy === "private"}
                                         />
                                     </ActionGroup>
+
+                                    <AddToWatchLaterChip videoId={video.id} />
+                                    <AddToPlaylistButton videoId={video.id} />
                                 </div>
                             </div>
 

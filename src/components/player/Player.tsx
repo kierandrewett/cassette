@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef } from "react";
 
 import { SEEK_EVENT, usePlayerStore } from "@/lib/player/store";
+import { readPreferences, writeVolume, writePlaybackRate } from "@/lib/player/preferences";
 import type { Video, VideoCaption, VideoChapter, VideoVariant } from "@/server/db/schema/videos";
 import { PlayerCanvas } from "./PlayerCanvas";
 import { PlayerVignette } from "./PlayerVignette";
@@ -19,6 +20,7 @@ import { PlayerTopBar } from "./PlayerTopBar";
 import { PlayerCenterStage } from "./PlayerCenterStage";
 import { PlayerBottomBar } from "./PlayerBottomBar";
 import { UpNextOverlay } from "./UpNextOverlay";
+import { KeyboardShortcutsOverlay, useShortcutsOverlay } from "./KeyboardShortcutsOverlay";
 import { useWatchBeacon, sendPauseBeacon } from "./useWatchBeacon";
 import { useIdleControls } from "./useIdleControls";
 
@@ -71,6 +73,11 @@ export const Player = ({
 }: PlayerProps) => {
     const tokenQS = signedToken ? `?t=${signedToken}` : "";
 
+    // Read stored captions preference once on render (SSR-safe).
+    const storedCaptionsLang = typeof window !== "undefined"
+        ? readPreferences().captionsLang
+        : null;
+
     return (
         <MediaPlayer
             className="relative w-full overflow-hidden bg-black"
@@ -101,7 +108,7 @@ export const Player = ({
                     default
                     label="thumbnails"
                 />
-                {/* Caption tracks */}
+                {/* Caption tracks — prefer stored language preference over DB isDefault flag. */}
                 {captions.map((c) => (
                     <Track
                         key={c.lang}
@@ -109,7 +116,9 @@ export const Player = ({
                         kind="subtitles"
                         lang={c.lang}
                         label={c.label}
-                        default={c.isDefault}
+                        default={storedCaptionsLang !== null
+                            ? c.lang === storedCaptionsLang
+                            : c.isDefault}
                     />
                 ))}
             </MediaProvider>
@@ -148,6 +157,38 @@ const PlayerInner = ({
     const toggleTheatre = usePlayerStore((s) => s.toggleTheatre);
     const targetSeekSec = usePlayerStore((s) => s.targetSeekSec);
     const clearSeek = usePlayerStore((s) => s.clearSeek);
+    const { open: shortcutsOpen, setOpen: setShortcutsOpen } = useShortcutsOverlay();
+
+    // Restore volume and playback rate from localStorage once the player is ready.
+    useEffect(() => {
+        if (!player) return;
+        const prefs = readPreferences();
+
+        const unsubscribe = player.subscribe(({ canPlay }) => {
+            if (!canPlay) return;
+            remote.changeVolume(prefs.volume);
+            remote.changePlaybackRate(prefs.playbackRate);
+            unsubscribe();
+        });
+
+        return unsubscribe;
+    }, [player, remote]);
+
+    // Persist volume changes (debounced inside writeVolume).
+    useEffect(() => {
+        if (!player) return;
+        return player.subscribe(({ volume }) => {
+            writeVolume(volume);
+        });
+    }, [player]);
+
+    // Persist playback rate changes (debounced).
+    useEffect(() => {
+        if (!player) return;
+        return player.subscribe(({ playbackRate }) => {
+            writePlaybackRate(playbackRate);
+        });
+    }, [player]);
 
     // Apply programmatic seeks from the store (e.g., description timestamp clicks).
     useEffect(() => {
@@ -170,11 +211,14 @@ const PlayerInner = ({
     }, [remote]);
 
     // Speed shortcuts: > and < (not in Vidstack's built-in key shortcut map).
+    // Also handles T (theatre), I (PiP), 0-9 (% seek), and ? (shortcuts overlay).
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement)?.tagName;
             if (tag === "INPUT" || tag === "TEXTAREA") return;
-            if (e.key === ">" || (e.key === "." && e.shiftKey)) {
+            if (e.key === "?" || (e.key === "/" && e.shiftKey)) {
+                setShortcutsOpen((v) => !v);
+            } else if (e.key === ">" || (e.key === "." && e.shiftKey)) {
                 const currentRate = player?.state.playbackRate ?? 1;
                 remote.changePlaybackRate(Math.min(2, currentRate + 0.25));
             } else if (e.key === "<" || (e.key === "," && e.shiftKey)) {
@@ -192,7 +236,7 @@ const PlayerInner = ({
         };
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
-    }, [remote, player, toggleTheatre]);
+    }, [remote, player, toggleTheatre, setShortcutsOpen]);
 
     // Watch progress beacon wiring.
     const getPositionSec = () => player?.state.currentTime ?? 0;
@@ -209,6 +253,9 @@ const PlayerInner = ({
         <>
             {/* Pause beacon handler */}
             <PauseHandler onPause={handlePause} />
+
+            {/* Keyboard shortcuts help dialog */}
+            <KeyboardShortcutsOverlay open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
             <PlayerCanvas>
                 <PlayerVignette />

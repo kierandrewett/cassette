@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Bell, Check } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { api } from "@/lib/trpc/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -53,6 +53,19 @@ export const NotificationBell = ({ enabled }: { enabled: boolean }) => {
     });
 
     const count = unread.data ?? 0;
+
+    // Prepend "(N) " to the browser tab title when there are unread notifications.
+    // Restores the previous title on unmount or when count drops to zero.
+    useEffect(() => {
+        if (!enabled || count === 0) return;
+        const prev = document.title;
+        // Avoid double-prepending if the title already starts with a count badge.
+        const bare = prev.replace(/^\(\d+\) /, "");
+        document.title = `(${count}) ${bare}`;
+        return () => {
+            document.title = bare;
+        };
+    }, [count, enabled]);
 
     if (!enabled) {
         return (

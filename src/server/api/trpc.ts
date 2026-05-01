@@ -6,6 +6,7 @@ import { ZodError } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/server/db/client";
 import { channelMembers, type ChannelRole } from "@/server/db/schema/channels";
+import { adminGrants } from "@/server/db/schema/admin";
 
 export type CreateContextOptions = {
     headers: Headers;
@@ -55,6 +56,19 @@ const sessionRequired = middleware(({ ctx, next }) => {
 });
 
 export const protectedProcedure = t.procedure.use(sessionRequired);
+
+// adminProcedure: requires a session AND that the caller has a row in admin_grants.
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+    const rows = await ctx.db
+        .select({ userId: adminGrants.userId })
+        .from(adminGrants)
+        .where(eq(adminGrants.userId, ctx.user.id))
+        .limit(1);
+    if (!rows[0]) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required." });
+    }
+    return next({ ctx });
+});
 
 // channelProcedure: requires a session AND that the caller is a member of the
 // channel referenced by `input.channelId` with at least the given role.
