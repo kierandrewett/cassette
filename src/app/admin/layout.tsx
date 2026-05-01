@@ -1,20 +1,20 @@
-import { headers } from "next/headers";
-
-import { requireAdmin } from "@/lib/admin";
+import AppShell from "@/components/shell/AppShell";
 import { AdminSubNav } from "@/components/admin/AdminSubNav";
+import { requireAdmin } from "@/lib/admin";
 
 export const metadata = { title: "Admin — Cassette" };
 
+// Admin lives inside the standard AppShell now — it shares the top bar,
+// left rail, and theme so the surface reads as "still cassette" instead
+// of a stripped-down sub-app. The AdminSubNav stays as the secondary
+// navigation strip (Overview / Users / Videos / Storage / etc.).
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-    // Guard: non-admins are redirected to /.
-    await requireAdmin(await headers());
+    await requireAdmin();
 
     return (
-        <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
-            <div className="pt-14">
-                <AdminSubNav />
-                <div className="p-6">{children}</div>
-            </div>
-        </div>
+        <AppShell>
+            <AdminSubNav />
+            <div className="p-6">{children}</div>
+        </AppShell>
     );
 }
