@@ -189,7 +189,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                 >
                     <Menu01Icon size={20} strokeWidth={1.6} />
                 </Button>
-                <Link href="/" className="ml-1">
+                <Link href="/" className="ml-1 flex items-center gap-1 rounded-lg px-1 h-full hover:bg-secondary/40 focus-visible:bg-secondary/40 focus-visible:ring-2 focus-visible:ring-ring">
                     <CassetteWordmark />
                 </Link>
             </div>
@@ -272,7 +272,7 @@ export const AppHeader = ({ user, isAdmin = false, onMenuToggle }: AppHeaderProp
                                 variant="ghost"
                                 size="icon"
                                 aria-label="Account menu"
-                                className="ml-2 h-8 w-8 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-ring"
+                                className="ml-1 h-8 w-8 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <UserAvatar user={user} size={32} />
                             </Button>
