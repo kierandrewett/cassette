@@ -40,9 +40,16 @@ const DropdownMenuSubContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DropdownMenuPrimitive.SubContent
         ref={ref}
+        sideOffset={4}
         collisionPadding={8}
         className={cn(
-            "surface-glass z-50 max-h-[var(--radix-dropdown-menu-content-available-height,80vh)] min-w-[8rem] overflow-y-auto rounded-xl p-1 text-popover-foreground shadow-xl",
+            // Submenus open to the side of the parent and contain at most a
+            // handful of radio rows. The parent menu's max-height + overflow
+            // were leaking into here and clipping the submenu when it
+            // collided with the viewport edge — drop both, let the submenu
+            // size to its own content. collisionPadding still keeps it on
+            // screen by flipping/sliding.
+            "surface-glass z-50 min-w-[8rem] rounded-xl p-1 text-popover-foreground shadow-xl",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
