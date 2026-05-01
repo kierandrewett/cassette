@@ -73,6 +73,7 @@ const nextConfig = {
             bodySizeLimit: "20gb",
         },
     },
+    devIndicators: false,
     images: {
         remotePatterns: [],
     },
