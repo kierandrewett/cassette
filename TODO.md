@@ -173,6 +173,50 @@ item means shippable; the smoke runner (`scripts/smoke.sh`) is the contract.
 - [x] `error.tsx`, `global-error.tsx`, `not-found.tsx` cassette-styled
 - [x] `404 -> /` link uses `<Link>` instead of `<a>` (lint clean)
 
+## Post-M9 QoL Wave 1 (shipped)
+
+- [x] Player localStorage prefs (volume, playback rate, captions lang, theatre)
+- [x] Keyboard shortcut overlay (`?` opens a Dialog listing every shortcut)
+- [x] Watch progress beacon skips when signed-out (no anonymous POSTs)
+- [x] Optimistic UI on subscribe / like / queue.add / watchLater.add (with rollback)
+- [x] Comment list skeletons
+- [x] Subscriber count refreshes after subscribe / unsubscribe
+- [x] Web Share API on mobile (≤ 768 px) bypasses the Popover
+- [x] Tab title shows playing video; bell prepends `(N) ` when unread
+- [x] Comment timestamp links seek the player (shared `lib/timestamps.ts`)
+- [x] Pinned comment scrolls into view when URL hash is `#comments`
+- [x] Bulk video upload at `/studio/c/<handle>/upload` with N=2 concurrency
+- [x] Thumbnail picker (10×10 sprite-grid → ffmpeg single-frame extract)
+- [x] HTML5 drag-reorder for playlists and the queue
+- [x] AddToPlaylist + AddToWatchLater on the watch action row
+- [x] Admin pages: `/admin` (overview), `/admin/users`, `/admin/users/[id]`, `/admin/videos`, `/admin/storage`, `/admin/jobs`, `/admin/settings`
+- [x] `adminProcedure` middleware joining `admin_grants`
+- [x] `admin_grants` schema; `seed-admin` grants the bootstrap user
+
+## Post-M9 QoL Wave 2 (shipped)
+
+- [x] Webhooks: `webhooks` + `webhook_deliveries` schema
+- [x] HMAC-signed delivery (`X-Cassette-Signature: sha256=<hex>`)
+- [x] Worker fires `transcode.completed` + `transcode.failed`
+- [x] `comment.create` fires `comment.created`
+- [x] `/studio/c/<handle>/webhooks` management UI (CRUD + test fire + rotate + deliveries log)
+- [x] In-memory rate limiter on `/api/auth/*`, `/api/upload`, `comment.create`
+- [x] RSS feed at `/c/<handle>/feed.xml` (50 most-recent public videos, max-age=300)
+- [x] Channel head exposes `<link rel="alternate" type="application/rss+xml">`
+- [x] Video tags (text[] GIN-indexed) + tags UI in upload + edit dialog + search filter
+- [x] `<TagChipRow>` on the watch page below the title
+- [x] Structured logger in `src/lib/log.ts` (no new deps; JSON via `LOG_FORMAT=json`)
+- [x] `scripts/backup.sh` + `scripts/restore.sh` (`just backup`, `just restore <dir>`)
+- [x] Operator API doc updated with webhooks / RSS / tags / rate limits
+
+## Post-M9 QoL Wave 3 (in flight)
+
+- [ ] Email password reset (Better-Auth, with stdout fallback when SMTP missing)
+- [ ] Change-password form on `/settings`
+- [ ] Active sessions panel on `/settings` with revoke per-device + revoke-all-others
+- [ ] Passkeys / WebAuthn via Better-Auth plugin (optional)
+- [ ] Playwright e2e for the watch + upload + comment flows
+
 ## Codex review
 
 - [ ] Codex sign-off on the implementation
