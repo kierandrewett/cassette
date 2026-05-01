@@ -111,7 +111,11 @@ export const Player = ({
 
     return (
         <MediaPlayer
-            className="relative w-full overflow-hidden bg-black"
+            // [--media-focus-ring:transparent] suppresses Vidstack's default
+            // outline that flashed when pressing Space (the play/pause
+            // shortcut) — the chrome already shows pause/play state, the
+            // ring on the canvas was just visual noise.
+            className="relative w-full overflow-hidden bg-black [--media-focus-ring:transparent]"
             style={{ aspectRatio: "16/9" }}
             src={`/api/hls/${video.id}/master.m3u8${tokenQS}`}
             crossOrigin
@@ -222,6 +226,28 @@ const PlayerInner = ({
         });
 
         return unsubscribe;
+    }, [player, remote]);
+
+    // Frame-by-frame stepping with `,` and `.` keys (YouTube convention).
+    // Pauses if currently playing, then nudges currentTime by +/- 1/30s
+    // (we don't know the source FPS reliably without probing every frame —
+    // 30 fps is a sensible default and the behaviour matches YouTube).
+    useEffect(() => {
+        if (!player) return;
+        const FRAME_SEC = 1 / 30;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key !== "," && e.key !== ".") return;
+            // Don't intercept when the user is typing in an input/textarea.
+            const target = e.target as HTMLElement | null;
+            if (target?.matches("input, textarea, [contenteditable=true]")) return;
+            e.preventDefault();
+            if (!player.state.paused) remote.pause();
+            const delta = e.key === "," ? -FRAME_SEC : FRAME_SEC;
+            const next = Math.max(0, Math.min(player.state.duration || 0, player.state.currentTime + delta));
+            remote.seek(next);
+        };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
     }, [player, remote]);
 
     // Autoplay race fix.  Vidstack's `autoPlay` prop attempts play() before

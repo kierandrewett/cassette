@@ -68,6 +68,13 @@ export const SleepTimer = ({ onSelect, onStateChange }: SleepTimerProps) => {
     });
     const [remainingSec, setRemainingSec] = useState<number | null>(null);
 
+    // Auto-close when the pointer leaves the player canvas.
+    useEffect(() => {
+        const onLeave = () => setOpen(false);
+        window.addEventListener("cassette:player-leave", onLeave);
+        return () => window.removeEventListener("cassette:player-leave", onLeave);
+    }, []);
+
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const remainingRef = useRef<number | null>(null);

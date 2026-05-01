@@ -205,23 +205,30 @@ const LibraryPage = async () => {
                     </p>
                 </div>
 
-                {/* Up Next (queue). Drag-reorderable on populated state via QueueRow;
-                    when empty, render a clean empty card instead of an unstyled CTA. */}
+                {/* Up Next (queue). Drag-reorderable on populated state via
+                    QueueRow; when empty, render a clean empty card instead of
+                    an unstyled CTA. Wrap the populated case in LibraryRow too
+                    so the section heading is consistent with every other
+                    shelf — without it the queue items rendered as floating
+                    cards with no label, leaving the user wondering what
+                    they were looking at. */}
                 {queuePlaylistId && queueItems.length > 0 ? (
-                    <QueueRow
-                        playlistId={queuePlaylistId}
-                        initialItems={queueItems.map((item, idx) => ({
-                            itemId: item.itemId,
-                            position: idx,
-                            video: {
-                                id: item.video.id,
-                                title: item.video.title,
-                                thumbnailPath: item.video.thumbnailPath,
-                                durationSec: item.video.durationSec,
-                            },
-                            channel: { name: item.channel.name, handle: item.channel.handle },
-                        }))}
-                    />
+                    <LibraryRow heading={tLibrary("upNext")} caption="Your cross-device queue">
+                        <QueueRow
+                            playlistId={queuePlaylistId}
+                            initialItems={queueItems.map((item, idx) => ({
+                                itemId: item.itemId,
+                                position: idx,
+                                video: {
+                                    id: item.video.id,
+                                    title: item.video.title,
+                                    thumbnailPath: item.video.thumbnailPath,
+                                    durationSec: item.video.durationSec,
+                                },
+                                channel: { name: item.channel.name, handle: item.channel.handle },
+                            }))}
+                        />
+                    </LibraryRow>
                 ) : (
                     <LibraryRow heading={tLibrary("upNext")} caption="Your cross-device queue">
                         <EmptyShelfCard

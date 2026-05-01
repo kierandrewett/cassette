@@ -5,17 +5,22 @@ import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { readPreferences, writeStatsOverlayEnabled } from "@/lib/player/preferences";
+import { readPreferences } from "@/lib/player/preferences";
 import { StatsOverlay } from "./StatsOverlay";
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
 /**
- * Gear icon opening a popover with Quality / Speed / Stats submenus.
- * Uses a custom popover (not Vidstack's Menu) to keep full style control.
+ * Gear icon opening a popover with Quality / Speed sub-panels.
  *
- * The StatsOverlay is rendered as a sibling on the player canvas — it is
- * positioned absolutely and not clipped by the settings panel.
+ * Stats-for-nerds lives in the right-click context menu (PlayerContextMenu)
+ * — we don't surface it here. The mini-stats summary that used to sit
+ * below the menu has been dropped too: power users go to the context menu;
+ * casual viewers don't need quality+buffer numbers in their face.
+ *
+ * Sub-panel transition: the active panel re-mounts under the same `panel`
+ * key so the animate-in/slide-in-from-right utilities give it a YouTube-
+ * like slide on every transition.
  */
 export const SettingsMenu = () => {
     const [open, setOpen] = useState(false);
@@ -24,17 +29,16 @@ export const SettingsMenu = () => {
     const playbackRate = useMediaState("playbackRate");
     const quality = useMediaState("quality");
     const autoQuality = useMediaState("autoQuality");
-    const bufferedEnd = useMediaState("bufferedEnd");
-    const duration = useMediaState("duration");
     const qualities = useVideoQualityOptions();
 
-    // Stats overlay state — persisted to localStorage.
+    // Stats overlay state lives in localStorage; the gear menu no longer
+    // toggles it — the context menu does. We still mount the overlay here
+    // because this component already sits inside PlayerCanvas and a single
+    // mount keeps wiring simple.
     const [statsEnabled, setStatsEnabled] = useState<boolean>(() => {
         if (typeof window === "undefined") return false;
         return readPreferences().statsOverlayEnabled;
     });
-
-    // Listen for the B-key shortcut toggling stats externally.
     useEffect(() => {
         const handler = (e: Event) => {
             const detail = (e as CustomEvent<{ enabled: boolean }>).detail;
@@ -49,15 +53,16 @@ export const SettingsMenu = () => {
         setPanel("root");
     };
 
-    const toggleStats = () => {
-        const next = !statsEnabled;
-        setStatsEnabled(next);
-        writeStatsOverlayEnabled(next);
-    };
+    // Auto-close when the pointer leaves the player surface so the panel
+    // doesn't stick around when the user moves on.
+    useEffect(() => {
+        const onLeave = () => handleClose();
+        window.addEventListener("cassette:player-leave", onLeave);
+        return () => window.removeEventListener("cassette:player-leave", onLeave);
+    }, []);
 
     return (
         <>
-            {/* Render stats overlay on the player canvas (absolute-positioned inside PlayerCanvas). */}
             <StatsOverlay visible={statsEnabled} />
 
             <div className="relative">
@@ -81,16 +86,17 @@ export const SettingsMenu = () => {
 
                 {open && (
                     <>
-                        {/* Backdrop */}
                         <div className="fixed inset-0 z-40" onClick={handleClose} />
 
-                        {/* Panel */}
                         <div
                             className="player-popover absolute bottom-full right-0 z-50 mb-2 w-56 overflow-hidden rounded-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {panel === "root" && (
-                                <div className="py-2">
+                                <div
+                                    key="root"
+                                    className="py-2 duration-200 animate-in fade-in slide-in-from-left-4"
+                                >
                                     <MenuRow
                                         label="Quality"
                                         value={autoQuality ? "Auto" : quality?.height ? `${quality.height}p` : "Auto"}
@@ -101,25 +107,14 @@ export const SettingsMenu = () => {
                                         value={playbackRate === 1 ? "Normal" : `${playbackRate}x`}
                                         onClick={() => setPanel("speed")}
                                     />
-                                    <div className="mx-3 my-1 border-t border-white/10" />
-                                    {/* Stats for nerds toggle */}
-                                    <button
-                                        className="flex w-full items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-white/10"
-                                        onClick={toggleStats}
-                                        role="menuitemcheckbox"
-                                        aria-checked={statsEnabled}
-                                    >
-                                        <span className="text-white/70">Stats for nerds</span>
-                                        <ToggleIndicator on={statsEnabled} />
-                                    </button>
-                                    <div className="mx-3 my-1 border-t border-white/10" />
-                                    {/* Quick stats summary */}
-                                    <QuickStats bufferedEnd={bufferedEnd} duration={duration} quality={quality} />
                                 </div>
                             )}
 
                             {panel === "quality" && (
-                                <div className="py-2">
+                                <div
+                                    key="quality"
+                                    className="py-2 duration-200 animate-in fade-in slide-in-from-right-4"
+                                >
                                     <PanelHeader label="Quality" onBack={() => setPanel("root")} />
                                     <button
                                         className={cn(
@@ -158,7 +153,10 @@ export const SettingsMenu = () => {
                             )}
 
                             {panel === "speed" && (
-                                <div className="py-2">
+                                <div
+                                    key="speed"
+                                    className="py-2 duration-200 animate-in fade-in slide-in-from-right-4"
+                                >
                                     <PanelHeader label="Playback Speed" onBack={() => setPanel("root")} />
                                     {SPEEDS.map((s) => (
                                         <button

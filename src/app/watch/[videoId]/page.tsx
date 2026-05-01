@@ -2,7 +2,10 @@ import Image from "next/image";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { TRPCError } from "@trpc/server";
+import { count, eq } from "drizzle-orm";
 
+import { db } from "@/server/db/client";
+import { subscriptions } from "@/server/db/schema/social";
 import { trpc } from "@/lib/trpc/server";
 import AppShell from "@/components/shell/AppShell";
 import { Player } from "@/components/player/Player";
@@ -52,6 +55,16 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
     }
 
     const { video, channel, variants, captions, chapters, isLikedByMe, isSubscribed, signedToken } = data;
+
+    // Subscriber count for the channel chip on this watch page. Fetched
+    // here rather than threaded through video.byId so the procedure shape
+    // stays focused; the cost is one cheap aggregate per render.
+    const subscriberCountRows = await db
+        .select({ value: count() })
+        .from(subscriptions)
+        .where(eq(subscriptions.channelId, channel.id))
+        .catch(() => []);
+    const subscriberCount = subscriberCountRows[0]?.value ?? 0;
 
     // Canonicalise: if the URL still uses the internal UUID, 308-redirect to
     // the short publicId form. Preserve the rest of the query string (slug,
@@ -216,12 +229,16 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
 
                                     <div>
                                         <a
-                                            href={`/channel/${channel.handle}`}
+                                            href={`/@${channel.handle}`}
                                             className="block text-sm font-semibold text-foreground transition-colors hover:text-foreground/80"
                                         >
                                             {channel.name}
                                         </a>
-                                        <p className="text-xs text-muted-foreground">@{channel.handle}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {formatCount(subscriberCount)}
+                                            {" subscriber"}
+                                            {subscriberCount === 1 ? "" : "s"}
+                                        </p>
                                     </div>
 
                                     {/* Subscribe button — B2 will wire real logic; placeholder for now */}

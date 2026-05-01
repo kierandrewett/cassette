@@ -33,6 +33,13 @@ export const PlayerCanvas = ({ children }: PlayerCanvasProps) => {
         }
     }, [theatre]);
 
+    // Player popovers (Settings / Captions / Sleep) listen for this event
+    // and close themselves when the pointer leaves the player surface so
+    // they don't stick around after the user moves on.
+    const handlePointerLeave = () => {
+        window.dispatchEvent(new CustomEvent("cassette:player-leave"));
+    };
+
     return (
         <div
             ref={ref}
@@ -40,6 +47,7 @@ export const PlayerCanvas = ({ children }: PlayerCanvasProps) => {
             data-active={active ? "true" : "false"}
             data-fullscreen={fullscreen ? "true" : "false"}
             data-theater={theatre ? "true" : "false"}
+            onPointerLeave={handlePointerLeave}
         >
             {children}
         </div>
