@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check, List } from "lucide-react";
+import { Plus, Check, Clock, ListVideo } from "lucide-react";
 import { toast } from "sonner";
 
 import { useSession } from "@/lib/auth-client";
@@ -10,6 +10,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -178,22 +179,29 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                 </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
-                {/* System actions */}
+            <DropdownMenuContent align="end" className="w-60" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuLabel>Save video to…</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                {/* System destinations: queue + watch later. Each row uses
+                    its own semantic icon (ListVideo for queue, Clock for
+                    Watch Later — Check used to be on Watch Later, which
+                    incorrectly read as "already saved"). A right-aligned
+                    Check appears AFTER the action succeeds. */}
                 <DropdownMenuItem
                     onSelect={(e) => {
                         e.preventDefault();
                         if (!queueAdded) addToQueue.mutate({ videoId });
                         setOpen(false);
                     }}
-                    disabled={addToQueue.isPending}
+                    disabled={addToQueue.isPending || queueAdded}
+                    className="justify-between gap-3"
                 >
-                    {queueAdded ? (
-                        <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
-                    ) : (
-                        <List className="mr-2 h-4 w-4" aria-hidden="true" />
-                    )}
-                    {queueAdded ? "Added to queue" : "Add to queue"}
+                    <span className="flex items-center gap-2">
+                        <ListVideo className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        Add to queue
+                    </span>
+                    {queueAdded && <Check className="h-4 w-4 text-primary" aria-hidden="true" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                     onSelect={(e) => {
@@ -201,32 +209,39 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                         if (!watchLaterAdded) addToWatchLater.mutate({ videoId });
                         setOpen(false);
                     }}
-                    disabled={addToWatchLater.isPending}
+                    disabled={addToWatchLater.isPending || watchLaterAdded}
+                    className="justify-between gap-3"
                 >
-                    {watchLaterAdded ? (
-                        <Check className="mr-2 h-4 w-4 text-green-500" aria-hidden="true" />
-                    ) : (
-                        <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-                    )}
-                    {watchLaterAdded ? "Saved to Watch Later" : "Add to Watch Later"}
+                    <span className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        Watch Later
+                    </span>
+                    {watchLaterAdded && <Check className="h-4 w-4 text-primary" aria-hidden="true" />}
                 </DropdownMenuItem>
 
-                {userPlaylists.length > 0 && <DropdownMenuSeparator />}
-
-                {/* User playlists */}
-                {userPlaylists.map((pl) => (
-                    <DropdownMenuItem
-                        key={pl.id}
-                        onSelect={(e) => {
-                            e.preventDefault();
-                            addItem.mutate({ playlistId: pl.id, videoId });
-                            setOpen(false);
-                        }}
-                        disabled={addItem.isPending}
-                    >
-                        <span className="truncate">{pl.title}</span>
-                    </DropdownMenuItem>
-                ))}
+                {userPlaylists.length > 0 && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">
+                            Your playlists
+                        </DropdownMenuLabel>
+                        {userPlaylists.map((pl) => (
+                            <DropdownMenuItem
+                                key={pl.id}
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    addItem.mutate({ playlistId: pl.id, videoId });
+                                    setOpen(false);
+                                }}
+                                disabled={addItem.isPending}
+                                className="gap-2"
+                            >
+                                <ListVideo className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                <span className="truncate">{pl.title}</span>
+                            </DropdownMenuItem>
+                        ))}
+                    </>
+                )}
 
                 <DropdownMenuSeparator />
 
@@ -246,8 +261,10 @@ export const AddToPlaylistButton = ({ videoId }: AddToPlaylistButtonProps) => {
                             e.preventDefault();
                             setShowCreate(true);
                         }}
+                        className="gap-2"
                     >
-                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />+ Create new playlist
+                        <Plus className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        Create new playlist
                     </DropdownMenuItem>
                 )}
             </DropdownMenuContent>
